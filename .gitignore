@@ -1,0 +1,16 @@
+# Git ignore
+node_modules/
+dist/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.exe
+cloudflared.exe
+data/*.db
+uploads/
+backend/uploads/
+backend/.env
+.env
+.env.local
+public_url.txt
