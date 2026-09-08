@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:5173"
 
     supabase_url: str = "https://tpmvuvsalhluqfdyaeha.supabase.co"
-    supabase_key: str = "sb_publishable_KBwBB9vRdOwMOHQyPhMreA_VtnWDNIK"
+    supabase_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwbXZ1dnNhbGhsdXFmZHlhZWhhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODcxNjcwOCwiZXhwIjoyMTA0MjkyNzA4fQ.JsPIcIQIG8h-eBsp80jCGe4I5yfx5UQbNva1W04DV1A"
 
     model_config = {"env_file": ".env"}
 

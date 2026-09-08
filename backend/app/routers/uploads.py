@@ -107,6 +107,17 @@ def delete_session(session_id: str):
     if not session:
         raise HTTPException(404, "Session not found")
     Path(session["audio_path"]).unlink(missing_ok=True)
+    if settings.supabase_url and settings.supabase_key:
+        try:
+            stored_name = Path(session["audio_path"]).name
+            url = f"{settings.supabase_url}/storage/v1/object/uploads/{stored_name}"
+            headers = {
+                "apikey": settings.supabase_key,
+                "Authorization": f"Bearer {settings.supabase_key}",
+            }
+            requests.delete(url, headers=headers, timeout=5)
+        except Exception as e:
+            print("Supabase cloud audio delete error:", e)
     db.delete_session(session_id)
     return {"ok": True}
 

@@ -12,4 +12,4 @@ services:
       - key: SUPABASE_URL
         value: https://tpmvuvsalhluqfdyaeha.supabase.co
       - key: SUPABASE_KEY
-        value: sb_publishable_KBwBB9vRdOwMOHQyPhMreA_VtnWDNIK
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwbXZ1dnNhbGhsdXFmZHlhZWhhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODcxNjcwOCwiZXhwIjoyMTA0MjkyNzA4fQ.JsPIcIQIG8h-eBsp80jCGe4I5yfx5UQbNva1W04DV1A

@@ -185,6 +185,86 @@ def _format_session(data: dict) -> dict:
     }
 
 
+def _cloud_headers():
+    return {
+        "apikey": settings.supabase_key,
+        "Authorization": f"Bearer {settings.supabase_key}",
+        "Content-Type": "application/json",
+    }
+
+
+def _save_session_cloud_meta(session_dict: dict):
+    if not _supabase_enabled():
+        return
+    try:
+        sid = session_dict["id"]
+        url = f"{settings.supabase_url}/storage/v1/object/uploads/meta_{sid}.json"
+        data = json.dumps(session_dict, ensure_ascii=False).encode("utf-8")
+        headers = _cloud_headers()
+        r = requests.post(url, headers=headers, data=data, timeout=5)
+        if r.status_code in (400, 409):
+            requests.put(url, headers=headers, data=data, timeout=5)
+        
+        # Update cloud catalog
+        catalog = _list_session_cloud_meta()
+        catalog_dict = {s["id"]: s for s in catalog}
+        catalog_dict[sid] = session_dict
+        sorted_list = sorted(catalog_dict.values(), key=lambda s: s.get("created_at", ""), reverse=True)
+        cat_url = f"{settings.supabase_url}/storage/v1/object/uploads/sessions_catalog.json"
+        cat_data = json.dumps(sorted_list, ensure_ascii=False).encode("utf-8")
+        r_cat = requests.post(cat_url, headers=headers, data=cat_data, timeout=5)
+        if r_cat.status_code in (400, 409):
+            requests.put(cat_url, headers=headers, data=cat_data, timeout=5)
+    except Exception as e:
+        print("Cloud meta save error:", e)
+
+
+def _get_session_cloud_meta(session_id: str) -> dict | None:
+    if not _supabase_enabled():
+        return None
+    try:
+        url = f"{settings.supabase_url}/storage/v1/object/public/uploads/meta_{session_id}.json"
+        r = requests.get(url, timeout=5)
+        if r.status_code == 200:
+            return r.json()
+    except Exception as e:
+        print("Cloud meta get error:", e)
+    return None
+
+
+def _list_session_cloud_meta() -> list[dict]:
+    if not _supabase_enabled():
+        return []
+    try:
+        cat_url = f"{settings.supabase_url}/storage/v1/object/public/uploads/sessions_catalog.json"
+        r = requests.get(cat_url, timeout=5)
+        if r.status_code == 200 and isinstance(r.json(), list):
+            return r.json()
+    except Exception as e:
+        print("Cloud catalog read error:", e)
+    return []
+
+
+def _delete_session_cloud_meta(session_id: str):
+    if not _supabase_enabled():
+        return
+    try:
+        url = f"{settings.supabase_url}/storage/v1/object/uploads/meta_{session_id}.json"
+        headers = _cloud_headers()
+        requests.delete(url, headers=headers, timeout=5)
+        
+        # Update catalog
+        catalog = _list_session_cloud_meta()
+        filtered = [s for s in catalog if s.get("id") != session_id]
+        cat_url = f"{settings.supabase_url}/storage/v1/object/uploads/sessions_catalog.json"
+        cat_data = json.dumps(filtered, ensure_ascii=False).encode("utf-8")
+        r_cat = requests.post(cat_url, headers=headers, data=cat_data, timeout=5)
+        if r_cat.status_code in (400, 409):
+            requests.put(cat_url, headers=headers, data=cat_data, timeout=5)
+    except Exception as e:
+        print("Cloud meta delete error:", e)
+
+
 def create_session(session_id: str, filename: str, audio_path: str) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     sess_data = {
@@ -206,9 +286,14 @@ def create_session(session_id: str, filename: str, audio_path: str) -> dict:
             url = f"{settings.supabase_url}/rest/v1/sessions"
             r = requests.post(url, headers=_headers(), json=sess_data, timeout=5)
             if r.status_code in (200, 201):
-                return _format_session(sess_data)
+                formatted = _format_session(sess_data)
+                _save_session_cloud_meta(formatted)
+                return formatted
         except Exception as e:
             print("Supabase create_session error:", e)
+
+    formatted = _format_session(sess_data)
+    _save_session_cloud_meta(formatted)
 
     with _lock:
         conn = _local_conn()
@@ -219,7 +304,7 @@ def create_session(session_id: str, filename: str, audio_path: str) -> dict:
         conn.commit()
         conn.close()
 
-    return _format_session(sess_data)
+    return formatted
 
 
 def get_session(session_id: str) -> dict | None:
@@ -233,6 +318,10 @@ def get_session(session_id: str) -> dict | None:
                     return _format_session(data[0])
         except Exception as e:
             print("Supabase get_session error:", e)
+
+    cloud_data = _get_session_cloud_meta(session_id)
+    if cloud_data:
+        return _format_session(cloud_data)
 
     with _lock:
         conn = _local_conn()
@@ -249,10 +338,14 @@ def list_sessions() -> list[dict]:
             r = requests.get(url, headers=_headers(), timeout=5)
             if r.status_code == 200:
                 data = r.json()
-                if data is not None and isinstance(data, list):
+                if data is not None and isinstance(data, list) and len(data) > 0:
                     return [_format_session(item) for item in data]
         except Exception as e:
             print("Supabase list_sessions error:", e)
+
+    cloud_list = _list_session_cloud_meta()
+    if cloud_list:
+        return [_format_session(item) for item in cloud_list]
 
     with _lock:
         conn = _local_conn()
@@ -268,33 +361,47 @@ def update_session(session_id: str, **fields) -> dict | None:
     for key, value in fields.items():
         if key not in allowed:
             continue
-        if isinstance(value, (list, dict)):
-            value = json.dumps(value, ensure_ascii=False)
         update_data[key] = value
 
     if not update_data:
         return get_session(session_id)
 
+    sql_updates = {}
+    for k, v in update_data.items():
+        if isinstance(v, (list, dict)):
+            sql_updates[k] = json.dumps(v, ensure_ascii=False)
+        else:
+            sql_updates[k] = v
+
+    current_sess = None
+    with _lock:
+        conn = _local_conn()
+        sets = [f"{k} = ?" for k in sql_updates.keys()]
+        values = list(sql_updates.values())
+        values.append(session_id)
+        conn.execute(f"UPDATE sessions SET {', '.join(sets)} WHERE id = ?", values)
+        conn.commit()
+        cur = conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+        row = cur.fetchone()
+        conn.close()
+        if row:
+            current_sess = _format_session(dict(row))
+
+    if not current_sess:
+        current_sess = _get_session_cloud_meta(session_id) or {"id": session_id}
+        for k, v in update_data.items():
+            current_sess[k] = v
+        current_sess = _format_session(current_sess)
+
     if _supabase_enabled():
         try:
             url = f"{settings.supabase_url}/rest/v1/sessions?id=eq.{session_id}"
-            r = requests.patch(url, headers=_headers(), json=update_data, timeout=5)
-            if r.status_code in (200, 204):
-                return get_session(session_id)
+            requests.patch(url, headers=_headers(), json=sql_updates, timeout=5)
         except Exception as e:
-            print("Supabase update_session error:", e)
+            pass
 
-    sets = [f"{k} = ?" for k in update_data.keys()]
-    values = list(update_data.values())
-    values.append(session_id)
-
-    with _lock:
-        conn = _local_conn()
-        conn.execute(f"UPDATE sessions SET {', '.join(sets)} WHERE id = ?", values)
-        conn.commit()
-        conn.close()
-
-    return get_session(session_id)
+    _save_session_cloud_meta(current_sess)
+    return current_sess
 
 
 def delete_session(session_id: str) -> bool:
@@ -307,6 +414,8 @@ def delete_session(session_id: str) -> bool:
         except Exception as e:
             print("Supabase delete_session error:", e)
 
+    _delete_session_cloud_meta(session_id)
+
     with _lock:
         conn = _local_conn()
         cur = conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
@@ -314,3 +423,4 @@ def delete_session(session_id: str) -> bool:
         affected = cur.rowcount if hasattr(cur, "rowcount") else 1
         conn.close()
         return affected > 0
+
