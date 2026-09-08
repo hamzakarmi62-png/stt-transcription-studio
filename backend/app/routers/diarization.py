@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from .. import db
 from ..models import DiarizeRequest
 from ..services import diarization
+from .uploads import ensure_local_audio
 
 router = APIRouter(prefix="/api")
 
@@ -15,8 +16,9 @@ def _run_diarization(session_id: str, num_speakers: int) -> None:
         if not session:
             return
         db.update_session(session_id, status="diarizing", error=None)
+        audio_file = ensure_local_audio(session)
         segments, speakers = diarization.diarize(
-            session["audio_path"], session["segments"], num_speakers
+            str(audio_file), session["segments"], num_speakers
         )
         db.update_session(session_id, status="done", segments=segments, speakers=speakers)
     except Exception as exc:

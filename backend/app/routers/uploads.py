@@ -76,25 +76,55 @@ async def upload_audio(file: UploadFile = File(...)):
     return session
 
 
+def ensure_local_audio(session_or_path) -> Path:
+    if isinstance(session_or_path, dict):
+        raw_path = session_or_path.get("audio_path", "")
+    else:
+        raw_path = str(session_or_path)
+    
+    path = Path(raw_path)
+    if not path.is_absolute():
+        path = settings.upload_path / path.name
+    
+    if path.exists() and path.stat().st_size > 0:
+        return path
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if settings.supabase_url and settings.supabase_key:
+        stored_name = path.name
+        headers = {
+            "apikey": settings.supabase_key,
+            "Authorization": f"Bearer {settings.supabase_key}",
+        }
+        try:
+            # First try authenticated storage endpoint
+            auth_url = f"{settings.supabase_url}/storage/v1/object/uploads/{stored_name}"
+            r = requests.get(auth_url, headers=headers, timeout=40)
+            if r.status_code == 200 and len(r.content) > 0:
+                with open(path, "wb") as f:
+                    f.write(r.content)
+                return path
+
+            # Fallback to public storage endpoint
+            pub_url = f"{settings.supabase_url}/storage/v1/object/public/uploads/{stored_name}"
+            r_pub = requests.get(pub_url, timeout=40)
+            if r_pub.status_code == 200 and len(r_pub.content) > 0:
+                with open(path, "wb") as f:
+                    f.write(r_pub.content)
+                return path
+        except Exception as e:
+            print("Failed downloading audio from Supabase:", e)
+    return path
+
+
 @router.get("/sessions/{session_id}/audio")
 def get_audio(session_id: str):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
-    path = Path(session["audio_path"])
-    if not path.exists():
-        stored_name = path.name
-        url = f"{settings.supabase_url}/storage/v1/object/public/uploads/{stored_name}"
-        try:
-            r = requests.get(url, timeout=30)
-            if r.status_code == 200:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                with open(path, "wb") as f:
-                    f.write(r.content)
-            else:
-                raise HTTPException(404, "Audio file missing on cloud storage")
-        except Exception:
-            raise HTTPException(404, "Audio file missing")
+    path = ensure_local_audio(session)
+    if not path.exists() or path.stat().st_size == 0:
+        raise HTTPException(404, "Audio file not found on disk or cloud")
             
     ext = path.suffix.lower().lstrip(".")
     media_type = MIME_BY_EXT.get(ext, "application/octet-stream")

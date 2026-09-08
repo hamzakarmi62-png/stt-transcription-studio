@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from .. import db
 from ..models import TranscribeRequest
 from ..services import transcription
+from .uploads import ensure_local_audio
 
 router = APIRouter(prefix="/api")
 
@@ -15,7 +16,8 @@ def _run_transcription(session_id: str, language: str | None) -> None:
         if not session:
             return
         db.update_session(session_id, status="processing", error=None)
-        result = transcription.transcribe(session["audio_path"], language=language)
+        audio_file = ensure_local_audio(session)
+        result = transcription.transcribe(str(audio_file), language=language)
         db.update_session(
             session_id,
             status="transcribed",
