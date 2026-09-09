@@ -5,8 +5,8 @@ import uuid
 from pathlib import Path
 
 import requests
-from fastapi import APIRouter, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, File, HTTPException, Request, UploadFile
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 
 from .. import db
 from ..config import settings
@@ -118,17 +118,68 @@ def ensure_local_audio(session_or_path) -> Path:
 
 
 @router.get("/sessions/{session_id}/audio")
-def get_audio(session_id: str):
+def get_audio(session_id: str, request: Request):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
+
+    stored_name = Path(session.get("audio_path", "")).name
+    ext = Path(session.get("audio_path", "")).suffix.lower().lstrip(".")
+    media_type = MIME_BY_EXT.get(ext, "application/octet-stream")
+
+    # Best approach: redirect browser directly to Supabase public URL
+    # This lets the browser handle Range requests natively (video seeking works)
+    if settings.supabase_url and settings.supabase_key and stored_name:
+        pub_url = f"{settings.supabase_url}/storage/v1/object/public/uploads/{stored_name}"
+        return RedirectResponse(url=pub_url, status_code=302)
+
+    # Fallback: serve from local disk with Range support
     path = ensure_local_audio(session)
     if not path.exists() or path.stat().st_size == 0:
         raise HTTPException(404, "Audio file not found on disk or cloud")
-            
-    ext = path.suffix.lower().lstrip(".")
-    media_type = MIME_BY_EXT.get(ext, "application/octet-stream")
-    return FileResponse(path, media_type=media_type, filename=session["filename"])
+
+    file_size = path.stat().st_size
+    range_header = request.headers.get("range")
+    if range_header:
+        try:
+            range_val = range_header.strip().replace("bytes=", "")
+            start_str, end_str = range_val.split("-")
+            start = int(start_str) if start_str else 0
+            end = int(end_str) if end_str else file_size - 1
+            end = min(end, file_size - 1)
+            length = end - start + 1
+
+            def file_chunk():
+                with open(path, "rb") as f:
+                    f.seek(start)
+                    remaining = length
+                    while remaining > 0:
+                        chunk = f.read(min(64 * 1024, remaining))
+                        if not chunk:
+                            break
+                        remaining -= len(chunk)
+                        yield chunk
+
+            return StreamingResponse(
+                file_chunk(),
+                status_code=206,
+                headers={
+                    "Content-Range": f"bytes {start}-{end}/{file_size}",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(length),
+                    "Content-Type": media_type,
+                },
+                media_type=media_type,
+            )
+        except Exception:
+            pass
+
+    return FileResponse(
+        path,
+        media_type=media_type,
+        filename=session["filename"],
+        headers={"Accept-Ranges": "bytes"},
+    )
 
 
 @router.delete("/sessions/{session_id}")

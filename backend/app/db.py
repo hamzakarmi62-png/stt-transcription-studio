@@ -108,6 +108,7 @@ def create_user(user_id: str, username: str, email: str, password: str) -> dict:
         except Exception as e:
             print("Supabase create_user error:", e)
 
+    # دائماً احفظ المستخدم محلياً كنسخة احتياطية حتى لو تم الحفظ في Supabase
     with _lock:
         conn = _local_conn()
         conn.execute(
@@ -123,15 +124,24 @@ def get_user_by_username_or_email(identifier: str) -> dict | None:
     init_db()
     if _supabase_enabled():
         try:
-            url = f"{settings.supabase_url}/rest/v1/users?or=(username.eq.{identifier},email.eq.{identifier})&select=*"
+            # استخدام صيغة PostgREST الصحيحة مع URL encoding
+            from urllib.parse import quote
+            encoded_id = quote(identifier)
+            url = (
+                f"{settings.supabase_url}/rest/v1/users"
+                f"?or=(username.eq.{encoded_id},email.eq.{encoded_id})&select=*"
+            )
             r = requests.get(url, headers=_headers(), timeout=5)
             if r.status_code == 200:
                 data = r.json()
                 if data and len(data) > 0:
                     return data[0]
+            else:
+                print(f"Supabase get_user status {r.status_code}: {r.text}")
         except Exception as e:
             print("Supabase get_user error:", e)
 
+    # البحث دائماً في قاعدة البيانات المحلية كنسخة احتياطية
     with _lock:
         conn = _local_conn()
         try:
