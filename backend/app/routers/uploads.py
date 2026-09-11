@@ -39,9 +39,12 @@ CHUNK_SIZE = 1024 * 1024
 # handing off to the normal session + cloud pipeline.
 
 def _chunks_dir(upload_id: str) -> Path:
+    safe_id = "".join(c for c in upload_id if c.isalnum() or c in "-_")
     chunks_root = settings.upload_path / "chunks"
     chunks_root.mkdir(parents=True, exist_ok=True)
-    return chunks_root / upload_id
+    target = chunks_root / safe_id
+    target.mkdir(parents=True, exist_ok=True)
+    return target
 
 
 
@@ -59,7 +62,7 @@ class CompleteRequest(BaseModel):
 def init_chunked_upload():
     """Return a fresh upload_id the client will use for all subsequent chunk POSTs."""
     upload_id = uuid.uuid4().hex[:16]
-    _chunks_dir(upload_id).mkdir(parents=True, exist_ok=True)
+    _chunks_dir(upload_id)
     return {"upload_id": upload_id}
 
 
@@ -71,9 +74,6 @@ async def upload_chunk(
 ):
     """Receive one chunk and save it to a temp directory."""
     chunk_dir = _chunks_dir(upload_id)
-    if not chunk_dir.exists():
-        raise HTTPException(400, "upload_id غير صالح أو منتهي")
-
     chunk_path = chunk_dir / f"{chunk_index:06d}"
     data = await file.read()
     chunk_path.write_bytes(data)
@@ -84,8 +84,9 @@ async def upload_chunk(
 def complete_chunked_upload(req: CompleteRequest):
     """Assemble all chunks into a single file and create a session."""
     chunk_dir = _chunks_dir(req.upload_id)
-    if not chunk_dir.exists():
-        raise HTTPException(400, "upload_id غير صالح أو منتهي")
+    chunk_files = sorted(chunk_dir.glob("??????"))
+    if not chunk_files:
+        raise HTTPException(400, "لم يتم استلام أي أجزاء، يرجى إعادة المحاولة")
 
     filename = req.filename or "recording.webm"
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webm"

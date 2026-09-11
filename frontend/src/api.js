@@ -61,29 +61,45 @@ function _classicUpload(file, onProgress) {
 async function _chunkedUpload(file, onProgress) {
   // 1. Init: get a fresh upload_id
   const initRes = await fetch(`${BASE}/upload/init`, { method: "POST" });
-  if (!initRes.ok) throw new Error("فشل بدء الرفع");
+  if (!initRes.ok) throw new Error("فشل بدء الرفع السحابي");
   const { upload_id } = await initRes.json();
 
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
   let uploaded = 0;
 
   try {
-    // 2. Upload each chunk
+    // 2. Upload each chunk with retry
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, file.size);
       const blob = file.slice(start, end);
 
-      const form = new FormData();
-      form.append("upload_id", upload_id);
-      form.append("chunk_index", String(i));
-      form.append("file", blob, file.name);
+      let success = false;
+      let lastErr = null;
 
-      const res = await fetch(`${BASE}/upload/chunk`, { method: "POST", body: form });
-      if (!res.ok) {
-        let detail = "فشل رفع الجزء";
-        try { detail = (await res.json()).detail || detail; } catch { /* ignore */ }
-        throw new Error(detail);
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try {
+          const form = new FormData();
+          form.append("upload_id", upload_id);
+          form.append("chunk_index", String(i));
+          form.append("file", blob, file.name);
+
+          const res = await fetch(`${BASE}/upload/chunk`, { method: "POST", body: form });
+          if (res.ok) {
+            success = true;
+            break;
+          }
+          let detail = "فشل رفع الجزء";
+          try { detail = (await res.json()).detail || detail; } catch { /* ignore */ }
+          lastErr = new Error(detail);
+        } catch (err) {
+          lastErr = err;
+        }
+        await new Promise((r) => setTimeout(r, 1200));
+      }
+
+      if (!success) {
+        throw lastErr || new Error(`فشل رفع الجزء ${i + 1} بعد عدة محاولات`);
       }
 
       uploaded += blob.size;
@@ -92,16 +108,30 @@ async function _chunkedUpload(file, onProgress) {
 
     // 3. Complete: ask server to assemble
     onProgress(97);
-    const completeRes = await fetch(`${BASE}/upload/complete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ upload_id, filename: file.name, total_chunks: totalChunks }),
-    });
-    if (!completeRes.ok) {
-      let detail = "فشل تجميع الملف";
-      try { detail = (await completeRes.json()).detail || detail; } catch { /* ignore */ }
-      throw new Error(detail);
+    let completeRes = null;
+    let completeErr = null;
+
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        completeRes = await fetch(`${BASE}/upload/complete`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ upload_id, filename: file.name, total_chunks: totalChunks }),
+        });
+        if (completeRes.ok) break;
+        let detail = "فشل تجميع الملف";
+        try { detail = (await completeRes.json()).detail || detail; } catch { /* ignore */ }
+        completeErr = new Error(detail);
+      } catch (err) {
+        completeErr = err;
+      }
+      await new Promise((r) => setTimeout(r, 2000));
     }
+
+    if (!completeRes || !completeRes.ok) {
+      throw completeErr || new Error("فشل تجميع الملف في الخادم");
+    }
+
     onProgress(100);
     return await completeRes.json();
   } catch (err) {
