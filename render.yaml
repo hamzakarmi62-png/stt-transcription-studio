@@ -5,10 +5,14 @@ services:
     region: frankfurt
     plan: free
     buildCommand: npm --prefix frontend install && npm --prefix frontend run build && pip install -r backend/requirements.txt
-    startCommand: python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT
+    startCommand: python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300
     envVars:
       - key: PYTHON_VERSION
         value: 3.10.0
+      - key: MAX_UPLOAD_MB
+        value: 2000
+      - key: CORS_ORIGINS
+        value: "*"
       - key: SUPABASE_URL
         value: https://tpmvuvsalhluqfdyaeha.supabase.co
       - key: SUPABASE_KEY

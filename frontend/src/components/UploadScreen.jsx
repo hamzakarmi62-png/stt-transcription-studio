@@ -463,6 +463,17 @@ export default function UploadScreen({ onComplete }) {
     try {
       setPhase("uploading");
       setProgress(0);
+      const fileSizeMB = (selectedBlob.size / (1024 * 1024)).toFixed(1);
+      const isLarge = selectedBlob.size > 10 * 1024 * 1024;
+      if (isLarge) {
+        setMessage(
+          uiLang === "ar"
+            ? `📦 جاري رفع الملف (${fileSizeMB} MB) بالرفع المجزّأ... يرجى الانتظار`
+            : uiLang === "fr"
+            ? `📦 Envoi du fichier (${fileSizeMB} MB) en morceaux...`
+            : `📦 Uploading file (${fileSizeMB} MB) in chunks...`
+        );
+      }
       const session = await api.upload(selectedBlob, setProgress);
 
       setPhase("transcribing");
@@ -484,6 +495,7 @@ export default function UploadScreen({ onComplete }) {
       setError(e.message || "Something went wrong");
     }
   };
+
 
   const openSession = (s) => {
     setError("");
