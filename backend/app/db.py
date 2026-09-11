@@ -382,6 +382,21 @@ def create_session(session_id: str, filename: str, audio_path: str) -> dict:
 
 
 def get_session(session_id: str) -> dict | None:
+    # 1. Local SQLite always carries the immediate live status on this worker
+    with _lock:
+        conn = _local_conn()
+        cur = conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
+        row = cur.fetchone()
+        conn.close()
+        if row:
+            return _format_session(dict(row))
+
+    # 2. Cloud metadata cache (for restarts or files created on other workers)
+    cloud_data = _get_session_cloud_meta(session_id)
+    if cloud_data:
+        return _format_session(cloud_data)
+
+    # 3. Supabase REST fallback
     if _supabase_enabled():
         try:
             url = f"{settings.supabase_url}/rest/v1/sessions?id=eq.{session_id}&select=*"
@@ -390,19 +405,10 @@ def get_session(session_id: str) -> dict | None:
                 data = r.json()
                 if data and len(data) > 0:
                     return _format_session(data[0])
-        except Exception as e:
-            print("Supabase get_session error:", e)
+        except Exception:
+            pass
 
-    cloud_data = _get_session_cloud_meta(session_id)
-    if cloud_data:
-        return _format_session(cloud_data)
-
-    with _lock:
-        conn = _local_conn()
-        cur = conn.execute("SELECT * FROM sessions WHERE id = ?", (session_id,))
-        row = cur.fetchone()
-        conn.close()
-        return _format_session(dict(row)) if row else None
+    return None
 
 
 def list_sessions() -> list[dict]:

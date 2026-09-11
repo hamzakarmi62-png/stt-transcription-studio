@@ -448,11 +448,23 @@ export default function UploadScreen({ onComplete }) {
   const selectedBlob = file || recBlob;
 
   const pollStatus = async (id, target) => {
+    let consecutiveErrors = 0;
     for (;;) {
-      await sleep(1500);
-      const s = await api.getSession(id);
-      if (s.status === "error") throw new Error(s.error || "Processing failed");
-      if (s.status === target) return s;
+      await sleep(2000);
+      try {
+        const s = await api.getSession(id);
+        consecutiveErrors = 0;
+        if (s.status === "error") throw new Error(s.error || "فشلت معالجة الملف الصوتي بالذكاء الاصطناعي");
+        if (s.status === target) return s;
+      } catch (err) {
+        if (err.message && (err.message.includes("فشلت") || err.message.includes("failed") || err.message.includes("خطأ"))) {
+          throw err;
+        }
+        consecutiveErrors++;
+        if (consecutiveErrors > 20) {
+          throw err;
+        }
+      }
     }
   };
 
@@ -491,8 +503,10 @@ export default function UploadScreen({ onComplete }) {
       await loadSessions();
       onComplete(full);
     } catch (e) {
+      console.error("Pipeline error:", e);
       setPhase("error");
-      setError(e.message || "Something went wrong");
+      const errText = e?.message || (typeof e === "string" ? e : "");
+      setError(errText && errText !== "{}" ? errText : "حدث خطأ غير متوقع أثناء المعالجة، يرجى المحاولة مجدداً.");
     }
   };
 

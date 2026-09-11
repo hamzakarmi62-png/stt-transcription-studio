@@ -19,14 +19,15 @@ const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB per chunk
 const SMALL_FILE_THRESHOLD = 10 * 1024 * 1024; // use classic upload for files < 10 MB
 
 export function uploadFile(file, onProgress) {
+  const fileName = file.name || (file.type?.includes("video") ? "recording.mp4" : "recording.webm");
   if (file.size <= SMALL_FILE_THRESHOLD) {
-    return _classicUpload(file, onProgress);
+    return _classicUpload(file, fileName, onProgress);
   }
-  return _chunkedUpload(file, onProgress);
+  return _chunkedUpload(file, fileName, onProgress);
 }
 
 /** Classic single-request upload (for small files). */
-function _classicUpload(file, onProgress) {
+function _classicUpload(file, fileName, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${BASE}/upload`);
@@ -38,7 +39,7 @@ function _classicUpload(file, onProgress) {
         try {
           resolve(JSON.parse(xhr.responseText));
         } catch {
-          reject(new Error("Invalid server response"));
+          reject(new Error("استجابة غير صالحة من الخادم"));
         }
       } else {
         let detail = xhr.responseText;
@@ -50,15 +51,15 @@ function _classicUpload(file, onProgress) {
         reject(new Error(detail));
       }
     };
-    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.onerror = () => reject(new Error("حدث انقطاع في الاتصال أثناء الرفع"));
     const form = new FormData();
-    form.append("file", file, file.name);
+    form.append("file", file, fileName);
     xhr.send(form);
   });
 }
 
 /** Chunked upload for large files — bypasses proxy size limits. */
-async function _chunkedUpload(file, onProgress) {
+async function _chunkedUpload(file, fileName, onProgress) {
   // 1. Init: get a fresh upload_id
   const initRes = await fetch(`${BASE}/upload/init`, { method: "POST" });
   if (!initRes.ok) throw new Error("فشل بدء الرفع السحابي");
@@ -82,7 +83,7 @@ async function _chunkedUpload(file, onProgress) {
           const form = new FormData();
           form.append("upload_id", upload_id);
           form.append("chunk_index", String(i));
-          form.append("file", blob, file.name);
+          form.append("file", blob, fileName);
 
           const res = await fetch(`${BASE}/upload/chunk`, { method: "POST", body: form });
           if (res.ok) {
@@ -116,7 +117,7 @@ async function _chunkedUpload(file, onProgress) {
         completeRes = await fetch(`${BASE}/upload/complete`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ upload_id, filename: file.name, total_chunks: totalChunks }),
+          body: JSON.stringify({ upload_id, filename: fileName, total_chunks: totalChunks }),
         });
         if (completeRes.ok) break;
         let detail = "فشل تجميع الملف";
