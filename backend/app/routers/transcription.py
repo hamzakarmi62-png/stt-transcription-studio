@@ -3,11 +3,16 @@ import threading
 from fastapi import APIRouter, HTTPException
 
 from .. import db
+from ..config import settings
 from ..models import TranscribeRequest
-from ..services import transcription
+from ..services import groq_stt, transcription
 from .uploads import ensure_local_audio
 
 router = APIRouter(prefix="/api")
+
+
+def _engine():
+    return groq_stt if settings.transcription_engine.strip().lower() == "groq" else transcription
 
 
 def _run_transcription(session_id: str, language: str | None) -> None:
@@ -17,7 +22,7 @@ def _run_transcription(session_id: str, language: str | None) -> None:
             return
         db.update_session(session_id, status="processing", error=None)
         audio_file = ensure_local_audio(session)
-        result = transcription.transcribe(str(audio_file), language=language)
+        result = _engine().transcribe(str(audio_file), language=language)
         db.update_session(
             session_id,
             status="transcribed",

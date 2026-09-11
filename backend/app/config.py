@@ -2,11 +2,23 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings
 
+BACKEND_DIR = Path(__file__).resolve().parent.parent
+
+
+def _anchored(value: str) -> Path:
+    """Relative paths are resolved against the backend dir, never the CWD."""
+    path = Path(value)
+    return path if path.is_absolute() else BACKEND_DIR / path
+
 
 class Settings(BaseSettings):
     whisper_model: str = "base"
     whisper_device: str = "cpu"
     whisper_compute_type: str = "int8"
+
+    transcription_engine: str = "whisper"
+    groq_api_key: str = ""
+    groq_model: str = "whisper-large-v3-turbo"
 
     diarization_method: str = "auto"
     hf_token: str = ""
@@ -14,20 +26,35 @@ class Settings(BaseSettings):
     upload_dir: str = "uploads"
     db_path: str = "data/app.db"
     max_upload_mb: int = 2000
+    cloud_upload_max_mb: int = 50
     cors_origins: str = "http://localhost:5173"
 
-    supabase_url: str = "https://tpmvuvsalhluqfdyaeha.supabase.co"
-    supabase_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwbXZ1dnNhbGhsdXFmZHlhZWhhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4ODcxNjcwOCwiZXhwIjoyMTA0MjkyNzA4fQ.JsPIcIQIG8h-eBsp80jCGe4I5yfx5UQbNva1W04DV1A"
+    # Where uploaded media is kept. "auto" prefers a dedicated S3 bucket and
+    # falls back to Supabase Storage; "s3" and "supabase" force one driver;
+    # "local" opts out, leaving media on this machine only. Anything but "local"
+    # makes the bucket the source of truth, so uploads survive a shutdown.
+    storage_backend: str = "auto"
+    s3_endpoint: str = ""
+    s3_region: str = "auto"
+    s3_bucket: str = ""
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+    s3_presign_seconds: int = 3600
 
-    model_config = {"env_file": ".env"}
+    supabase_url: str = ""
+    # Supplied by backend/.env. Never commit the real key: it is a service_role
+    # secret that bypasses row-level security.
+    supabase_key: str = ""
+
+    model_config = {"env_file": str(BACKEND_DIR / ".env"), "extra": "ignore"}
 
     @property
     def upload_path(self) -> Path:
-        return Path(self.upload_dir)
+        return _anchored(self.upload_dir)
 
     @property
     def database_path(self) -> Path:
-        return Path(self.db_path)
+        return _anchored(self.db_path)
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from .config import settings
+from .config import BACKEND_DIR, settings
 from .db import init_db
 from .routers import auth, diarization, export, sessions, transcription, uploads
 
@@ -37,7 +37,9 @@ def health():
 
 
 # Serve Frontend Static Files
-dist_path = os.path.abspath("frontend/dist")
+dist_path = str(BACKEND_DIR.parent / "frontend" / "dist")
+if not os.path.exists(dist_path):
+    dist_path = os.path.abspath("frontend/dist")
 if not os.path.exists(dist_path):
     dist_path = os.path.abspath("../frontend/dist")
 

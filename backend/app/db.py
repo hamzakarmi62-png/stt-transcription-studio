@@ -9,6 +9,7 @@ from pathlib import Path
 import requests
 
 from .config import settings
+from .services import storage
 
 _lock = threading.Lock()
 VIDEO_EXTS = {"mp4", "webm", "mov", "m4v", "mkv", "avi"}
@@ -34,6 +35,16 @@ def media_kind(path: str) -> str:
     return "video" if ext in VIDEO_EXTS else "audio"
 
 
+def media_basename(path: str) -> str:
+    """Filename from a stored audio_path, whatever OS wrote it.
+
+    Existing rows hold Windows-style "uploads\\abc.wav". On a POSIX host
+    Path.name treats the backslash as an ordinary character and returns the
+    whole string, which would corrupt both the local lookup and the object key.
+    """
+    return (path or "").replace("\\", "/").rsplit("/", 1)[-1]
+
+
 def _headers():
     return {
         "apikey": settings.supabase_key,
@@ -45,6 +56,45 @@ def _headers():
 
 def _supabase_enabled() -> bool:
     return bool(settings.supabase_url and settings.supabase_key)
+
+
+# ── Cloud persistence for the JSON catalogs ──────────────────────────────────
+# These hold accounts and session metadata so data survives a redeploy.
+# users_catalog.json contains every password hash, so it goes through the storage
+# service, which authenticates every request and never uses a public URL.
+
+def _catalog_enabled() -> bool:
+    return storage.enabled()
+
+
+def _catalog_read(name: str) -> bytes | None:
+    return storage.get_bytes(name) if storage.enabled() else None
+
+
+def _catalog_write(name: str, data: bytes) -> bool:
+    return storage.put_bytes(name, data) if storage.enabled() else False
+
+
+def _catalog_delete(name: str) -> None:
+    if storage.enabled():
+        storage.delete(name)
+
+
+def _read_json(name: str):
+    raw = _catalog_read(name)
+    if raw is None:
+        return None
+    try:
+        return json.loads(raw.decode("utf-8"))
+    except (ValueError, UnicodeDecodeError) as e:
+        print(f"Catalog parse error ({name}):", e)
+        return None
+
+
+def _write_json(name: str, payload) -> bool:
+    return _catalog_write(
+        name, json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    )
 
 
 def _local_conn():
@@ -93,66 +143,107 @@ def init_db() -> None:
         print("Error in local init_db:", e)
 
 
+# ── User storage via Supabase Storage JSON (persists across Render restarts) ──
+
+def _load_users_catalog() -> list[dict]:
+    """Load all users from the cloud JSON catalog, then fall back to SQLite."""
+    if _catalog_enabled():
+        data = _read_json("users_catalog.json")
+        if isinstance(data, list):
+            return data
+    # Fallback: load from local SQLite
+    try:
+        with _lock:
+            conn = _local_conn()
+            rows = conn.execute("SELECT * FROM users").fetchall()
+            conn.close()
+            return [dict(r) for r in rows]
+    except Exception:
+        return []
+
+
+def _save_users_catalog(users: list[dict]) -> None:
+    """Persist the users catalog to private cloud storage."""
+    if not _catalog_enabled():
+        return
+    _write_json("users_catalog.json", users)
+
+
 def create_user(user_id: str, username: str, email: str, password: str) -> dict:
     init_db()
     pwd_hash = hash_password(password)
     now = datetime.now(timezone.utc).isoformat()
     user_dict = {"id": user_id, "username": username, "email": email, "password_hash": pwd_hash, "created_at": now}
 
-    if _supabase_enabled():
-        try:
-            url = f"{settings.supabase_url}/rest/v1/users"
-            r = requests.post(url, headers=_headers(), json=user_dict, timeout=5)
-            if r.status_code in (200, 201):
-                return {"id": user_id, "username": username, "email": email, "created_at": now}
-        except Exception as e:
-            print("Supabase create_user error:", e)
+    # Save to the cloud catalog (survives a redeploy or an ephemeral disk)
+    if _catalog_enabled():
+        catalog = _load_users_catalog()
+        # Remove any existing entry with same id/username/email
+        catalog = [u for u in catalog if u["id"] != user_id
+                   and u.get("username") != username
+                   and u.get("email") != email]
+        catalog.append(user_dict)
+        _save_users_catalog(catalog)
 
-    # دائماً احفظ المستخدم محلياً كنسخة احتياطية حتى لو تم الحفظ في Supabase
+    # Also save locally as fast-path cache
     with _lock:
         conn = _local_conn()
-        conn.execute(
-            "INSERT OR REPLACE INTO users (id, username, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
-            (user_id, username, email, pwd_hash, now),
-        )
-        conn.commit()
-        conn.close()
+        try:
+            conn.execute(
+                "INSERT OR REPLACE INTO users (id, username, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
+                (user_id, username, email, pwd_hash, now),
+            )
+            conn.commit()
+        except Exception as e:
+            print("Local create_user error:", e)
+        finally:
+            conn.close()
+
     return {"id": user_id, "username": username, "email": email, "created_at": now}
 
 
 def get_user_by_username_or_email(identifier: str) -> dict | None:
     init_db()
-    if _supabase_enabled():
-        try:
-            # استخدام صيغة PostgREST الصحيحة مع URL encoding
-            from urllib.parse import quote
-            encoded_id = quote(identifier)
-            url = (
-                f"{settings.supabase_url}/rest/v1/users"
-                f"?or=(username.eq.{encoded_id},email.eq.{encoded_id})&select=*"
-            )
-            r = requests.get(url, headers=_headers(), timeout=5)
-            if r.status_code == 200:
-                data = r.json()
-                if data and len(data) > 0:
-                    return data[0]
-            else:
-                print(f"Supabase get_user status {r.status_code}: {r.text}")
-        except Exception as e:
-            print("Supabase get_user error:", e)
+    identifier_lower = identifier.strip().lower()
 
-    # البحث دائماً في قاعدة البيانات المحلية كنسخة احتياطية
+    # 1. Try local SQLite first (fast cache)
     with _lock:
         conn = _local_conn()
         try:
-            cur = conn.execute("SELECT * FROM users WHERE username = ? OR email = ?", (identifier, identifier))
+            cur = conn.execute(
+                "SELECT * FROM users WHERE lower(username) = ? OR lower(email) = ?",
+                (identifier_lower, identifier_lower),
+            )
             row = cur.fetchone()
             conn.close()
-            return dict(row) if row else None
+            if row:
+                return dict(row)
         except Exception as e:
             conn.close()
             print("Local get_user error:", e)
-            return None
+
+    # 2. Fall back to the cloud catalog (the source of truth on an ephemeral disk)
+    if _catalog_enabled():
+        catalog = _load_users_catalog()
+        for u in catalog:
+            if (u.get("username", "").lower() == identifier_lower
+                    or u.get("email", "").lower() == identifier_lower):
+                # Warm the local cache so next login is fast
+                with _lock:
+                    conn = _local_conn()
+                    try:
+                        conn.execute(
+                            "INSERT OR REPLACE INTO users (id, username, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
+                            (u["id"], u["username"], u["email"], u["password_hash"], u["created_at"]),
+                        )
+                        conn.commit()
+                    except Exception:
+                        pass
+                    finally:
+                        conn.close()
+                return u
+
+    return None
 
 
 def _format_session(data: dict) -> dict:
@@ -204,73 +295,46 @@ def _cloud_headers():
 
 
 def _save_session_cloud_meta(session_dict: dict):
-    if not _supabase_enabled():
+    if not _catalog_enabled():
         return
     try:
         sid = session_dict["id"]
-        url = f"{settings.supabase_url}/storage/v1/object/uploads/meta_{sid}.json"
-        data = json.dumps(session_dict, ensure_ascii=False).encode("utf-8")
-        headers = _cloud_headers()
-        r = requests.post(url, headers=headers, data=data, timeout=5)
-        if r.status_code in (400, 409):
-            requests.put(url, headers=headers, data=data, timeout=5)
-        
-        # Update cloud catalog
+        _write_json(f"meta_{sid}.json", session_dict)
+
         catalog = _list_session_cloud_meta()
-        catalog_dict = {s["id"]: s for s in catalog}
+        catalog_dict = {s["id"]: s for s in catalog if isinstance(s, dict) and s.get("id")}
         catalog_dict[sid] = session_dict
-        sorted_list = sorted(catalog_dict.values(), key=lambda s: s.get("created_at", ""), reverse=True)
-        cat_url = f"{settings.supabase_url}/storage/v1/object/uploads/sessions_catalog.json"
-        cat_data = json.dumps(sorted_list, ensure_ascii=False).encode("utf-8")
-        r_cat = requests.post(cat_url, headers=headers, data=cat_data, timeout=5)
-        if r_cat.status_code in (400, 409):
-            requests.put(cat_url, headers=headers, data=cat_data, timeout=5)
+        sorted_list = sorted(
+            catalog_dict.values(), key=lambda s: s.get("created_at", ""), reverse=True
+        )
+        _write_json("sessions_catalog.json", sorted_list)
     except Exception as e:
         print("Cloud meta save error:", e)
 
 
 def _get_session_cloud_meta(session_id: str) -> dict | None:
-    if not _supabase_enabled():
+    if not _catalog_enabled():
         return None
-    try:
-        url = f"{settings.supabase_url}/storage/v1/object/public/uploads/meta_{session_id}.json"
-        r = requests.get(url, timeout=5)
-        if r.status_code == 200:
-            return r.json()
-    except Exception as e:
-        print("Cloud meta get error:", e)
-    return None
+    data = _read_json(f"meta_{session_id}.json")
+    return data if isinstance(data, dict) else None
 
 
 def _list_session_cloud_meta() -> list[dict]:
-    if not _supabase_enabled():
+    if not _catalog_enabled():
         return []
-    try:
-        cat_url = f"{settings.supabase_url}/storage/v1/object/public/uploads/sessions_catalog.json"
-        r = requests.get(cat_url, timeout=5)
-        if r.status_code == 200 and isinstance(r.json(), list):
-            return r.json()
-    except Exception as e:
-        print("Cloud catalog read error:", e)
-    return []
+    data = _read_json("sessions_catalog.json")
+    return data if isinstance(data, list) else []
 
 
 def _delete_session_cloud_meta(session_id: str):
-    if not _supabase_enabled():
+    if not _catalog_enabled():
         return
     try:
-        url = f"{settings.supabase_url}/storage/v1/object/uploads/meta_{session_id}.json"
-        headers = _cloud_headers()
-        requests.delete(url, headers=headers, timeout=5)
-        
-        # Update catalog
-        catalog = _list_session_cloud_meta()
-        filtered = [s for s in catalog if s.get("id") != session_id]
-        cat_url = f"{settings.supabase_url}/storage/v1/object/uploads/sessions_catalog.json"
-        cat_data = json.dumps(filtered, ensure_ascii=False).encode("utf-8")
-        r_cat = requests.post(cat_url, headers=headers, data=cat_data, timeout=5)
-        if r_cat.status_code in (400, 409):
-            requests.put(cat_url, headers=headers, data=cat_data, timeout=5)
+        _catalog_delete(f"meta_{session_id}.json")
+        filtered = [
+            s for s in _list_session_cloud_meta() if s.get("id") != session_id
+        ]
+        _write_json("sessions_catalog.json", filtered)
     except Exception as e:
         print("Cloud meta delete error:", e)
 
@@ -342,27 +406,51 @@ def get_session(session_id: str) -> dict | None:
 
 
 def list_sessions() -> list[dict]:
+    """Merge every source, newest first.
+
+    Each store used to short-circuit the others, so a stale cloud catalog hid
+    sessions that existed only locally — and on a fresh deploy the reverse.
+    Local rows win because they carry the media path and the latest results;
+    the cloud copies supply anything this disk does not have.
+    """
+    merged: dict[str, dict] = {}
+
+    def add(items) -> None:
+        for item in items:
+            try:
+                session = _format_session(item)
+            except Exception as e:
+                print("list_sessions format error:", e)
+                continue
+            sid = session.get("id")
+            if sid and sid not in merged:
+                merged[sid] = session
+
+    with _lock:
+        conn = _local_conn()
+        try:
+            rows = conn.execute(
+                "SELECT * FROM sessions ORDER BY created_at DESC"
+            ).fetchall()
+        except sqlite3.OperationalError as e:
+            print("Local list_sessions error:", e)
+            rows = []
+        finally:
+            conn.close()
+    add([dict(r) for r in rows])
+
+    add(_list_session_cloud_meta())
+
     if _supabase_enabled():
         try:
             url = f"{settings.supabase_url}/rest/v1/sessions?select=*&order=created_at.desc"
             r = requests.get(url, headers=_headers(), timeout=5)
-            if r.status_code == 200:
-                data = r.json()
-                if data is not None and isinstance(data, list) and len(data) > 0:
-                    return [_format_session(item) for item in data]
+            if r.status_code == 200 and isinstance(r.json(), list):
+                add(r.json())
         except Exception as e:
             print("Supabase list_sessions error:", e)
 
-    cloud_list = _list_session_cloud_meta()
-    if cloud_list:
-        return [_format_session(item) for item in cloud_list]
-
-    with _lock:
-        conn = _local_conn()
-        cur = conn.execute("SELECT * FROM sessions ORDER BY created_at DESC")
-        rows = cur.fetchall()
-        conn.close()
-        return [_format_session(dict(r)) for r in rows]
+    return sorted(merged.values(), key=lambda s: s.get("created_at", ""), reverse=True)
 
 
 def update_session(session_id: str, **fields) -> dict | None:
