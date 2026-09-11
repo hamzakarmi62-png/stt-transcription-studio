@@ -38,11 +38,11 @@ CHUNK_SIZE = 1024 * 1024
 # then POST to /api/upload/complete.  The server reassembles them locally before
 # handing off to the normal session + cloud pipeline.
 
-_CHUNKS_DIR = settings.upload_path.parent / "uploads" / "chunks"
-
-
 def _chunks_dir(upload_id: str) -> Path:
-    return _CHUNKS_DIR / upload_id
+    chunks_root = settings.upload_path / "chunks"
+    chunks_root.mkdir(parents=True, exist_ok=True)
+    return chunks_root / upload_id
+
 
 
 class ChunkInitResponse(BaseModel):
