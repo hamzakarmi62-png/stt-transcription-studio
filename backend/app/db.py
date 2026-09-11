@@ -362,13 +362,13 @@ def create_session(session_id: str, filename: str, audio_path: str) -> dict:
             if r.status_code in (200, 201):
                 formatted = _format_session(sess_data)
                 _save_session_cloud_meta(formatted)
-                return formatted
         except Exception as e:
             print("Supabase create_session error:", e)
 
+    # The local row is the live source of truth for this worker: get_session
+    # reads it first, so skipping this insert would leave every later status
+    # update to fall through to a cloud copy that may lag behind.
     formatted = _format_session(sess_data)
-    _save_session_cloud_meta(formatted)
-
     with _lock:
         conn = _local_conn()
         conn.execute(
@@ -492,10 +492,31 @@ def update_session(session_id: str, **fields) -> dict | None:
             current_sess = _format_session(dict(row))
 
     if not current_sess:
-        current_sess = _get_session_cloud_meta(session_id) or {"id": session_id}
+        # No local row: merge onto the latest cloud copy. Fabricating a bare
+        # {"id": ...} here would format every missing field with its default
+        # (status "uploaded") and clobber a running transcription's state.
+        cloud_sess = _get_session_cloud_meta(session_id)
+        if not cloud_sess and _supabase_enabled():
+            try:
+                url = f"{settings.supabase_url}/rest/v1/sessions?id=eq.{session_id}&select=*"
+                r = requests.get(url, headers=_headers(), timeout=5)
+                if r.status_code == 200:
+                    data = r.json()
+                    cloud_sess = data[0] if data else None
+            except Exception:
+                pass
+        if not cloud_sess:
+            # Session truly unknown here — persist only the patched fields.
+            if _supabase_enabled():
+                try:
+                    url = f"{settings.supabase_url}/rest/v1/sessions?id=eq.{session_id}"
+                    requests.patch(url, headers=_headers(), json=sql_updates, timeout=5)
+                except Exception as e:
+                    print("Supabase update_session error:", e)
+            return None
+        current_sess = _format_session(cloud_sess)
         for k, v in update_data.items():
             current_sess[k] = v
-        current_sess = _format_session(current_sess)
 
     if _supabase_enabled():
         try:
@@ -506,6 +527,31 @@ def update_session(session_id: str, **fields) -> dict | None:
 
     _save_session_cloud_meta(current_sess)
     return current_sess
+
+
+RESTART_ERROR = "انقطعت المعالجة بسبب إعادة تشغيل الخادم (الخطة المجانية). يرجى إعادة تشغيل التفريغ."
+
+
+def recover_orphan_processing() -> int:
+    """On startup no worker thread exists yet, so every 'processing' row is an
+    orphan from a previous instance (free plans restart often). Mark it failed
+    instead of leaving the UI polling a status that will never change."""
+    recovered = 0
+    with _lock:
+        conn = _local_conn()
+        rows = conn.execute(
+            "SELECT id FROM sessions WHERE status = 'processing'"
+        ).fetchall()
+        conn.close()
+    for row in rows:
+        update_session(row["id"], status="error", error=RESTART_ERROR)
+        recovered += 1
+
+    for sess in _list_session_cloud_meta():
+        if sess.get("status") == "processing":
+            update_session(sess["id"], status="error", error=RESTART_ERROR)
+            recovered += 1
+    return recovered
 
 
 def delete_session(session_id: str) -> bool:

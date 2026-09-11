@@ -11,6 +11,10 @@ services:
         value: 3.10.0
       - key: MAX_UPLOAD_MB
         value: 2000
+      - key: TRANSCRIPTION_ENGINE
+        value: auto
+      - key: GROQ_API_KEY
+        sync: false
       - key: CORS_ORIGINS
         value: "*"
       - key: SUPABASE_URL

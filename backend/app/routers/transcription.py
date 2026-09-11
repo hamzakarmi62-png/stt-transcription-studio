@@ -12,7 +12,15 @@ router = APIRouter(prefix="/api")
 
 
 def _engine():
-    return groq_stt if settings.transcription_engine.strip().lower() == "groq" else transcription
+    """auto: prefer Groq (fast, free API) whenever a key exists — local Whisper
+    on a 512 MB free worker cannot finish long files. An explicit 'whisper'
+    still forces the local engine."""
+    name = settings.transcription_engine.strip().lower()
+    if name == "whisper":
+        return transcription
+    if name in ("groq", "auto"):
+        return groq_stt if settings.groq_api_key else transcription
+    return transcription
 
 
 def _run_transcription(session_id: str, language: str | None) -> None:

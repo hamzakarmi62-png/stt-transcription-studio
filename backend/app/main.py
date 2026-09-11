@@ -5,7 +5,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import BACKEND_DIR, settings
-from .db import init_db
+from .db import init_db, recover_orphan_processing
 from .routers import auth, diarization, export, sessions, transcription, uploads
 
 app = FastAPI(title="Speech-to-Text Transcription Studio", version="0.1.0")
@@ -29,6 +29,12 @@ app.include_router(export.router)
 @app.on_event("startup")
 def on_startup():
     init_db()
+    try:
+        recovered = recover_orphan_processing()
+        if recovered:
+            print(f"Recovered {recovered} orphaned processing session(s)")
+    except Exception as exc:
+        print("Startup recovery failed:", exc)
 
 
 @app.get("/api/health")

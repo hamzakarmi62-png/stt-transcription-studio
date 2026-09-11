@@ -449,8 +449,13 @@ export default function UploadScreen({ onComplete }) {
 
   const pollStatus = async (id, target) => {
     let consecutiveErrors = 0;
+    const startedAt = Date.now();
+    const POLL_TIMEOUT_MS = 30 * 60 * 1000; // 30 min ceiling for very long audio
     for (;;) {
       await sleep(2000);
+      if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+        throw new Error(uiLang === "ar" ? "استغرقت المعالجة وقتاً طويلاً جداً، توقفت الانتظار. تحقق من الجلسة لاحقاً أو أعد المحاولة." : "Processing timed out after 30 minutes.");
+      }
       try {
         const s = await api.getSession(id);
         consecutiveErrors = 0;

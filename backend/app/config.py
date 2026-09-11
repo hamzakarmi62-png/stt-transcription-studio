@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     whisper_device: str = "cpu"
     whisper_compute_type: str = "int8"
 
-    transcription_engine: str = "whisper"
+    transcription_engine: str = "auto"
     groq_api_key: str = ""
     groq_model: str = "whisper-large-v3-turbo"
 

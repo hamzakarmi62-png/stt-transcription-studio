@@ -238,6 +238,9 @@ def _sb_headers(mime: str = "application/octet-stream") -> dict:
         "apikey": settings.supabase_key,
         "Authorization": f"Bearer {settings.supabase_key}",
         "Content-Type": mime,
+        # Newer Storage API versions ignore the ?upsert=true query param and
+        # reject overwrites with KeyAlreadyExists unless this header is set.
+        "x-upsert": "true",
     }
 
 
