@@ -25,6 +25,84 @@ MAX_CHUNK_BYTES = 24 * 1024 * 1024
 BYTES_PER_SECOND = AUDIO_BITRATE / 8
 REQUEST_TIMEOUT = (30, 900)
 
+# Whisper hallucinates fluent phrases over silence (music, applause, dead air).
+# These alone prove nothing, so a segment made only of them inside a quiet
+# region is dropped; elsewhere real speech may legitimately contain them.
+_HALLUCINATION_TOKENS = {
+    "thank", "thanks", "merci", "bye", "goodbye", "au revoir", "watching",
+    "subscribe", "sous-titrage", "sous-titres", "stefan", "subtitle",
+    "amara", "org", "music", "applause", "silence", "you",
+}
+
+
+def _is_silent(audio_path: Path, start: float, end: float, threshold: float = 0.008) -> bool:
+    """True when [start, end) carries no meaningful signal energy."""
+    try:
+        import av as _av
+        import numpy as _np
+
+        container = _av.open(str(audio_path), metadata_errors="ignore")
+        stream = container.streams.audio[0]
+        resampler = _av.AudioResampler(format="s16", layout="mono", rate=16000)
+        lo, hi = int(start * 16000), int(end * 16000)
+        pos = 0
+        peak = 0.0
+        for frame in container.decode(stream):
+            frame.pts = None
+            for res in resampler.resample(frame):
+                samples = res.to_ndarray()[0].astype("float32") / 32768.0
+                nxt = pos + len(samples)
+                if nxt < lo or pos > hi:
+                    pos = nxt
+                    continue
+                a = max(0, lo - pos)
+                b = min(len(samples), hi - pos)
+                if b > a:
+                    peak = max(peak, float(_np.max(_np.abs(samples[a:b]))))
+                pos = nxt
+                if pos > hi:
+                    break
+        container.close()
+        return peak < threshold
+    except Exception:
+        return False
+
+
+def _clean_segments(raw_segments: list[dict], offset: float, duration: float, src: Path) -> list[dict]:
+    """Offset, clamp to the real duration, and drop silence hallucinations."""
+    out: list[dict] = []
+    for raw in raw_segments:
+        text = (raw.get("text") or "").strip()
+        start = float(raw.get("start", 0.0)) + offset
+        end = float(raw.get("end", 0.0)) + offset
+        if end - start <= 0:
+            continue
+        # Whisper timestamps past the end of the audio are fabricated.
+        if duration > 0:
+            if start >= duration + 0.25:
+                continue
+            end = min(end, duration)
+            start = max(start, offset)
+        words = _shift_words(raw.get("words"), offset)
+        tokens = {t.strip(".,!?…—-").lower() for t in text.split()}
+        is_fillers = bool(tokens) and tokens.issubset(_HALLUCINATION_TOKENS)
+        if is_fillers and _is_silent(src, start, end):
+            logger.info("Dropped hallucinated segment over silence: %.1f-%.1fs %r", start, end, text[:40])
+            continue
+        if not text:
+            continue
+        out.append(
+            {
+                "id": uuid.uuid4().hex[:12],
+                "start": round(start, 3),
+                "end": round(end, 3),
+                "text": text,
+                "speaker": None,
+                "words": words,
+            }
+        )
+    return out
+
 
 def _extract_audio(src: Path, dst: Path, start: float | None = None, end: float | None = None) -> float:
     """Decode src into mono 16 kHz mp3 at dst, keeping only [start, end)."""
@@ -125,20 +203,9 @@ def transcribe(audio_path: str, language: str | None = None) -> dict:
             payload = _transcribe_chunk(chunk_path, language)
             detected_language = detected_language or payload.get("language")
 
-            for raw in payload.get("segments") or []:
-                text = (raw.get("text") or "").strip()
-                if not text:
-                    continue
-                segments.append(
-                    {
-                        "id": uuid.uuid4().hex[:12],
-                        "start": round(float(raw.get("start", 0.0)) + offset, 3),
-                        "end": round(float(raw.get("end", 0.0)) + offset, 3),
-                        "text": text,
-                        "speaker": None,
-                        "words": _shift_words(raw.get("words"), offset),
-                    }
-                )
+            segments.extend(
+                _clean_segments(payload.get("segments") or [], offset, offset + (written or 0), src)
+            )
             chunk_path.unlink(missing_ok=True)
 
         return {
