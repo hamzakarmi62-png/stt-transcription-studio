@@ -4,10 +4,11 @@ import { formatTime, nextColor, uid } from "../utils.js";
 import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
+import UserMenu from "./UserMenu.jsx";
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
 
-export default function TranscriptScreen({ initialSession, onBack }) {
+export default function TranscriptScreen({ initialSession, onBack, user, onLogout }) {
   const [session, setSession] = useState(initialSession || {});
   const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -624,6 +625,7 @@ export default function TranscriptScreen({ initialSession, onBack }) {
               </button>
             </div>
             <ExportMenu sessionId={session.id} filename={session.filename} />
+            <UserMenu user={user} onLogout={onLogout} />
           </div>
         </div>
       </header>
