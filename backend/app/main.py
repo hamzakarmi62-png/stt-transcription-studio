@@ -35,6 +35,27 @@ def on_startup():
             print(f"Recovered {recovered} orphaned processing session(s)")
     except Exception as exc:
         print("Startup recovery failed:", exc)
+    _load_bucket_secrets()
+
+
+def _load_bucket_secrets() -> None:
+    """Secrets that cannot ride in the repo (GitHub push protection blocks
+    API keys) live as private objects in the app's own bucket. The dashboard
+    env var, when set, always wins."""
+    if settings.groq_api_key:
+        return
+    try:
+        from .services import storage
+
+        if not storage.enabled():
+            return
+        raw = storage.get_bytes("secrets/groq_api_key.txt")
+        value = (raw or b"").decode("utf-8", "ignore").strip()
+        if value:
+            settings.groq_api_key = value
+            print("GROQ_API_KEY loaded from bucket secret")
+    except Exception as exc:
+        print("Bucket secret load failed:", exc)
 
 
 @app.get("/api/health")
