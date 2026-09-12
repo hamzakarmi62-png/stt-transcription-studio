@@ -68,6 +68,33 @@ def _is_silent(audio_path: Path, start: float, end: float, threshold: float = 0.
         return False
 
 
+def _synthesize_words(text: str, start: float, end: float) -> list[dict]:
+    """Word timings distributed across [start, end] by word length.
+
+    whisper-large-v3-turbo does not return word timestamps (only large-v3
+    does), so without this the frontend's word-by-word highlight has nothing
+    to key on and never lights up.
+    """
+    parts = text.split()
+    if not parts or end <= start:
+        return []
+    total_chars = sum(max(len(p), 1) for p in parts)
+    span = end - start
+    words = []
+    cursor = start
+    for i, part in enumerate(parts):
+        dur = max(0.08, (max(len(part), 1) / total_chars) * span)
+        w_start = cursor
+        w_end = min(end, cursor + dur)
+        if i == len(parts) - 1:
+            w_end = end
+        words.append(
+            {"word": part, "start": round(w_start, 3), "end": round(max(w_end, w_start + 0.05), 3)}
+        )
+        cursor = w_end
+    return words
+
+
 def _clean_segments(raw_segments: list[dict], offset: float, duration: float, src: Path) -> list[dict]:
     """Offset, clamp to the real duration, and drop silence hallucinations."""
     out: list[dict] = []
@@ -84,6 +111,8 @@ def _clean_segments(raw_segments: list[dict], offset: float, duration: float, sr
             end = min(end, duration)
             start = max(start, offset)
         words = _shift_words(raw.get("words"), offset)
+        if not words:
+            words = _synthesize_words(text, start, end)
         tokens = {t.strip(".,!?…—-").lower() for t in text.split()}
         is_fillers = bool(tokens) and tokens.issubset(_HALLUCINATION_TOKENS)
         if is_fillers and _is_silent(src, start, end):

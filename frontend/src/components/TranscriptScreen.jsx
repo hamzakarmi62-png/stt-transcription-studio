@@ -101,7 +101,15 @@ export default function TranscriptScreen({ initialSession, onBack }) {
 
   useEffect(() => {
     if (!initialSession) return;
-    const segs = (initialSession.segments || []).map((s) => ({ ...s, words: s.words || [] }));
+    const segs = (initialSession.segments || []).map((s) => {
+      const seg = { ...s, words: s.words || [] };
+      // Sessions transcribed without word timestamps (e.g. Groq turbo) get
+      // synthesized timings so the yellow word highlight still tracks.
+      if (seg.words.length === 0 && seg.text && seg.end > seg.start) {
+        seg.words = generateWordsForText(seg.text, seg.start, seg.end);
+      }
+      return seg;
+    });
     let spk = initialSession.speakers || [];
     if (spk.length === 0 && segs.length > 0) {
       spk = [{ id: "s1", name: "Speaker 1", color: "#2563eb" }];
