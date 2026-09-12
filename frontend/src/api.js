@@ -188,11 +188,18 @@ export const api = {
 
   audioUrl: (id) => `${BASE}/sessions/${id}/audio`,
 
-  register: (username, email, password) =>
+  register: (username, email, password, profile = {}) =>
     request(`${BASE}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password }),
+      body: JSON.stringify({
+        username,
+        email,
+        password,
+        full_name: profile.full_name || "",
+        phone: profile.phone || "",
+        country: profile.country || "",
+      }),
     }),
 
   login: (identifier, password) =>

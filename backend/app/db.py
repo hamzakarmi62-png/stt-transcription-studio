@@ -137,6 +137,10 @@ def init_db() -> None:
                 )
                 """
             )
+            try:
+                conn.execute("ALTER TABLE users ADD COLUMN profile TEXT DEFAULT '{}'")
+            except sqlite3.OperationalError:
+                pass  # column already exists
             conn.commit()
             conn.close()
     except Exception as e:
@@ -169,11 +173,20 @@ def _save_users_catalog(users: list[dict]) -> None:
     _write_json("users_catalog.json", users)
 
 
-def create_user(user_id: str, username: str, email: str, password: str) -> dict:
+def create_user(user_id: str, username: str, email: str, password: str, profile: dict | None = None) -> dict:
     init_db()
     pwd_hash = hash_password(password)
     now = datetime.now(timezone.utc).isoformat()
-    user_dict = {"id": user_id, "username": username, "email": email, "password_hash": pwd_hash, "created_at": now}
+    user_dict = {
+        "id": user_id,
+        "username": username,
+        "email": email,
+        "password_hash": pwd_hash,
+        "full_name": (profile or {}).get("full_name", ""),
+        "phone": (profile or {}).get("phone", ""),
+        "country": (profile or {}).get("country", ""),
+        "created_at": now,
+    }
 
     # Save to the cloud catalog (survives a redeploy or an ephemeral disk)
     if _catalog_enabled():
@@ -190,8 +203,8 @@ def create_user(user_id: str, username: str, email: str, password: str) -> dict:
         conn = _local_conn()
         try:
             conn.execute(
-                "INSERT OR REPLACE INTO users (id, username, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
-                (user_id, username, email, pwd_hash, now),
+                "INSERT OR REPLACE INTO users (id, username, email, password_hash, created_at, profile) VALUES (?, ?, ?, ?, ?, ?)",
+                (user_id, username, email, pwd_hash, now, json.dumps({k: user_dict[k] for k in ("full_name", "phone", "country")}, ensure_ascii=False)),
             )
             conn.commit()
         except Exception as e:
@@ -199,7 +212,28 @@ def create_user(user_id: str, username: str, email: str, password: str) -> dict:
         finally:
             conn.close()
 
-    return {"id": user_id, "username": username, "email": email, "created_at": now}
+    return public_user(user_dict)
+
+
+def public_user(user_row: dict) -> dict:
+    """User fields safe to expose to the client."""
+    return {
+        "id": user_row.get("id"),
+        "username": user_row.get("username"),
+        "email": user_row.get("email"),
+        "full_name": user_row.get("full_name", ""),
+        "phone": user_row.get("phone", ""),
+        "country": user_row.get("country", ""),
+        "created_at": user_row.get("created_at", ""),
+    }
+
+
+def _local_profile(row: sqlite3.Row) -> dict:
+    try:
+        data = json.loads(row["profile"] or "{}")
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
 
 
 def get_user_by_username_or_email(identifier: str) -> dict | None:
@@ -217,7 +251,9 @@ def get_user_by_username_or_email(identifier: str) -> dict | None:
             row = cur.fetchone()
             conn.close()
             if row:
-                return dict(row)
+                user = dict(row)
+                user.update(_local_profile(row))
+                return user
         except Exception as e:
             conn.close()
             print("Local get_user error:", e)
@@ -232,9 +268,10 @@ def get_user_by_username_or_email(identifier: str) -> dict | None:
                 with _lock:
                     conn = _local_conn()
                     try:
+                        profile = {k: u.get(k, "") for k in ("full_name", "phone", "country")}
                         conn.execute(
-                            "INSERT OR REPLACE INTO users (id, username, email, password_hash, created_at) VALUES (?, ?, ?, ?, ?)",
-                            (u["id"], u["username"], u["email"], u["password_hash"], u["created_at"]),
+                            "INSERT OR REPLACE INTO users (id, username, email, password_hash, created_at, profile) VALUES (?, ?, ?, ?, ?, ?)",
+                            (u["id"], u["username"], u["email"], u["password_hash"], u["created_at"], json.dumps(profile, ensure_ascii=False)),
                         )
                         conn.commit()
                     except Exception:

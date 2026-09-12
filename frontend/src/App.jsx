@@ -58,13 +58,29 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="absolute top-4 left-4 z-50 flex items-center gap-3 bg-white px-4 py-2 rounded-xl shadow-md border border-gray-100 text-sm" dir="rtl">
-        <span className="font-bold text-gray-800">👤 {user.username}</span>
+      <div className="absolute top-4 left-4 z-50 flex items-center gap-3 bg-white/95 backdrop-blur px-3 py-2 rounded-2xl shadow-lg shadow-black/5 border border-slate-200 text-sm" dir="ltr">
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-black shrink-0">
+          {(user.full_name || user.username || "?")
+            .trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .map((p) => p[0])
+            .join("")
+            .toUpperCase()}
+        </div>
+        <div className="leading-tight min-w-0">
+          <p className="font-bold text-slate-900 truncate max-w-[160px]">
+            {user.full_name || user.username}
+          </p>
+          <p className="text-[11px] text-slate-400 truncate max-w-[160px]">{user.email}</p>
+        </div>
+        <div className="w-[1px] h-7 bg-slate-200"></div>
         <button
           onClick={handleLogout}
-          className="text-red-600 hover:text-red-700 font-medium text-xs bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition"
+          className="text-red-600 hover:text-white hover:bg-red-600 font-semibold text-xs px-3 py-2 rounded-xl border border-red-200 transition"
+          title="Se déconnecter"
         >
-          تسجيل الخروج
+          Déconnexion
         </button>
       </div>
       {session ? (
