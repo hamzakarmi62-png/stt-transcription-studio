@@ -5,7 +5,7 @@ import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
-import { ArrowLeft, Play, LayoutGrid, AlignLeft, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause } from "./Icons.jsx";
+import { ArrowLeft, Play, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause } from "./Icons.jsx";
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
 
@@ -48,7 +48,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [viewMode, setViewMode] = useState("stream"); // stream (default) | cards
 
   const audioRef = useRef(null);
   const saveTimerRef = useRef(null);
@@ -625,22 +624,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             >
               Save
             </button>
-            <div className="flex items-center bg-white/[0.06] p-1 rounded-xl border border-white/10">
-              <button
-                onClick={() => setViewMode("stream")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "stream" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
-                title="Texte continu fluide"
-              >
-                <AlignLeft className="w-3.5 h-3.5" /> Stream
-              </button>
-              <button
-                onClick={() => setViewMode("cards")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "cards" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
-                title="Cartes séparées"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" /> Cards
-              </button>
-            </div>
             <ExportMenu sessionId={session.id} filename={session.filename} />
             <UserMenu user={user} onLogout={onLogout} />
           </div>
@@ -902,7 +885,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     <Segment
                       key={seg.id}
                       segment={seg}
-                      variant={viewMode}
                       speaker={speakerById[seg.speaker]}
                       isActive={activeSegment?.id === seg.id}
                       activeWordKey={activeWordKey}
