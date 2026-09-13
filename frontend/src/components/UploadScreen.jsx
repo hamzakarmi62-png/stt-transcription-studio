@@ -790,41 +790,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 </div>
               ))}
 
-              {/* Favorites tile */}
-              <div className={`${glass} rounded-[26px] p-6 border col-span-2 space-y-4`}>
-                <div className="flex items-center justify-between">
-                  <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    <Star className="w-3.5 h-3.5 text-amber-400" /> {t.favoriteFiles}
-                  </h3>
-                  <button onClick={() => setActiveTab("myFiles")} className="text-[11px] text-indigo-400 font-bold hover:underline">
-                    {t.viewAll}
-                  </button>
-                </div>
-                {customWorksSessions.length === 0 ? (
-                  <p className={`text-xs ${textSub} py-8 text-center rounded-2xl border border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
-                    {t.noFavorites}
-                  </p>
-                ) : (
-                  <div className="space-y-2">
-                    {customWorksSessions.slice(0, 4).map((s) => (
-                      <div
-                        key={s.id}
-                        onClick={() => openSession(s)}
-                        className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-slate-200 hover:border-indigo-400"}`}
-                      >
-                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${isVideo(s) ? "bg-fuchsia-500/15 text-fuchsia-400" : "bg-indigo-500/15 text-indigo-400"}`}>
-                          {isVideo(s) ? <FileVideo className="w-4 h-4" /> : <FileAudio className="w-4 h-4" />}
-                        </div>
-                        <span className="font-semibold text-xs truncate flex-1">{customFileNames[s.id] || s.filename}</span>
-                        <span className="text-[10px] text-indigo-400 font-black inline-flex items-center gap-0.5">{t.open} <ArrowUpRight className="w-3 h-3" /></span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
               {/* Folders tile */}
-              <div className={`${glass} rounded-[26px] p-6 border col-span-2 space-y-4`}>
+              <div className={`${glass} rounded-[26px] p-6 border col-span-2 lg:col-span-4 space-y-4`}>
                 <div className="flex items-center justify-between">
                   <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
                     <FolderOpen className="w-3.5 h-3.5 text-indigo-400" /> {t.availableFolders}
