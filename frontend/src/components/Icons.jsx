@@ -359,6 +359,20 @@ export const Home = mk(
   </>
 );
 
+export const Copy = mk(
+  <>
+    <rect width="14" height="14" x="8" y="8" rx="2" />
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+  </>
+);
+
+export const CornerDownRight = mk(
+  <>
+    <path d="m15 10 5 5-5 5" />
+    <path d="M4 4v7a4 4 0 0 0 4 4h12" />
+  </>
+);
+
 export const Box = mk(
   <>
     <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
