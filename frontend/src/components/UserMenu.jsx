@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Phone, Globe } from "./Icons.jsx";
 
 export default function UserMenu({ user, onLogout, dark = false }) {
   const [open, setOpen] = useState(false);
@@ -60,8 +61,8 @@ export default function UserMenu({ user, onLogout, dark = false }) {
             </div>
             {(user.phone || user.country) && (
               <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
-                {user.phone && <span>📞 {user.phone}</span>}
-                {user.country && <span>🌍 {user.country}</span>}
+                {user.phone && <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" /> {user.phone}</span>}
+                {user.country && <span className="inline-flex items-center gap-1"><Globe className="w-3 h-3" /> {user.country}</span>}
               </div>
             )}
           </div>

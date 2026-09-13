@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../api.js";
+import { Mic, Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff } from "./Icons.jsx";
 
 const PAYS = [
   "Algérie", "Maroc", "Tunisie", "Mauritanie", "France", "Belgique",
@@ -9,7 +10,7 @@ const PAYS = [
 function Logo({ size = "w-14 h-14", text = "text-2xl" }) {
   return (
     <div className={`${size} rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-indigo-500/40`}>
-      <span className={text}>🎙️</span>
+      <Mic className="w-6 h-6 text-white" />
     </div>
   );
 }
@@ -113,10 +114,10 @@ export default function LoginScreen({ onLogin }) {
             </h2>
             <ul className="space-y-4">
               {[
-                ["🎯", "Transcription automatique fidèle, horodatage précis"],
-                ["👥", "Détection des locuteurs et suivi de qui parle quand"],
-                ["✍️", "Éditeur temps réel : corrigez en écoutant, mot par mot"],
-                ["📄", "Export propre en TXT, SRT, DOCX et PDF"],
+                [<Target className="w-4 h-4 text-indigo-300" key="t" />, "Transcription automatique fidèle, horodatage précis"],
+                [<Users className="w-4 h-4 text-violet-300" key="u" />, "Détection des locuteurs et suivi de qui parle quand"],
+                [<PenLine className="w-4 h-4 text-fuchsia-300" key="p" />, "Éditeur temps réel : corrigez en écoutant, mot par mot"],
+                [<FileText className="w-4 h-4 text-sky-300" key="f" />, "Export propre en TXT, SRT, DOCX et PDF"],
               ].map(([icon, text]) => (
                 <li key={text} className="flex items-center gap-3 text-slate-300 text-sm">
                   <span className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
@@ -128,8 +129,8 @@ export default function LoginScreen({ onLogin }) {
             </ul>
           </div>
 
-          <p className="text-slate-500 text-xs">
-            🔒 Vos enregistrements restent privés — stockage chiffré et accès authentifié.
+          <p className="text-slate-500 text-xs flex items-center gap-1.5">
+            <Lock className="w-3.5 h-3.5 shrink-0" /><span>Vos enregistrements restent privés — stockage chiffré et accès authentifié.</span>
           </p>
         </div>
       </div>
@@ -181,7 +182,7 @@ export default function LoginScreen({ onLogin }) {
 
             {error && (
               <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl font-medium flex items-start gap-2">
-                <span>⚠️</span>
+                <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
@@ -272,7 +273,7 @@ export default function LoginScreen({ onLogin }) {
                     tabIndex={-1}
                     title={showPassword ? "Masquer" : "Afficher"}
                   >
-                    {showPassword ? "🙈" : "👁️"}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
                 {isRegister && password.length > 0 && (

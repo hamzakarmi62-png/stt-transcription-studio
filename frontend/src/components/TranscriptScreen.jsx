@@ -5,6 +5,7 @@ import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
+import { ArrowLeft, Play, Zap, LayoutGrid, AlignLeft, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, MoreHorizontal, RotateCcw, RotateCw, Pause } from "./Icons.jsx";
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
 
@@ -571,9 +572,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
           <button
             onClick={onBack}
-            className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition"
+            className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition inline-flex items-center gap-1.5"
           >
-            ← New
+            <ArrowLeft className="w-4 h-4" /> New
           </button>
           <div className="min-w-0">
             <h1 className="font-semibold truncate text-sm sm:text-base">{session.filename}</h1>
@@ -585,10 +586,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             {playerMode === "hidden" && (
               <button
                 onClick={() => setPlayerMode("docked")}
-                className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition"
+                className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition inline-flex items-center gap-1.5"
                 title="Show player"
               >
-                ▶ Show player
+                <Play className="w-3.5 h-3.5" filled /> Show player
               </button>
             )}
             <span className={`text-xs ${saveState === "error" ? "text-red-500" : "text-slate-400"}`}>
@@ -601,7 +602,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               Save
             </button>
             <div className="hidden md:flex items-center gap-1 bg-white/[0.04] border border-white/10 px-2.5 py-1.5 rounded-xl text-xs" title="تحكم في توقيت وسرعة التظليل الزمني">
-              <span className="text-slate-600 font-medium">⚡ Sync:</span>
+              <span className="text-slate-600 font-medium inline-flex items-center gap-1"><Zap className="w-3 h-3" /> Sync:</span>
               <select
                 value={highlightOffset}
                 onChange={(e) => setHighlightOffset(Number(e.target.value))}
@@ -620,14 +621,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "cards" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
                 title="مربعات منفصلة"
               >
-                🗂️ Cards
+                <LayoutGrid className="w-3.5 h-3.5" /> Cards
               </button>
               <button
                 onClick={() => setViewMode("stream")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "stream" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
                 title="نص متسلسل ومرن"
               >
-                📜 Stream
+                <AlignLeft className="w-3.5 h-3.5" /> Stream
               </button>
             </div>
             <ExportMenu sessionId={session.id} filename={session.filename} />
@@ -647,7 +648,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
                 title="رجوع 15 ثانية"
               >
-                <span className="text-base">↺</span><span className="text-[10px]">15</span>
+                <RotateCcw className="w-4 h-4" /><span className="text-[10px]">15</span>
               </button>
 
               {/* 2. Play / Pause */}
@@ -656,7 +657,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-white text-lg transition-colors"
                 title={playing ? "إيقاف مؤقت" : "تشغيل"}
               >
-                {playing ? "⏸" : "▶"}
+                {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" filled />}
               </button>
 
               {/* 3. Forward 30s */}
@@ -665,7 +666,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
                 title="تقديم 30 ثانية"
               >
-                <span className="text-[10px]">30</span><span className="text-base">↻</span>
+                <span className="text-[10px]">30</span><RotateCw className="w-4 h-4" />
               </button>
 
               <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
@@ -709,7 +710,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
                 title="إضافة مقطع جديد"
               >
-                💬+
+                <MessageSquarePlus className="w-4 h-4" />
               </button>
 
               {/* 6. Split active segment */}
@@ -723,7 +724,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
                 title="قص / تقسيم المقطع (Scissors)"
               >
-                ✂️
+                <Scissors className="w-4 h-4" />
               </button>
 
               {/* 7. Highlight tool */}
@@ -734,7 +735,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 border-b-2 border-fuchsia-400 transition-colors"
                 title="أداة التحديد والتعديل والتظليل"
               >
-                🖍️
+                <Highlighter className="w-4 h-4" />
               </button>
 
               <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
@@ -746,7 +747,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
                 title="تراجع (Undo)"
               >
-                ↩️
+                <CornerUpLeft className="w-4 h-4" />
               </button>
 
               {/* 9. Redo */}
@@ -756,7 +757,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
                 title="إعادة (Redo)"
               >
-                ↪️
+                <CornerUpRight className="w-4 h-4" />
               </button>
             </div>
 
@@ -779,7 +780,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
                 title="بحث في النص"
               >
-                🔍
+                <Search className="w-4 h-4" />
               </button>
 
               {/* 13. More options */}
@@ -789,7 +790,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   className="p-2 rounded-xl hover:bg-white/10 text-slate-300 font-bold transition-colors"
                   title="المزيد"
                 >
-                  ⋯
+                  <MoreHorizontal className="w-4 h-4" />
                 </button>
                 {moreMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-2 z-50 space-y-2">
@@ -817,7 +818,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           {/* Search bar expandable */}
           {showSearch && (
             <div className="mt-2 bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 flex items-center gap-2">
-              <span className="text-sm">🔍</span>
+              <Search className="w-4 h-4 text-slate-400" />
               <input
                 type="text"
                 placeholder="ابحث في النص..."
@@ -828,7 +829,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               />
               {searchQuery && (
                 <button onClick={() => setSearchQuery("")} className="text-xs text-slate-400 hover:text-slate-600">
-                  ✕
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
@@ -903,7 +904,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             ) : viewMode === "stream" ? (
               <div className="space-y-6 pb-10 max-w-4xl mx-auto">
                 <div className="pb-2 mb-4 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-200 text-sm">📜 Continuous Stream Reading View</h3>
+                  <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2"><AlignLeft className="w-4 h-4 text-slate-400" /> Continuous Stream Reading View</h3>
                   <span className="text-xs text-slate-400">{segments.length} segments · انقر على أي كلمة للتصحيح المباشر</span>
                 </div>
                 <div className="text-[17px] leading-relaxed space-y-6" dir="auto">

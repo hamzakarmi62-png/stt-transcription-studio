@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import { sleep, uid } from "../utils.js";
 import UserMenu from "./UserMenu.jsx";
+import { Mic, Zap, Folder, FolderOpen, Star, FileVideo, FileAudio, FileText, Headphones, X, Check, AlertTriangle, Loader, Inbox, Pencil, Trash, Sun, Moon, Settings, ArrowUpRight, Lightbulb, Home, Box } from "./Icons.jsx";
 
 const ACCEPTED = ".mp3,.wav,.m4a,.ogg,.mp4,.webm,.mkv,.avi";
 
@@ -66,19 +67,19 @@ const TRANSLATIONS = {
     recentFiles: "أحدث الملفات المضافة",
     welcomeBack: "مرحباً بك في لوحة تحكم استوديو التفريغ الصوتي",
     welcomeDesc: "استخدم الذكاء الاصطناعي لتحويل وتسجيل وتحليل الملفات الصوتية والمرئية وتنظيمها في مجلدات مخصصة بكل احترافية.",
-    startNewTranscribe: "🎙️ بدء تحويل جديد",
-    browseMyFiles: "📁 استعراض ملفاتي",
+    startNewTranscribe: "بدء تحويل جديد",
+    browseMyFiles: "استعراض ملفاتي",
     favoriteFiles: "الملفات المفضلة والأعمال الخاصة",
     viewAll: "عرض الكل ←",
     noFavorites: "لا توجد ملفات مفضلة محفوظة حالياً",
     availableFolders: "المجلدات المتاحة",
     open: "فتح",
     noFilesFolder: "لا توجد ملفات في هذا المجلد حالياً.",
-    noFilesFolderDesc: "انقر على أيقونة النجمة (⭐) في الأرشيف لحفظ الملفات هنا ونقلها بين المجلدات.",
-    folderLabel: "📂 المجلد:",
+    noFilesFolderDesc: "انقر على أيقونة النجمة (★) في الأرشيف لحفظ الملفات هنا ونقلها بين المجلدات.",
+    folderLabel: "المجلد:",
     systemState: "حالة النظام",
     active: "نشط",
-    largeFileTip: "💡 ملاحظة: معالجة الملفات الكبيرة قد تستغرق بضع دقائق نظراً للتحليل الصوتي العميق محلياً. يرجى الانتظار وعدم إغلاق الصفحة.",
+    largeFileTip: "ملاحظة: معالجة الملفات الكبيرة قد تستغرق بضع دقائق نظراً للتحليل الصوتي العميق محلياً. يرجى الانتظار وعدم إغلاق الصفحة.",
   },
   en: {
     title: "Transcription Studio Pro",
@@ -140,19 +141,19 @@ const TRANSLATIONS = {
     recentFiles: "Recent Files",
     welcomeBack: "Welcome to your Professional Transcription Control Panel",
     welcomeDesc: "Use artificial intelligence to transcribe, record, and analyze audio and video files and organize them into custom folders.",
-    startNewTranscribe: "🎙️ Start New Transcription",
-    browseMyFiles: "📁 Browse My Files",
+    startNewTranscribe: "Start New Transcription",
+    browseMyFiles: "Browse My Files",
     favoriteFiles: "Favorite Files & Custom Works",
     viewAll: "View All →",
     noFavorites: "No favorite files saved yet",
     availableFolders: "Available Folders",
     open: "Open",
     noFilesFolder: "No files in this folder yet.",
-    noFilesFolderDesc: "Click the star icon (⭐) in the archive to save files here and organize them.",
-    folderLabel: "📂 Folder:",
+    noFilesFolderDesc: "Click the star icon (★) in the archive to save files here and organize them.",
+    folderLabel: "Folder:",
     systemState: "System State",
     active: "Active",
-    largeFileTip: "💡 Tip: Large files may take a few minutes to process locally due to deep AI speech analysis. Please keep the page open.",
+    largeFileTip: "Tip: Large files may take a few minutes to process locally due to deep AI speech analysis. Please keep the page open.",
   },
   fr: {
     title: "Studio de Transcription Pro",
@@ -214,19 +215,19 @@ const TRANSLATIONS = {
     recentFiles: "Fichiers Récents",
     welcomeBack: "Bienvenue dans votre Studio de Transcription",
     welcomeDesc: "Utilisez l'intelligence artificielle pour transcrire, enregistrer et analyser vos fichiers audio et vidéo avec précision.",
-    startNewTranscribe: "🎙️ Démarrer une transcription",
-    browseMyFiles: "📁 Parcourir mes fichiers",
+    startNewTranscribe: "Démarrer une transcription",
+    browseMyFiles: "Parcourir mes fichiers",
     favoriteFiles: "Fichiers Favoris & Travaux",
     viewAll: "Voir tout →",
     noFavorites: "Aucun fichier favori pour le moment",
     availableFolders: "Dossiers Disponibles",
     open: "Ouvrir",
     noFilesFolder: "Aucun fichier dans ce dossier pour le moment.",
-    noFilesFolderDesc: "Cliquez sur l'icône étoile (⭐) dans l'archive pour enregistrer des fichiers ici.",
-    folderLabel: "📂 Dossier :",
+    noFilesFolderDesc: "Cliquez sur l'icône étoile (★) dans l'archive pour enregistrer des fichiers ici.",
+    folderLabel: "Dossier :",
     systemState: "État du système",
     active: "Actif",
-    largeFileTip: "💡 Conseil : Le traitement des gros fichiers peut prendre quelques minutes en raison de l'analyse IA locale en profondeur. Veuillez patienter.",
+    largeFileTip: "Conseil : Le traitement des gros fichiers peut prendre quelques minutes en raison de l'analyse IA locale en profondeur. Veuillez patienter.",
   },
 };
 
@@ -486,10 +487,10 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       if (isLarge) {
         setMessage(
           uiLang === "ar"
-            ? `📦 جاري رفع الملف (${fileSizeMB} MB) بالرفع المجزّأ... يرجى الانتظار`
+            ? `جاري رفع الملف (${fileSizeMB} MB) بالرفع المجزّأ... يرجى الانتظار`
             : uiLang === "fr"
-            ? `📦 Envoi du fichier (${fileSizeMB} MB) en morceaux...`
-            : `📦 Uploading file (${fileSizeMB} MB) in chunks...`
+            ? `Envoi du fichier (${fileSizeMB} MB) en morceaux...`
+            : `Uploading file (${fileSizeMB} MB) in chunks...`
         );
       }
       const session = await api.upload(selectedBlob, setProgress);
@@ -596,29 +597,29 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     {
       id: "home",
       label: t.navHome,
-      icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
+      Icon: Home,
     },
     {
       id: "transcribe",
       label: t.navTranscribe,
-      icon: "M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z",
+      Icon: Mic,
     },
     {
       id: "myFiles",
       label: t.navMyFiles,
       badge: customWorksSessions.length,
-      icon: "M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4",
+      Icon: Star,
     },
     {
       id: "archive",
       label: t.navArchive,
       badge: sessions.length,
-      icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
+      Icon: Box,
     },
     {
       id: "settings",
       label: t.navSettings,
-      icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
+      Icon: Settings,
     },
   ];
 
@@ -657,8 +658,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
             isDark ? "bg-slate-950/60 border-white/[0.08] shadow-xl shadow-black/20" : "bg-white/80 border-slate-200 shadow-lg shadow-slate-900/5"
           }`}>
             <div className="flex items-center gap-2.5 shrink-0">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-lg shadow-lg shadow-indigo-950/40">
-                🎙️
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-950/40">
+                <Mic className="w-5 h-5" />
               </div>
               <div className="hidden sm:block leading-none">
                 <p className="font-black tracking-tight text-[15px]">Zendocs</p>
@@ -675,11 +676,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     onClick={() => setActiveTab(item.id)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all ${navPill(active)}`}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {item.icon.split(" M").map((d, i) => (
-                        <path key={i} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d={i === 0 ? d : "M" + d} />
-                      ))}
-                    </svg>
+                    <item.Icon className="w-4 h-4" />
                     <span className="hidden xl:block whitespace-nowrap">{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${active ? "bg-white/25" : isDark ? "bg-white/10" : "bg-slate-200"}`}>
@@ -706,7 +703,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 className={`w-9 h-9 rounded-2xl border flex items-center justify-center text-sm transition ${inputBg} ${hoverGlass}`}
                 title={isDark ? t.lightMode : t.darkMode}
               >
-                {isDark ? "☀️" : "🌙"}
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
               <UserMenu user={user} onLogout={onLogout} />
             </div>
@@ -754,15 +751,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <div className="relative flex gap-3 flex-wrap">
                   <button
                     onClick={() => setActiveTab("transcribe")}
-                    className="px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-black text-sm hover:bg-indigo-50 shadow-xl transition-all hover:-translate-y-0.5"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-black text-sm hover:bg-indigo-50 shadow-xl transition-all hover:-translate-y-0.5"
                   >
-                    ⚡ {t.startNewTranscribe}
+                    <Zap className="w-4 h-4" /> {t.startNewTranscribe}
                   </button>
                   <button
                     onClick={() => setActiveTab("myFiles")}
-                    className="px-6 py-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur text-white font-bold text-sm hover:bg-white/20 transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur text-white font-bold text-sm hover:bg-white/20 transition-all"
                   >
-                    📁 {t.browseMyFiles}
+                    <Folder className="w-4 h-4" /> {t.browseMyFiles}
                   </button>
                 </div>
               </div>
@@ -777,7 +774,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <div key={st.label} className={`${glass} rounded-[26px] p-5 border relative overflow-hidden group hover:-translate-y-1 transition-all duration-300`}>
                   <div className={`absolute -top-10 -end-10 w-28 h-28 rounded-full bg-gradient-to-br ${st.grad} opacity-[0.12] blur-2xl group-hover:opacity-25 transition-opacity`}></div>
                   <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${st.grad} text-white flex items-center justify-center text-xs font-black shadow-lg`}>
-                    {st.value === null ? "⚡" : String(st.value).slice(0, 2)}
+                    {st.value === null ? <Zap className="w-4 h-4" /> : String(st.value).slice(0, 2)}
                   </div>
                   <p className={`text-[10px] font-bold ${textSub} mt-4 uppercase tracking-widest`}>{st.label}</p>
                   <h3 className="text-2xl font-black mt-1">
@@ -797,7 +794,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               <div className={`${glass} rounded-[26px] p-6 border col-span-2 space-y-4`}>
                 <div className="flex items-center justify-between">
                   <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    <span className="text-amber-400">★</span> {t.favoriteFiles}
+                    <Star className="w-3.5 h-3.5 text-amber-400" /> {t.favoriteFiles}
                   </h3>
                   <button onClick={() => setActiveTab("myFiles")} className="text-[11px] text-indigo-400 font-bold hover:underline">
                     {t.viewAll}
@@ -816,10 +813,10 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-slate-200 hover:border-indigo-400"}`}
                       >
                         <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${isVideo(s) ? "bg-fuchsia-500/15 text-fuchsia-400" : "bg-indigo-500/15 text-indigo-400"}`}>
-                          {isVideo(s) ? "🎬" : "🎵"}
+                          {isVideo(s) ? <FileVideo className="w-4 h-4" /> : <FileAudio className="w-4 h-4" />}
                         </div>
                         <span className="font-semibold text-xs truncate flex-1">{customFileNames[s.id] || s.filename}</span>
-                        <span className="text-[10px] text-indigo-400 font-black">{t.open} ↗</span>
+                        <span className="text-[10px] text-indigo-400 font-black inline-flex items-center gap-0.5">{t.open} <ArrowUpRight className="w-3 h-3" /></span>
                       </div>
                     ))}
                   </div>
@@ -830,7 +827,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               <div className={`${glass} rounded-[26px] p-6 border col-span-2 space-y-4`}>
                 <div className="flex items-center justify-between">
                   <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    <span className="text-indigo-400">▣</span> {t.availableFolders}
+                    <FolderOpen className="w-3.5 h-3.5 text-indigo-400" /> {t.availableFolders}
                   </h3>
                   <button onClick={handleCreateFolder} className="text-[11px] text-indigo-400 font-bold hover:underline">
                     {t.createNewFolder}
@@ -848,7 +845,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         }}
                         className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-slate-200 hover:border-indigo-400"}`}
                       >
-                        <span className="font-semibold text-xs truncate">📂 {f.name}</span>
+                        <span className="font-semibold text-xs truncate flex items-center gap-1.5 min-w-0"><FolderOpen className="w-3.5 h-3.5 text-indigo-400 shrink-0" /><span className="truncate">{f.name}</span></span>
                         <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isDark ? "bg-white/10" : "bg-slate-200/80"}`}>{count}</span>
                       </div>
                     );
@@ -902,14 +899,14 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                       }
                     }}
                   />
-                  <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center text-3xl mb-4">
-                    🎧
+                  <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4">
+                    <Headphones className="w-7 h-7" />
                   </div>
                   <p className="font-bold text-sm">{t.uploadTitle}</p>
                   <p className={`text-xs ${textSub} mt-1.5`}>{t.uploadDesc}</p>
                   {file && (
                     <div className="mt-5 inline-flex items-center gap-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 px-4 py-2.5 rounded-2xl text-sm font-bold">
-                      <span>📄 {file.name}</span>
+                      <span className="flex items-center gap-1.5 min-w-0"><FileText className="w-3.5 h-3.5 shrink-0" /><span className="truncate max-w-[260px]">{file.name}</span></span>
                       <button
                         className="text-slate-400 hover:text-red-400 font-black"
                         onClick={(e) => {
@@ -917,7 +914,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                           setFile(null);
                         }}
                       >
-                        ✕
+                        <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
@@ -1050,7 +1047,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                               : "bg-slate-200 text-slate-400"
                           }`}
                         >
-                          {done ? "✓" : i + 1}
+                          {done ? <Check className="w-3.5 h-3.5" /> : i + 1}
                         </span>
                         <span className={`text-xs font-bold ${active ? "text-indigo-400" : done ? "text-emerald-400" : textSub}`}>
                           {step.label}
@@ -1077,14 +1074,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   {(phase === "transcribing" || phase === "diarizing") && (
                     <div className="space-y-2 pt-2">
                       <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500/30 via-fuchsia-500 to-indigo-500/30 animate-pulse" />
-                      <p className="text-[11px] text-amber-400 font-medium leading-relaxed">{t.largeFileTip}</p>
+                      <p className="text-[11px] text-amber-400 font-medium leading-relaxed flex items-start gap-1.5"><Lightbulb className="w-3.5 h-3.5 shrink-0 mt-0.5" /><span>{t.largeFileTip}</span></p>
                     </div>
                   )}
                 </div>
 
                 {phase === "error" && (
-                  <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-2xl p-3.5 font-semibold">
-                    ⚠️ {error}
+                  <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-2xl p-3.5 font-semibold flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{error}</span>
                   </div>
                 )}
 
@@ -1093,7 +1091,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   disabled={!hasAudio || busy}
                   className="w-full py-4 rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white font-black text-sm hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-indigo-950/50 transition-all hover:-translate-y-0.5"
                 >
-                  {busy ? "⏳ " + t.processing : "⚡ " + t.startTranscribe}
+                  <span className="inline-flex items-center justify-center gap-2">{busy ? <Loader className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}{busy ? t.processing : t.startTranscribe}</span>
                 </button>
               </div>
             </div>
@@ -1134,7 +1132,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
               {filteredSessions.length === 0 ? (
                 <div className={`text-center py-20 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"} ${textSub}`}>
-                  <p className="text-4xl mb-3">📭</p>
+                  <Inbox className="w-9 h-9 mx-auto mb-3 opacity-40" />
                   <p className="font-bold text-sm">Aucune session trouvée</p>
                 </div>
               ) : (
@@ -1154,13 +1152,13 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         }`}
                       >
                         <div
-                          className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg shrink-0 ${
+                          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
                             isVideo(s)
                               ? "bg-gradient-to-br from-fuchsia-500/20 to-pink-500/20 border border-fuchsia-500/20"
                               : "bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20"
                           }`}
                         >
-                          {isVideo(s) ? "🎬" : "🎵"}
+                          {isVideo(s) ? <FileVideo className="w-5 h-5 text-fuchsia-400" /> : <FileAudio className="w-5 h-5 text-indigo-400" />}
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -1186,21 +1184,21 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             }`}
                             title={isCustom ? t.removeFromCustom : t.addToCustom}
                           >
-                            {isCustom ? "★" : "☆"}
+                            {isCustom ? <Star className="w-4 h-4" filled /> : <Star className="w-4 h-4" />}
                           </button>
                           <button
                             onClick={(e) => handleRename(e, s.id)}
                             className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
                             title={t.renameFile}
                           >
-                            ✏️
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => deleteSession(e, s.id)}
                             className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
                             title={t.delete}
                           >
-                            🗑
+                            <Trash className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -1240,9 +1238,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     <button
                       key={f.id}
                       onClick={() => setSelectedFolderFilter(f.id)}
-                      className={`px-4 py-2 rounded-full text-xs font-bold transition ${filePill(selectedFolderFilter === f.id)}`}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition ${filePill(selectedFolderFilter === f.id)}`}
                     >
-                      📂 {f.name} ({count})
+                      <FolderOpen className="w-3.5 h-3.5 opacity-70" /> {f.name} ({count})
                     </button>
                   );
                 })}
@@ -1250,7 +1248,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
               {folderFilteredSessions.length === 0 ? (
                 <div className={`text-center py-20 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
-                  <div className="text-4xl mb-3">🗂️</div>
+                  <Inbox className="w-9 h-9 mx-auto mb-3 opacity-40" />
                   <p className="font-bold text-sm">{t.noFilesFolder}</p>
                   <p className={`text-xs mt-1.5 ${textSub}`}>{t.noFilesFolderDesc}</p>
                 </div>
@@ -1269,8 +1267,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             : "bg-white/70 border-slate-200 hover:border-indigo-400 hover:shadow-md"
                         }`}
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/25 flex items-center justify-center text-lg shrink-0 text-amber-400">
-                          ★
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/25 flex items-center justify-center shrink-0 text-amber-400">
+                          <Star className="w-5 h-5" filled />
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-bold text-sm truncate group-hover:text-indigo-400 transition-colors">{displayName}</h3>
@@ -1296,14 +1294,14 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
                             title={t.renameFile}
                           >
-                            ✏️
+                            <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => deleteSession(e, s.id)}
                             className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
                             title={t.delete}
                           >
-                            🗑
+                            <Trash className="w-3.5 h-3.5" />
                           </button>
                         </div>
                       </div>
@@ -1319,7 +1317,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
             <div className="space-y-5 max-w-2xl">
               <div className={`${glass} rounded-[30px] p-6 sm:p-8 border space-y-1`}>
                 <div className={`flex items-center gap-3 pb-5 border-b ${hairline}`}>
-                  <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center">⚙️</span>
+                  <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400"><Settings className="w-5 h-5" /></span>
                   <div>
                     <h2 className="text-lg font-black">{t.settingsTitle}</h2>
                     <p className={`text-xs ${textSub}`}>Préférences de l'espace de travail</p>
@@ -1349,15 +1347,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-white/[0.05]" : "bg-slate-200/70"}`}>
                     <button
                       onClick={() => setTheme("dark")}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition ${theme === "dark" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"}`}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${theme === "dark" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"}`}
                     >
-                      🌙 {t.darkMode}
+                      <Moon className="w-3.5 h-3.5" /> {t.darkMode}
                     </button>
                     <button
                       onClick={() => setTheme("light")}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition ${theme === "light" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"}`}
+                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${theme === "light" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"}`}
                     >
-                      ☀️ {t.lightMode}
+                      <Sun className="w-3.5 h-3.5" /> {t.lightMode}
                     </button>
                   </div>
                 </div>

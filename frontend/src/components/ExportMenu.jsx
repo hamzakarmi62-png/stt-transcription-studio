@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { api } from "../api.js";
 import { downloadBlob } from "../utils.js";
+import { Download } from "./Icons.jsx";
 
 const FORMATS = [
   { key: "txt", label: "Text (.txt)" },
@@ -42,9 +43,9 @@ export default function ExportMenu({ sessionId, filename }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="px-4 py-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-sm font-bold hover:bg-emerald-500 hover:text-white transition"
+        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-sm font-bold hover:bg-emerald-500 hover:text-white transition"
       >
-        ⬇ Export
+        <Download className="w-4 h-4" /> Export
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 w-64 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 p-3 z-20">
