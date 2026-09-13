@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
-import { formatTime, nextColor, uid } from "../utils.js";
+import { nextColor, uid } from "../utils.js";
 import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
-import { ArrowLeft, Play, LayoutGrid, AlignLeft, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause, Pencil } from "./Icons.jsx";
+import { ArrowLeft, Play, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause, from, jsx } from "./Icons.jsx";
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
 
@@ -35,7 +35,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [renamingId, setRenamingId] = useState(null);
   const [renameValue, setRenameValue] = useState("");
   const [playerMode, setPlayerMode] = useState("docked");
-  const [viewMode, setViewMode] = useState("stream"); // stream | cards
   const [highlightOffset, setHighlightOffset] = useState(() => {
     try {
       const v = parseFloat(localStorage.getItem("zendocs:syncOffset"));
@@ -228,28 +227,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
   const activeSegment = activeIdx >= 0 ? segments[activeIdx] : null;
 
-  const groupedTurns = useMemo(() => {
-    const turns = [];
-    let currentTurn = null;
-    filteredSegments.forEach((seg, i) => {
-      const spk = seg.speaker;
-      if (!currentTurn || currentTurn.speaker !== spk) {
-        if (currentTurn) turns.push(currentTurn);
-        currentTurn = {
-          id: `turn-${seg.id}`,
-          speaker: spk,
-          start: seg.start,
-          end: seg.end,
-          segments: [{ seg, index: i }],
-        };
-      } else {
-        currentTurn.segments.push({ seg, index: i });
-        currentTurn.end = seg.end;
-      }
-    });
-    if (currentTurn) turns.push(currentTurn);
-    return turns;
-  }, [filteredSegments]);
 
   useEffect(() => {
     if (!playing || !activeSegment) return;
@@ -533,24 +510,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       return { ...prev, segments: next };
     });
 
-  const mergeWithPrev = (id) =>
-    mutate((prev) => {
-      const idx = prev.segments.findIndex((s) => s.id === id);
-      if (idx <= 0) return prev;
-      const cur = prev.segments[idx];
-      const prv = prev.segments[idx - 1];
-      const merged = {
-        ...prv,
-        text: `${prv.text} ${cur.text}`.trim(),
-        end: cur.end,
-        words: [...(prv.words || []), ...(cur.words || [])],
-      };
-      const next = [...prev.segments];
-      next[idx - 1] = merged;
-      next.splice(idx, 1);
-      return { ...prev, segments: next };
-    });
-
   const reassign = (id, speakerId) =>
     mutate((prev) => ({
       ...prev,
@@ -665,22 +624,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             >
               Save
             </button>
-            <div className="flex items-center bg-white/[0.06] p-1 rounded-xl border border-white/10">
-              <button
-                onClick={() => setViewMode("cards")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "cards" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
-                title="Cartes séparées"
-              >
-                <LayoutGrid className="w-3.5 h-3.5" /> Cards
-              </button>
-              <button
-                onClick={() => setViewMode("stream")}
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "stream" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
-                title="Texte continu fluide"
-              >
-                <AlignLeft className="w-3.5 h-3.5" /> Stream
-              </button>
-            </div>
             <ExportMenu sessionId={session.id} filename={session.filename} />
             <UserMenu user={user} onLogout={onLogout} />
           </div>
@@ -934,106 +877,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <div className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-10 text-center text-slate-400">
                 No transcript available for this session yet.
               </div>
-            ) : viewMode === "stream" ? (
-              <div className="space-y-6 pb-10 max-w-4xl mx-auto">
-                <div className="pb-2 mb-4 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2"><AlignLeft className="w-4 h-4 text-slate-400" /> Continuous Stream Reading View</h3>
-                  <span className="text-xs text-slate-400">{segments.length} segments · cliquez sur un mot pour le corriger en direct</span>
-                </div>
-                <div className="text-[17px] leading-relaxed space-y-6" dir="auto">
-                  {groupedTurns.map((turn) => {
-                    const speaker = speakerById[turn.speaker];
-                    const startColor = speaker?.color || "#94a3b8";
-                    return (
-                      <div key={turn.id} className="space-y-2">
-                        <div className="inline-flex items-center gap-2.5 mt-4 mb-1">
-                          <span
-                            className="font-bold text-[15px] border-b-2 border-dotted pb-0.5"
-                            style={{ color: startColor, borderColor: startColor }}
-                          >
-                            {speaker?.name || "Unassigned"}
-                          </span>
-                          <span className="h-4 w-px bg-white/10"></span>
-                          <button
-                            onClick={() => seekTo(turn.start)}
-                            className="inline-flex items-center gap-1.5 text-slate-300 hover:text-indigo-400 transition"
-                            title="Aller au début du passage"
-                          >
-                            <Play className="w-3.5 h-3.5" filled />
-                            <span className="text-[13px] font-bold tabular-nums">
-                              {formatTime(turn.start)}
-                            </span>
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {turn.segments.map(({ seg }) => {
-                            const isEditing = editingId === seg.id;
-                            return (
-                              <div key={seg.id} className="relative group py-1">
-                                {isEditing ? (
-                                  <textarea
-                                    value={seg.text}
-                                    onChange={(e) => updateSegmentText(seg.id, e.target.value)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter") {
-                                        e.preventDefault();
-                                        const caret = e.target.selectionStart;
-                                        splitSegment(seg.id, caret);
-                                      } else if (e.key === "Backspace" && e.target.selectionStart === 0) {
-                                        e.preventDefault();
-                                        mergeWithPrev(seg.id);
-                                      }
-                                    }}
-                                    onBlur={() => setEditingId(null)}
-                                    rows={Math.max(1, Math.ceil(seg.text.length / 85))}
-                                    className="w-full bg-transparent border-0 p-0 text-[17px] leading-relaxed resize-none focus:outline-none focus:ring-0 text-slate-100"
-                                    dir="auto"
-                                    autoFocus
-                                  />
-                                ) : (
-                                  <p
-                                    dir="auto"
-                                    className="text-[17px] leading-relaxed select-text cursor-text hover:bg-white/[0.05] rounded px-1 transition-colors"
-                                    onClick={() => setEditingId(seg.id)}
-                                    title="Cliquez pour corriger en direct"
-                                  >
-                                    {seg.words && seg.words.length > 0 ? (
-                                      seg.words.map((w, i) => {
-                                        const wKey = `${seg.id}-w${i}`;
-                                        const isHighlighted = activeWordKey === wKey;
-                                        return (
-                                          <span
-                                            key={i}
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              seekTo(w.start);
-                                            }}
-                                            className={`cursor-pointer hover:bg-blue-100 rounded px-0.5 transition-colors inline-block ${
-                                              isHighlighted
-                                                ? "bg-amber-300 text-slate-900 font-semibold"
-                                                : ""
-                                            }`}
-                                            title={`Aller à la seconde ${w.start.toFixed(1)}`}
-                                          >
-                                            {w.word}{" "}
-                                          </span>
-                                        );
-                                      })
-                                    ) : (
-                                      <span>{seg.text}</span>
-                                    )}
-                                  </p>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
             ) : (
+
               <div className="pb-10">
                 <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-7">
                   {segments.map((seg, index) => (
