@@ -8,6 +8,7 @@ import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Sci
 export default function Segment({
   segment,
   speaker,
+  variant = "stream",
   isActive,
   activeWordKey,
   editingWordKey,
@@ -101,9 +102,11 @@ export default function Segment({
           onSeek(segment.start);
         }
       }}
-      className={`group relative rounded-2xl -mx-3 px-3 py-2 transition-all ${
-        isActive ? "bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-slate-50"
-      }`}
+      className={`group relative rounded-2xl transition-all ${
+        variant === "cards"
+          ? "border border-slate-200 bg-white shadow-sm px-3 py-3 my-1"
+          : "-mx-3 px-3 py-2"
+      } ${isActive ? "!bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-slate-50"}`}
     >
       {/* Floating toolbar — visible on hover, always on active/editing */}
       <div
