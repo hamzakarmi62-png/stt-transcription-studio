@@ -654,7 +654,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       <div className="relative">
         {/* ── Floating glass navbar ── */}
         <header className="sticky top-0 z-40 px-3 sm:px-5 pt-3 pb-1">
-          <div className={`max-w-6xl mx-auto rounded-[26px] border backdrop-blur-2xl px-4 h-16 flex items-center gap-3 ${
+          <div className={`max-w-7xl mx-auto rounded-[26px] border backdrop-blur-2xl px-4 sm:px-5 h-16 flex items-center gap-2 ${
             isDark ? "bg-slate-950/60 border-white/[0.08] shadow-xl shadow-black/20" : "bg-white/80 border-slate-200 shadow-lg shadow-slate-900/5"
           }`}>
             <div className="flex items-center gap-2.5 shrink-0">
@@ -667,14 +667,14 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               </div>
             </div>
 
-            <nav className="hidden md:flex items-center gap-1 mx-auto">
+            <nav className="hidden md:flex items-center gap-0.5 mx-auto min-w-0">
               {NAV.map((item) => {
                 const active = activeTab === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all ${navPill(active)}`}
+                    className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-2.5 rounded-2xl text-[11px] xl:text-xs font-bold transition-all ${navPill(active)}`}
                   >
                     <item.Icon className="w-4 h-4" />
                     <span className="hidden xl:block whitespace-nowrap">{item.label}</span>
@@ -688,7 +688,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               })}
             </nav>
 
-            <div className="flex items-center gap-2 ms-auto md:ms-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 ms-auto md:ms-0 shrink-0">
               <select
                 value={uiLang}
                 onChange={(e) => setUiLang(e.target.value)}
