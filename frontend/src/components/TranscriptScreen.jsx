@@ -883,20 +883,24 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     const startColor = speaker?.color || "#94a3b8";
                     return (
                       <div key={turn.id} className="space-y-2">
-                        <div className="inline-flex items-center gap-2 mt-4 mb-1">
+                        <div className="inline-flex items-center gap-2.5 mt-4 mb-1">
                           <span
-                            className="text-xs font-semibold px-2.5 py-0.5 rounded-full text-white"
-                            style={{ backgroundColor: startColor }}
+                            className="font-bold text-[15px] border-b-2 border-dotted pb-0.5"
+                            style={{ color: startColor, borderColor: startColor }}
                           >
                             {speaker?.name || "Unassigned"}
                           </span>
-                          <span
+                          <span className="h-4 w-px bg-white/10"></span>
+                          <button
                             onClick={() => seekTo(turn.start)}
-                            className="text-[11px] text-slate-400 tabular-nums cursor-pointer hover:text-blue-600"
+                            className="inline-flex items-center gap-1.5 text-slate-300 hover:text-indigo-400 transition"
                             title="Aller au début du passage"
                           >
-                            [{formatTime(turn.start)}] ▶
-                          </span>
+                            <Play className="w-3.5 h-3.5" filled />
+                            <span className="text-[13px] font-bold tabular-nums">
+                              {formatTime(turn.start)}
+                            </span>
+                          </button>
                         </div>
                         <div className="space-y-2">
                           {turn.segments.map(({ seg }) => {
