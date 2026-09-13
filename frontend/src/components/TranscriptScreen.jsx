@@ -9,6 +9,84 @@ import { ArrowLeft, Play, Zap, LayoutGrid, AlignLeft, MessageSquarePlus, Scissor
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
 
+const SYNC_PRESETS = [0, 0.15, 0.25, 0.4, 0.6];
+
+const clampOffset = (v) => Math.round(Math.min(1.5, Math.max(-1.5, v)) * 100) / 100;
+const fmtOffset = (v) => (v > 0 ? "+" : "") + v.toFixed(2) + "s";
+
+// Fine-grained highlight-sync tuner: slider (0.01s steps), ±0.01/±0.05 nudges
+// and quick presets. The value persists per device via localStorage.
+function SyncControls({ value, onChange }) {
+  const nudge =
+    "px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] font-bold text-slate-200 hover:bg-white/10 transition";
+  return (
+    <div className="space-y-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={`text-xs font-black tabular-nums px-2 py-0.5 rounded-lg ${
+            value < -0.05
+              ? "bg-sky-500/15 text-sky-400"
+              : value > 0.3
+              ? "bg-amber-500/15 text-amber-400"
+              : "bg-emerald-500/15 text-emerald-400"
+          }`}
+        >
+          {fmtOffset(value)}
+        </span>
+        <button
+          onClick={() => onChange(0.25)}
+          className="text-[10px] text-slate-400 hover:text-slate-200 font-bold transition"
+          title="العودة للقيمة المثالية"
+        >
+          إعادة ضبط
+        </button>
+      </div>
+      <input
+        type="range"
+        min="-1.5"
+        max="1.5"
+        step="0.01"
+        value={value}
+        onChange={(e) => onChange(clampOffset(parseFloat(e.target.value)))}
+        className="w-full accent-indigo-500 cursor-pointer"
+        dir="ltr"
+      />
+      <div className="flex items-center justify-between gap-1" dir="ltr">
+        <button className={nudge} onClick={() => onChange(clampOffset(value - 0.05))}>
+          −0.05
+        </button>
+        <button className={nudge} onClick={() => onChange(clampOffset(value - 0.01))}>
+          −0.01
+        </button>
+        <button className={nudge} onClick={() => onChange(clampOffset(value + 0.01))}>
+          +0.01
+        </button>
+        <button className={nudge} onClick={() => onChange(clampOffset(value + 0.05))}>
+          +0.05
+        </button>
+      </div>
+      <div className="flex items-center gap-1 flex-wrap">
+        {SYNC_PRESETS.map((p) => (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`px-2 py-1 rounded-lg text-[10px] font-bold tabular-nums transition ${
+              Math.abs(value - p) < 0.005
+                ? "bg-indigo-600 text-white"
+                : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10"
+            }`}
+          >
+            {p === 0 ? "0.00" : "+" + p.toFixed(2)}
+          </button>
+        ))}
+      </div>
+      <p className="text-[10px] text-slate-500 leading-relaxed">
+        شغّل الصوت واضبط حتى تُضيء الكلمة الصفراء لحظة نطقها بالضبط. الموجب يُؤخّر التظليل، السالب يُقدّمه. يُحفظ الضبط تلقائياً.
+      </p>
+    </div>
+  );
+}
+
 export default function TranscriptScreen({ initialSession, onBack, user, onLogout }) {
   const [session, setSession] = useState(initialSession || {});
   const [currentTime, setCurrentTime] = useState(0);
@@ -36,13 +114,21 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [renameValue, setRenameValue] = useState("");
   const [playerMode, setPlayerMode] = useState("docked");
   const [viewMode, setViewMode] = useState("stream"); // stream | cards
-  const [highlightOffset, setHighlightOffset] = useState(0.25);
+  const [highlightOffset, setHighlightOffset] = useState(() => {
+    try {
+      const v = parseFloat(localStorage.getItem("zendocs:syncOffset"));
+      return Number.isFinite(v) ? Math.min(1.5, Math.max(-1.5, v)) : 0.25;
+    } catch {
+      return 0.25;
+    }
+  });
   const [history, setHistory] = useState([initialSession || {}]);
   const [historyIndex, setHistoryIndex] = useState(0);
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const [syncOpen, setSyncOpen] = useState(false);
 
   const audioRef = useRef(null);
   const saveTimerRef = useRef(null);
@@ -133,6 +219,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("zendocs:syncOffset", String(highlightOffset));
+    } catch {
+      /* private mode */
+    }
+  }, [highlightOffset]);
 
   const payloadFor = useCallback((s) => ({
     segments: s.segments,
@@ -601,19 +695,24 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             >
               Save
             </button>
-            <div className="hidden md:flex items-center gap-1 bg-white/[0.04] border border-white/10 px-2.5 py-1.5 rounded-xl text-xs" title="تحكم في توقيت وسرعة التظليل الزمني">
-              <span className="text-slate-600 font-medium inline-flex items-center gap-1"><Zap className="w-3 h-3" /> Sync:</span>
-              <select
-                value={highlightOffset}
-                onChange={(e) => setHighlightOffset(Number(e.target.value))}
-                className="bg-white/5 rounded-lg px-1 py-0.5 text-xs font-semibold text-slate-200 border border-white/10 focus:outline-none"
+            <div className="hidden md:block relative">
+              <button
+                onClick={() => setSyncOpen(!syncOpen)}
+                className="inline-flex items-center gap-1.5 bg-white/[0.04] border border-white/10 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/10 transition"
+                title="ضبط دقيق لتوقيت التظليل (بدقة 0.01 ثانية)"
               >
-                <option value="0.0">بدون إزاحة (0.0s)</option>
-                <option value="0.15">سريع (+0.15s)</option>
-                <option value="0.25">مثالي / منع التأخير (+0.25s)</option>
-                <option value="0.4">متوسط (+0.4s)</option>
-                <option value="0.6">بطيء (+0.6s)</option>
-              </select>
+                <Zap className="w-3 h-3 text-indigo-400" />
+                Sync
+                <span className="tabular-nums text-slate-200 font-bold">{fmtOffset(highlightOffset)}</span>
+              </button>
+              {syncOpen && (
+                <div className="absolute end-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-3 z-50">
+                  <div className="text-[11px] font-bold text-slate-400 px-1 pb-2.5">
+                    مُضبوط التزامن — دقة 0.01 ثانية
+                  </div>
+                  <SyncControls value={highlightOffset} onChange={setHighlightOffset} />
+                </div>
+              )}
             </div>
             <div className="flex items-center bg-white/[0.06] p-1 rounded-xl border border-white/10">
               <button
@@ -793,22 +892,11 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
                 {moreMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-2 z-50 space-y-2">
-                    <div className="text-[11px] font-bold text-slate-400 px-2 py-1">تزامن التظليل (Sync Offset)</div>
-                    <select
-                      value={highlightOffset}
-                      onChange={(e) => {
-                        setHighlightOffset(Number(e.target.value));
-                        setMoreMenuOpen(false);
-                      }}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-2 py-1 text-xs text-slate-200"
-                    >
-                      <option value="0.0">0.0s (دقيق)</option>
-                      <option value="0.15">+0.15s (سريع)</option>
-                      <option value="0.25">+0.25s (مثالي)</option>
-                      <option value="0.4">+0.4s (متوسط)</option>
-                      <option value="0.6">+0.6s (بطيء)</option>
-                    </select>
+                  <div className="absolute right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-3 z-50 space-y-2">
+                    <div className="text-[11px] font-bold text-slate-400 px-1">
+                      تزامن التظليل — دقة 0.01 ثانية
+                    </div>
+                    <SyncControls value={highlightOffset} onChange={setHighlightOffset} />
                   </div>
                 )}
               </div>
