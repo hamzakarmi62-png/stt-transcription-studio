@@ -36,9 +36,9 @@ function SyncControls({ value, onChange }) {
         <button
           onClick={() => onChange(0.25)}
           className="text-[10px] text-slate-400 hover:text-slate-200 font-bold transition"
-          title="العودة للقيمة المثالية"
+          title="Revenir à la valeur idéale"
         >
-          إعادة ضبط
+          Réinitialiser
         </button>
       </div>
       <input
@@ -81,7 +81,7 @@ function SyncControls({ value, onChange }) {
         ))}
       </div>
       <p className="text-[10px] text-slate-500 leading-relaxed">
-        شغّل الصوت واضبط حتى تُضيء الكلمة الصفراء لحظة نطقها بالضبط. الموجب يُؤخّر التظليل، السالب يُقدّمه. يُحفظ الضبط تلقائياً.
+        Lancez la lecture et ajustez jusqu'à ce que le mot jaune s'allume exactement au moment où il est prononcé. Positif = retarde le surlignage, négatif = l'avance. Réglage enregistré automatiquement.
       </p>
     </div>
   );
@@ -699,7 +699,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={() => setSyncOpen(!syncOpen)}
                 className="inline-flex items-center gap-1.5 bg-white/[0.04] border border-white/10 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/10 transition"
-                title="ضبط دقيق لتوقيت التظليل (بدقة 0.01 ثانية)"
+                title="Réglage précis de la synchro du surlignage (au 0,01 s)"
               >
                 <Zap className="w-3 h-3 text-indigo-400" />
                 Sync
@@ -708,7 +708,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {syncOpen && (
                 <div className="absolute end-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-3 z-50">
                   <div className="text-[11px] font-bold text-slate-400 px-1 pb-2.5">
-                    مُضبوط التزامن — دقة 0.01 ثانية
+                    Synchroniseur du surlignage — précision 0,01 s
                   </div>
                   <SyncControls value={highlightOffset} onChange={setHighlightOffset} />
                 </div>
@@ -718,14 +718,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={() => setViewMode("cards")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "cards" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
-                title="مربعات منفصلة"
+                title="Cartes séparées"
               >
                 <LayoutGrid className="w-3.5 h-3.5" /> Cards
               </button>
               <button
                 onClick={() => setViewMode("stream")}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "stream" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
-                title="نص متسلسل ومرن"
+                title="Texte continu fluide"
               >
                 <AlignLeft className="w-3.5 h-3.5" /> Stream
               </button>
@@ -745,7 +745,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={() => skipTime(-15)}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
-                title="رجوع 15 ثانية"
+                title="Reculer de 15 s"
               >
                 <RotateCcw className="w-4 h-4" /><span className="text-[10px]">15</span>
               </button>
@@ -754,7 +754,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={togglePlay}
                 className="p-2 rounded-xl hover:bg-white/10 text-white text-lg transition-colors"
-                title={playing ? "إيقاف مؤقت" : "تشغيل"}
+                title={playing ? "Pause" : "Lecture"}
               >
                 {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" filled />}
               </button>
@@ -763,7 +763,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={() => skipTime(30)}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
-                title="تقديم 30 ثانية"
+                title="Avancer de 30 s"
               >
                 <span className="text-[10px]">30</span><RotateCw className="w-4 h-4" />
               </button>
@@ -775,7 +775,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 value={playbackSpeed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
                 className="bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
-                title="سرعة التشغيل"
+                title="Vitesse de lecture"
               >
                 <option value="0.5">0.5x</option>
                 <option value="0.75">0.75x</option>
@@ -799,7 +799,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                         id: uid(),
                         start: t,
                         end: t + 3,
-                        text: "مقطع جديد...",
+                        text: "Nouveau segment...",
                         speaker: prev.speakers[0]?.id || "s1",
                         words: [],
                       },
@@ -807,7 +807,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   }));
                 }}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
-                title="إضافة مقطع جديد"
+                title="Ajouter un segment"
               >
                 <MessageSquarePlus className="w-4 h-4" />
               </button>
@@ -821,7 +821,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 }}
                 disabled={!activeSegment}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
-                title="قص / تقسيم المقطع (Scissors)"
+                title="Couper / diviser le segment"
               >
                 <Scissors className="w-4 h-4" />
               </button>
@@ -832,7 +832,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   if (activeSegment) setEditingId(activeSegment.id);
                 }}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 border-b-2 border-fuchsia-400 transition-colors"
-                title="أداة التحديد والتعديل والتظليل"
+                title="Outil de sélection, d'édition et de surlignage"
               >
                 <Highlighter className="w-4 h-4" />
               </button>
@@ -844,7 +844,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 onClick={undo}
                 disabled={historyIndex <= 0}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
-                title="تراجع (Undo)"
+                title="Annuler (Undo)"
               >
                 <CornerUpLeft className="w-4 h-4" />
               </button>
@@ -854,7 +854,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 onClick={redo}
                 disabled={historyIndex >= history.length - 1}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
-                title="إعادة (Redo)"
+                title="Rétablir (Redo)"
               >
                 <CornerUpRight className="w-4 h-4" />
               </button>
@@ -877,7 +877,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={() => setShowSearch(!showSearch)}
                 className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
-                title="بحث في النص"
+                title="Rechercher dans le texte"
               >
                 <Search className="w-4 h-4" />
               </button>
@@ -887,14 +887,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <button
                   onClick={() => setMoreMenuOpen(!moreMenuOpen)}
                   className="p-2 rounded-xl hover:bg-white/10 text-slate-300 font-bold transition-colors"
-                  title="المزيد"
+                  title="Plus"
                 >
                   <MoreHorizontal className="w-4 h-4" />
                 </button>
                 {moreMenuOpen && (
                   <div className="absolute right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-3 z-50 space-y-2">
                     <div className="text-[11px] font-bold text-slate-400 px-1">
-                      تزامن التظليل — دقة 0.01 ثانية
+                      Synchronisation du surlignage — précision 0,01 s
                     </div>
                     <SyncControls value={highlightOffset} onChange={setHighlightOffset} />
                   </div>
@@ -909,7 +909,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <Search className="w-4 h-4 text-slate-400" />
               <input
                 type="text"
-                placeholder="ابحث في النص..."
+                placeholder="Rechercher dans le texte..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full text-sm outline-none bg-transparent text-slate-100"
@@ -993,7 +993,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <div className="space-y-6 pb-10 max-w-4xl mx-auto">
                 <div className="pb-2 mb-4 flex items-center justify-between">
                   <h3 className="font-bold text-slate-200 text-sm flex items-center gap-2"><AlignLeft className="w-4 h-4 text-slate-400" /> Continuous Stream Reading View</h3>
-                  <span className="text-xs text-slate-400">{segments.length} segments · انقر على أي كلمة للتصحيح المباشر</span>
+                  <span className="text-xs text-slate-400">{segments.length} segments · cliquez sur un mot pour le corriger en direct</span>
                 </div>
                 <div className="text-[17px] leading-relaxed space-y-6" dir="auto">
                   {groupedTurns.map((turn) => {
@@ -1011,7 +1011,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                           <span
                             onClick={() => seekTo(turn.start)}
                             className="text-[11px] text-slate-400 tabular-nums cursor-pointer hover:text-blue-600"
-                            title="الانتقال إلى بداية التحدث"
+                            title="Aller au début du passage"
                           >
                             [{formatTime(turn.start)}] ▶
                           </span>
@@ -1046,7 +1046,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                                     dir="auto"
                                     className="text-[17px] leading-relaxed select-text cursor-text hover:bg-white/[0.05] rounded px-1 transition-colors"
                                     onClick={() => setEditingId(seg.id)}
-                                    title="انقر للتعديل المباشر"
+                                    title="Cliquez pour corriger en direct"
                                   >
                                     {seg.words && seg.words.length > 0 ? (
                                       seg.words.map((w, i) => {
@@ -1064,7 +1064,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                                                 ? "bg-amber-300 text-slate-900 font-semibold"
                                                 : ""
                                             }`}
-                                            title={`الانتقال إلى الثانية ${w.start.toFixed(1)}`}
+                                            title={`Aller à la seconde ${w.start.toFixed(1)}`}
                                           >
                                             {w.word}{" "}
                                           </span>

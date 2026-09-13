@@ -124,7 +124,7 @@ export default function Segment({
             className="w-full rounded-xl bg-white/5 border border-indigo-500/40 px-3 py-2 text-sm leading-relaxed text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
           />
           <p className="text-xs text-slate-400 mt-1">
-            Editing — اضغط ⏎ Enter لتقسيم الفقرة للأسفل، أو ⌫ Backspace لمسح المقطع.
+            Editing — appuyez sur ⏎ Entrée pour diviser le paragraphe, ou ⌫ Retour arrière pour supprimer le segment.
           </p>
         </div>
       ) : (
@@ -168,7 +168,7 @@ export default function Segment({
                     onSetEditingWordKey(wKey);
                   }}
                   className={`cursor-pointer hover:bg-indigo-500/20 rounded px-0.5 transition-colors ${highlightClass}`}
-                  title="انقر للانتقال وتشغيل الصوت من هذه الكلمة · انقر نقراً مزدوجاً للتصحيح"
+                  title="Cliquez pour lire depuis ce mot · double-cliquez pour corriger"
                 >
                   {w.word}{" "}
                 </span>
