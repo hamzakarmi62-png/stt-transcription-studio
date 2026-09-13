@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils.js";
-import { Check, Copy, CornerDownRight, Pencil, Play, Scissors, Trash } from "./Icons.jsx";
+import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Scissors, Trash, User } from "./Icons.jsx";
 
 // Document-style segment: transparent body on the white reading panel, a
-// floating hover toolbar (split / copy / merge / delete) and amber word highlight.
+// floating hover toolbar (move / split / copy / merge / edit / delete /
+// per-paragraph speaker) and amber word highlight.
 export default function Segment({
   segment,
   speaker,
@@ -14,6 +15,10 @@ export default function Segment({
   onUpdateWord,
   editing,
   canMerge,
+  canMoveUp = true,
+  canMoveDown = true,
+  onMoveUp,
+  onMoveDown,
   onStartEdit,
   onCommitEdit,
   onDelete,
@@ -21,6 +26,7 @@ export default function Segment({
   onMerge,
   onReassign,
   onSeek,
+  speakers,
   currentTime,
 }) {
   const textareaRef = useRef(null);
@@ -31,6 +37,9 @@ export default function Segment({
       textareaRef.current?.focus();
     }
   }, [editing]);
+
+  const currentSpeaker = speakers.find((s) => s.id === segment.speaker);
+  const speakerColor = currentSpeaker?.color || "#64748b";
 
   const copyText = async () => {
     try {
@@ -70,6 +79,23 @@ export default function Segment({
           isActive || editing ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
       >
+        <button
+          onClick={() => onMoveUp(segment.id)}
+          disabled={!canMoveUp}
+          className={toolBtn}
+          title="Monter le paragraphe (il garde son temps)"
+        >
+          <ChevronUp className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => onMoveDown(segment.id)}
+          disabled={!canMoveDown}
+          className={toolBtn}
+          title="Descendre le paragraphe (il garde son temps)"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </button>
+        <span className="h-4 w-px bg-slate-200 mx-0.5"></span>
         <button onClick={doSplit} className={toolBtn} title="Couper / diviser le segment">
           <Scissors className="w-4 h-4" />
         </button>
@@ -95,6 +121,23 @@ export default function Segment({
         >
           <Trash className="w-4 h-4" />
         </button>
+        <span className="h-4 w-px bg-slate-200 mx-0.5"></span>
+        <span className="inline-flex items-center gap-1 ps-1 pe-1.5">
+          <User className="w-3.5 h-3.5 text-slate-400" />
+          <select
+            value={segment.speaker || ""}
+            onChange={(e) => onReassign(segment.id, e.target.value)}
+            className="appearance-none bg-transparent text-[11px] font-bold outline-none cursor-pointer max-w-[96px] truncate"
+            style={{ color: speakerColor }}
+            title="Locuteur de ce paragraphe"
+          >
+            {speakers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </span>
       </div>
 
       {editing ? (

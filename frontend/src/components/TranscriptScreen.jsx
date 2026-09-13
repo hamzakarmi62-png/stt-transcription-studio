@@ -556,6 +556,40 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       segments: prev.segments.map((s) => (s.id === id ? { ...s, speaker: speakerId } : s)),
     }));
 
+  // Reorder paragraphs; each keeps its own timing and words.
+  const moveSegmentUp = (id) =>
+    mutate((prev) => {
+      const idx = prev.segments.findIndex((s) => s.id === id);
+      if (idx <= 0) return prev;
+      const next = [...prev.segments];
+      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
+      return { ...prev, segments: next };
+    });
+
+  const moveSegmentDown = (id) =>
+    mutate((prev) => {
+      const idx = prev.segments.findIndex((s) => s.id === id);
+      if (idx === -1 || idx >= prev.segments.length - 1) return prev;
+      const next = [...prev.segments];
+      [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
+      return { ...prev, segments: next };
+    });
+
+  const deleteSpeaker = (speakerId) =>
+    mutate((prev) => {
+      if (prev.speakers.length <= 1) return prev;
+      const remaining = prev.speakers.filter((s) => s.id !== speakerId);
+      if (remaining.length === prev.speakers.length) return prev;
+      const fallback = remaining[0].id;
+      return {
+        ...prev,
+        speakers: remaining,
+        segments: prev.segments.map((s) =>
+          s.speaker === speakerId ? { ...s, speaker: fallback } : s
+        ),
+      };
+    });
+
   const renameSpeaker = (id, name) =>
     mutate((prev) => ({
       ...prev,
@@ -842,18 +876,31 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     style={{ borderColor: s.color }}
                   />
                 ) : (
-                  <button
+                  <span
                     key={s.id}
-                    onClick={() => {
-                      setRenamingId(s.id);
-                      setRenameValue(s.name);
-                    }}
-                    className="px-3 py-1.5 rounded-full text-sm font-medium text-white"
+                    className="inline-flex items-center rounded-full"
                     style={{ backgroundColor: s.color }}
-                    title="Click to rename speaker"
                   >
-                    {s.name}
-                  </button>
+                    <button
+                      onClick={() => {
+                        setRenamingId(s.id);
+                        setRenameValue(s.name);
+                      }}
+                      className="ps-3 pe-1.5 py-1.5 text-sm font-medium text-white"
+                      title="Cliquez pour renommer"
+                    >
+                      {s.name}
+                    </button>
+                    {speakers.length > 1 && (
+                      <button
+                        onClick={() => deleteSpeaker(s.id)}
+                        className="pe-2.5 py-2 text-white/70 hover:text-white transition"
+                        title="Supprimer ce locuteur — ses paragraphes passent au premier locuteur restant"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </span>
                 )
               )}
               <button
@@ -1029,6 +1076,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                               onUpdateWord={updateWordText}
                               editing={editingId === seg.id}
                               canMerge={index < segments.length - 1}
+                              canMoveUp={index > 0}
+                              canMoveDown={index < segments.length - 1}
+                              onMoveUp={moveSegmentUp}
+                              onMoveDown={moveSegmentDown}
                               speakers={speakers}
                               onStartEdit={(id) => setEditingId(id)}
                               onCommitEdit={updateSegmentText}
