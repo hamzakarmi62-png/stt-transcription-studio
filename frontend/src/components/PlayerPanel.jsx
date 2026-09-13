@@ -59,7 +59,7 @@ export default function PlayerPanel({
       {floating ? (
         <button
           onClick={() => onMode("docked")}
-          className="text-xs px-2 py-1 rounded-lg border border-slate-300 hover:bg-slate-50"
+          className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10"
           title="Dock player"
         >
           Dock
@@ -67,7 +67,7 @@ export default function PlayerPanel({
       ) : (
         <button
           onClick={() => onMode("floating")}
-          className="text-xs px-2 py-1 rounded-lg border border-slate-300 hover:bg-slate-50"
+          className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10"
           title="Undock as floating player"
         >
           Float
@@ -75,7 +75,7 @@ export default function PlayerPanel({
       )}
       <button
         onClick={() => onMode("hidden")}
-        className="text-xs px-2 py-1 rounded-lg border border-slate-300 hover:bg-slate-50"
+        className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10"
         title="Hide player"
       >
         Hide
@@ -86,12 +86,12 @@ export default function PlayerPanel({
   const header = (
     <div
       onPointerDown={startDrag}
-      className={`flex items-center gap-2 px-3 py-2 border-b border-slate-100 select-none ${
+      className={`flex items-center gap-2 px-3 py-2 border-b border-white/[0.06] select-none ${
         floating ? "cursor-grab active:cursor-grabbing" : ""
       }`}
       title={floating ? "Drag to move player" : filename}
     >
-      <span className="text-xs font-medium text-slate-500 truncate min-w-0">{filename}</span>
+      <span className="text-xs font-medium text-slate-400 truncate min-w-0">{filename}</span>
       <span className="text-[10px] uppercase tracking-wide text-slate-400">
         {isVideo ? "video" : "audio"}
       </span>
@@ -115,7 +115,7 @@ export default function PlayerPanel({
     return (
       <div
         ref={panelRef}
-        className="fixed z-50 w-[400px] max-w-[calc(100vw-16px)] bg-white rounded-2xl shadow-2xl border border-slate-200"
+        className="fixed z-50 w-[400px] max-w-[calc(100vw-16px)] bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/60 border border-white/10"
         style={{ left: pos.x, top: pos.y }}
       >
         {header}
@@ -125,7 +125,7 @@ export default function PlayerPanel({
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow">
+    <div className="bg-slate-900/80 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-xl shadow-black/30">
       {header}
       {media}
     </div>

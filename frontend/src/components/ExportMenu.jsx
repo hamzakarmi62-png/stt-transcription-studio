@@ -42,34 +42,34 @@ export default function ExportMenu({ sessionId, filename }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700"
+        className="px-4 py-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-sm font-bold hover:bg-emerald-500 hover:text-white transition"
       >
         ⬇ Export
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-200 p-3 z-20">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-2">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 p-3 z-20">
+          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             Options
           </div>
-          <label className="flex items-center gap-2 text-sm py-1">
+          <label className="flex items-center gap-2 text-sm py-1 text-slate-200">
             <input
               type="checkbox"
               checked={includeSpeakers}
               onChange={(e) => setIncludeSpeakers(e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
+              className="w-4 h-4 accent-indigo-500"
             />
             Include speaker names
           </label>
-          <label className="flex items-center gap-2 text-sm py-1">
+          <label className="flex items-center gap-2 text-sm py-1 text-slate-200">
             <input
               type="checkbox"
               checked={includeTimestamps}
               onChange={(e) => setIncludeTimestamps(e.target.checked)}
-              className="w-4 h-4 accent-blue-600"
+              className="w-4 h-4 accent-indigo-500"
             />
             Include timestamps
           </label>
-          <div className="text-xs text-slate-400 mt-1 mb-2">
+          <div className="text-xs text-slate-500 mt-1 mb-2">
             SRT always includes timings.
           </div>
           <div className="space-y-1">
@@ -78,7 +78,7 @@ export default function ExportMenu({ sessionId, filename }) {
                 key={f.key}
                 disabled={busy}
                 onClick={() => doExport(f.key)}
-                className="w-full text-left px-3 py-2 rounded-lg text-sm hover:bg-slate-100 disabled:opacity-50"
+                className="w-full text-left px-3 py-2 rounded-xl text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition"
               >
                 {f.label}
               </button>

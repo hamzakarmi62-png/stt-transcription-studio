@@ -26,24 +26,18 @@ export default function UserMenu({ user, onLogout, dark = false }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-2 rounded-xl px-2 py-1.5 transition ${
-          dark ? "hover:bg-white/10" : "hover:bg-slate-100"
-        }`}
+        className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 hover:bg-white/[0.07] transition"
         title="Mon compte"
       >
-        <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-[11px] font-black shadow-md shadow-indigo-500/30 shrink-0">
+        <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-indigo-950/50 ring-1 ring-white/20 shrink-0">
           {initials}
         </span>
-        <span className={`hidden sm:block text-start leading-tight`}>
-          <span className={`block text-xs font-bold ${dark ? "text-white" : "text-slate-900"}`}>
-            {displayName}
-          </span>
-          <span className={`block text-[10px] ${dark ? "text-slate-400" : "text-slate-400"}`}>
-            Compte gratuit
-          </span>
+        <span className="hidden sm:block text-start leading-tight">
+          <span className="block text-xs font-bold text-white">{displayName}</span>
+          <span className="block text-[10px] text-slate-400">Compte gratuit</span>
         </span>
         <svg
-          className={`w-3.5 h-3.5 ${dark ? "text-slate-400" : "text-slate-400"} transition-transform ${open ? "rotate-180" : ""}`}
+          className={`w-3.5 h-3.5 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -53,19 +47,19 @@ export default function UserMenu({ user, onLogout, dark = false }) {
       </button>
 
       {open && (
-        <div className="absolute end-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl shadow-black/20 border border-slate-100 overflow-hidden z-50">
-          <div className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 p-4">
+        <div className="absolute end-0 mt-3 w-64 rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/60 overflow-hidden z-50">
+          <div className="p-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
-              <span className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center text-white text-sm font-black border border-white/30">
+              <span className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-sm font-black ring-1 ring-white/20 shrink-0">
                 {initials}
               </span>
               <div className="min-w-0">
                 <p className="text-white font-bold text-sm truncate">{displayName}</p>
-                <p className="text-indigo-100 text-[11px] truncate">{user.email}</p>
+                <p className="text-slate-400 text-[11px] truncate">{user.email}</p>
               </div>
             </div>
             {(user.phone || user.country) && (
-              <div className="mt-3 pt-3 border-t border-white/20 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-indigo-100">
+              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
                 {user.phone && <span>📞 {user.phone}</span>}
                 {user.country && <span>🌍 {user.country}</span>}
               </div>
@@ -77,7 +71,7 @@ export default function UserMenu({ user, onLogout, dark = false }) {
                 setOpen(false);
                 onLogout && onLogout();
               }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold text-red-600 bg-red-50 hover:bg-red-600 hover:text-white transition"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-bold text-red-400 bg-red-500/10 hover:bg-red-500 hover:text-white transition"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

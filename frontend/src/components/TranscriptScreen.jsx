@@ -560,18 +560,24 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-saved";
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="bg-white shadow-sm sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-950 text-slate-100 relative">
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-600/[0.13] blur-[130px]"></div>
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full bg-fuchsia-600/[0.09] blur-[130px]"></div>
+        <div className="absolute -bottom-32 left-1/4 w-[420px] h-[420px] rounded-full bg-violet-600/[0.08] blur-[130px]"></div>
+      </div>
+      <div className="relative">
+      <header className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/[0.06] sticky top-0 z-30">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
           <button
             onClick={onBack}
-            className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm hover:bg-slate-50"
+            className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition"
           >
             ← New
           </button>
           <div className="min-w-0">
             <h1 className="font-semibold truncate text-sm sm:text-base">{session.filename}</h1>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-400">
               {session.language || "auto"} · {segments.length} segments
             </p>
           </div>
@@ -579,7 +585,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             {playerMode === "hidden" && (
               <button
                 onClick={() => setPlayerMode("docked")}
-                className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm hover:bg-slate-50"
+                className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition"
                 title="Show player"
               >
                 ▶ Show player
@@ -590,16 +596,16 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             </span>
             <button
               onClick={manualSave}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 text-sm hover:bg-slate-50"
+              className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition"
             >
               Save
             </button>
-            <div className="flex items-center gap-1 bg-slate-100 border border-slate-300 px-2.5 py-1.5 rounded-lg text-xs" title="تحكم في توقيت وسرعة التظليل الزمني">
+            <div className="hidden md:flex items-center gap-1 bg-white/[0.04] border border-white/10 px-2.5 py-1.5 rounded-xl text-xs" title="تحكم في توقيت وسرعة التظليل الزمني">
               <span className="text-slate-600 font-medium">⚡ Sync:</span>
               <select
                 value={highlightOffset}
                 onChange={(e) => setHighlightOffset(Number(e.target.value))}
-                className="bg-white rounded px-1 py-0.5 text-xs font-semibold text-slate-800 border border-slate-300 focus:outline-none"
+                className="bg-white/5 rounded-lg px-1 py-0.5 text-xs font-semibold text-slate-200 border border-white/10 focus:outline-none"
               >
                 <option value="0.0">بدون إزاحة (0.0s)</option>
                 <option value="0.15">سريع (+0.15s)</option>
@@ -608,17 +614,17 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <option value="0.6">بطيء (+0.6s)</option>
               </select>
             </div>
-            <div className="flex items-center bg-slate-200 p-1 rounded-lg">
+            <div className="flex items-center bg-white/[0.06] p-1 rounded-xl border border-white/10">
               <button
                 onClick={() => setViewMode("cards")}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${viewMode === "cards" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600"}`}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "cards" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
                 title="مربعات منفصلة"
               >
                 🗂️ Cards
               </button>
               <button
                 onClick={() => setViewMode("stream")}
-                className={`px-2.5 py-1 rounded-md text-xs font-semibold ${viewMode === "stream" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600"}`}
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${viewMode === "stream" ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"}`}
                 title="نص متسلسل ومرن"
               >
                 📜 Stream
@@ -631,14 +637,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       </header>
 
       {/* Rich Toolbar matching user's reference image */}
-      <div className="sticky top-[61px] z-20 bg-slate-100/95 backdrop-blur-md pt-2 pb-2">
+      <div className="sticky top-[61px] z-20 bg-slate-950/70 backdrop-blur-xl pt-2 pb-2">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 px-4 py-2.5 flex items-center justify-between gap-2 overflow-x-auto flex-wrap">
+          <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-3xl px-4 py-2.5 flex items-center justify-between gap-2 overflow-x-auto flex-wrap">
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* 1. Replay 15s */}
               <button
                 onClick={() => skipTime(-15)}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 flex items-center gap-0.5 text-xs font-medium transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
                 title="رجوع 15 ثانية"
               >
                 <span className="text-base">↺</span><span className="text-[10px]">15</span>
@@ -647,7 +653,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {/* 2. Play / Pause */}
               <button
                 onClick={togglePlay}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-800 text-lg transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-white text-lg transition-colors"
                 title={playing ? "إيقاف مؤقت" : "تشغيل"}
               >
                 {playing ? "⏸" : "▶"}
@@ -656,19 +662,19 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {/* 3. Forward 30s */}
               <button
                 onClick={() => skipTime(30)}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 flex items-center gap-0.5 text-xs font-medium transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
                 title="تقديم 30 ثانية"
               >
                 <span className="text-[10px]">30</span><span className="text-base">↻</span>
               </button>
 
-              <div className="h-5 w-[1px] bg-slate-200 mx-1"></div>
+              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
 
               {/* 4. Speed 1X */}
               <select
                 value={playbackSpeed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
-                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none cursor-pointer"
+                className="bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
                 title="سرعة التشغيل"
               >
                 <option value="0.5">0.5x</option>
@@ -679,7 +685,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <option value="2">2X</option>
               </select>
 
-              <div className="h-5 w-[1px] bg-slate-200 mx-1"></div>
+              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
 
               {/* 5. Add segment */}
               <button
@@ -700,7 +706,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     ].sort((a, b) => a.start - b.start),
                   }));
                 }}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
                 title="إضافة مقطع جديد"
               >
                 💬+
@@ -714,7 +720,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   }
                 }}
                 disabled={!activeSegment}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 disabled:opacity-40 transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
                 title="قص / تقسيم المقطع (Scissors)"
               >
                 ✂️
@@ -725,19 +731,19 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 onClick={() => {
                   if (activeSegment) setEditingId(activeSegment.id);
                 }}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 border-b-2 border-purple-400 transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 border-b-2 border-fuchsia-400 transition-colors"
                 title="أداة التحديد والتعديل والتظليل"
               >
                 🖍️
               </button>
 
-              <div className="h-5 w-[1px] bg-slate-200 mx-1"></div>
+              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
 
               {/* 8. Undo */}
               <button
                 onClick={undo}
                 disabled={historyIndex <= 0}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 disabled:opacity-40 transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
                 title="تراجع (Undo)"
               >
                 ↩️
@@ -747,7 +753,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={redo}
                 disabled={historyIndex >= history.length - 1}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 disabled:opacity-40 transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
                 title="إعادة (Redo)"
               >
                 ↪️
@@ -755,22 +761,22 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-5 w-[1px] bg-slate-200 mx-1"></div>
+              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
 
               {/* 10. Download / Export */}
               <ExportMenu sessionId={session.id} filename={session.filename} />
 
               {/* 11. Saved status */}
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${saveState === "error" ? "bg-red-100 text-red-600" : saveState === "saving" ? "bg-amber-100 text-amber-700" : "bg-emerald-50 text-emerald-700"}`}>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${saveState === "error" ? "bg-red-500/10 text-red-400 border-red-500/30" : saveState === "saving" ? "bg-amber-500/10 text-amber-400 border-amber-500/30" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"}`}>
                 {saveState === "saving" ? "Saving…" : saveState === "error" ? "Error" : "Saved"}
               </span>
 
-              <div className="h-5 w-[1px] bg-slate-200 mx-1"></div>
+              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
 
               {/* 12. Search */}
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 transition-colors"
+                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
                 title="بحث في النص"
               >
                 🔍
@@ -780,13 +786,13 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <div className="relative">
                 <button
                   onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                  className="p-2 rounded-xl hover:bg-slate-100 text-slate-700 font-bold transition-colors"
+                  className="p-2 rounded-xl hover:bg-white/10 text-slate-300 font-bold transition-colors"
                   title="المزيد"
                 >
                   ⋯
                 </button>
                 {moreMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-200 p-2 z-50 space-y-2">
+                  <div className="absolute right-0 mt-2 w-48 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-2 z-50 space-y-2">
                     <div className="text-[11px] font-bold text-slate-400 px-2 py-1">تزامن التظليل (Sync Offset)</div>
                     <select
                       value={highlightOffset}
@@ -794,7 +800,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                         setHighlightOffset(Number(e.target.value));
                         setMoreMenuOpen(false);
                       }}
-                      className="w-full bg-slate-50 border rounded-lg px-2 py-1 text-xs"
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-2 py-1 text-xs text-slate-200"
                     >
                       <option value="0.0">0.0s (دقيق)</option>
                       <option value="0.15">+0.15s (سريع)</option>
@@ -810,14 +816,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
           {/* Search bar expandable */}
           {showSearch && (
-            <div className="mt-2 bg-white rounded-xl shadow-sm border border-slate-200 p-3 flex items-center gap-2">
+            <div className="mt-2 bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 flex items-center gap-2">
               <span className="text-sm">🔍</span>
               <input
                 type="text"
                 placeholder="ابحث في النص..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-sm outline-none bg-transparent"
+                className="w-full text-sm outline-none bg-transparent text-slate-100"
                 autoFocus
               />
               {searchQuery && (
@@ -843,8 +849,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               onMode={setPlayerMode}
               mediaRef={audioRef}
             />
-            <div className="bg-white rounded-2xl shadow p-4 flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+            <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-3xl p-4 flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
                 Speakers
               </span>
               {speakers.map((s) =>
@@ -881,7 +887,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               )}
               <button
                 onClick={addSpeaker}
-                className="px-3 py-1.5 rounded-full text-sm border border-dashed border-slate-300 hover:bg-slate-50"
+                className="px-3 py-1.5 rounded-full text-sm border border-dashed border-white/20 text-slate-300 hover:bg-white/10"
                 title="Add a new speaker"
               >
                 + Add speaker
@@ -891,13 +897,13 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
           <section>
             {segments.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow p-10 text-center text-slate-500">
+              <div className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-10 text-center text-slate-400">
                 No transcript available for this session yet.
               </div>
             ) : viewMode === "stream" ? (
               <div className="space-y-6 pb-10 max-w-4xl mx-auto">
                 <div className="pb-2 mb-4 flex items-center justify-between">
-                  <h3 className="font-bold text-slate-700 text-sm">📜 Continuous Stream Reading View</h3>
+                  <h3 className="font-bold text-slate-200 text-sm">📜 Continuous Stream Reading View</h3>
                   <span className="text-xs text-slate-400">{segments.length} segments · انقر على أي كلمة للتصحيح المباشر</span>
                 </div>
                 <div className="text-[17px] leading-relaxed space-y-6" dir="auto">
@@ -942,14 +948,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                                     }}
                                     onBlur={() => setEditingId(null)}
                                     rows={Math.max(1, Math.ceil(seg.text.length / 85))}
-                                    className="w-full bg-transparent border-0 p-0 text-[17px] leading-relaxed resize-none focus:outline-none focus:ring-0 text-slate-900"
+                                    className="w-full bg-transparent border-0 p-0 text-[17px] leading-relaxed resize-none focus:outline-none focus:ring-0 text-slate-100"
                                     dir="auto"
                                     autoFocus
                                   />
                                 ) : (
                                   <p
                                     dir="auto"
-                                    className="text-[17px] leading-relaxed select-text cursor-text hover:bg-slate-50/50 rounded px-1 transition-colors"
+                                    className="text-[17px] leading-relaxed select-text cursor-text hover:bg-white/[0.05] rounded px-1 transition-colors"
                                     onClick={() => setEditingId(seg.id)}
                                     title="انقر للتعديل المباشر"
                                   >
@@ -997,10 +1003,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   return (
                     <div
                       key={turn.id}
-                      className="rounded-2xl border-l-4 bg-white shadow-sm p-5 space-y-4 transition-all"
+                      className="rounded-3xl border-l-4 bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl p-5 space-y-4 transition-all"
                       style={{ borderLeftColor: startColor }}
                     >
-                      <div className="flex items-center gap-2 flex-wrap pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2 flex-wrap pb-3 border-b border-white/[0.06]">
                         <span
                           className="text-xs font-semibold px-3 py-1 rounded-full text-white"
                           style={{ backgroundColor: startColor }}
@@ -1047,6 +1053,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           </section>
         </div>
       </main>
+          </div>
     </div>
   );
 }

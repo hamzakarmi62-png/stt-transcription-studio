@@ -39,7 +39,7 @@ export default function Segment({
           onSeek(segment.start);
         }
       }}
-      className={`rounded-xl border-l-4 bg-white shadow-sm p-4 transition-all ${
+      className={`rounded-2xl border-l-4 bg-white/[0.04] border border-white/[0.08] backdrop-blur p-4 transition-all ${
         isActive
           ? "ring-2 ring-blue-400 border-l-4"
           : "border-l-4"
@@ -53,14 +53,14 @@ export default function Segment({
         >
           {speaker?.name || "Unassigned"}
         </span>
-        <span className="text-xs text-slate-500 tabular-nums">
+        <span className="text-xs text-slate-400 tabular-nums">
           [{formatTime(segment.start)} – {formatTime(segment.end)}]
         </span>
         <div className="ml-auto flex items-center gap-1.5">
           <select
             value={segment.speaker || ""}
             onChange={(e) => onReassign(segment.id, e.target.value)}
-            className="text-xs rounded-lg border border-slate-300 px-2 py-1 bg-white"
+            className="text-xs rounded-lg border border-white/10 px-2 py-1 bg-white/5 text-slate-200"
             title="Reassign speaker"
           >
             {speakers.map((s) => (
@@ -72,7 +72,7 @@ export default function Segment({
           {!editing && (
             <button
               onClick={() => onStartEdit(segment.id)}
-              className="text-xs px-2 py-1 rounded-lg border border-slate-300 hover:bg-slate-50"
+              className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10 transition"
               title="Edit text"
             >
               Edit
@@ -81,7 +81,7 @@ export default function Segment({
           <button
             onClick={() => onSplit(segment.id, textareaRef.current?.selectionStart ?? -1)}
             disabled={!editing}
-            className="text-xs px-2 py-1 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-40"
+            className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10 disabled:opacity-40 transition"
             title="Split at cursor"
           >
             Split
@@ -89,14 +89,14 @@ export default function Segment({
           <button
             onClick={() => onMerge(segment.id)}
             disabled={!canMerge}
-            className="text-xs px-2 py-1 rounded-lg border border-slate-300 hover:bg-slate-50 disabled:opacity-40"
+            className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10 disabled:opacity-40 transition"
             title="Merge with next"
           >
             Merge ↓
           </button>
           <button
             onClick={() => onDelete(segment.id)}
-            className="text-xs px-2 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+            className="text-xs px-2 py-1 rounded-lg border border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white transition"
             title="Delete segment"
           >
             Delete
@@ -121,7 +121,7 @@ export default function Segment({
               }
             }}
             rows={Math.max(2, Math.ceil(segment.text.length / 80))}
-            className="w-full rounded-lg border border-blue-300 px-3 py-2 text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-300"
+            className="w-full rounded-xl bg-white/5 border border-indigo-500/40 px-3 py-2 text-sm leading-relaxed text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
           />
           <p className="text-xs text-slate-400 mt-1">
             Editing — اضغط ⏎ Enter لتقسيم الفقرة للأسفل، أو ⌫ Backspace لمسح المقطع.
@@ -148,7 +148,7 @@ export default function Segment({
                     onKeyDown={(e) => {
                       if (e.key === "Enter") e.currentTarget.blur();
                     }}
-                    className="w-24 bg-transparent border-b-2 border-blue-500 px-1 text-sm text-slate-900 focus:outline-none inline-block mx-0.5"
+                    className="w-24 bg-transparent border-b-2 border-indigo-400 px-1 text-sm text-slate-100 focus:outline-none inline-block mx-0.5"
                   />
                 );
               }
@@ -167,7 +167,7 @@ export default function Segment({
                     e.stopPropagation();
                     onSetEditingWordKey(wKey);
                   }}
-                  className={`cursor-pointer hover:bg-blue-100 rounded px-0.5 transition-colors ${highlightClass}`}
+                  className={`cursor-pointer hover:bg-indigo-500/20 rounded px-0.5 transition-colors ${highlightClass}`}
                   title="انقر للانتقال وتشغيل الصوت من هذه الكلمة · انقر نقراً مزدوجاً للتصحيح"
                 >
                   {w.word}{" "}

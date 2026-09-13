@@ -273,9 +273,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   const [folders, setFolders] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("custom_folders") || '[{"id":"default","name":"Général / General"}]');
+      return JSON.parse(localStorage.getItem("custom_folders") || '[{"id":"default","name":"Général"}]');
     } catch {
-      return [{ id: "default", name: "Général / General" }];
+      return [{ id: "default", name: "Général" }];
     }
   });
 
@@ -564,13 +564,33 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       ? customWorksSessions
       : customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === selectedFolderFilter);
 
-  // ---- Design tokens (premium light UI + always-dark sidebar) ----
+  // ---- Aurora Glass design tokens ----
   const isDark = theme === "dark";
-  const bgMain = isDark ? "bg-slate-100 text-slate-900" : "bg-slate-50 text-slate-900";
-  const bgCard = isDark ? "bg-slate-950/70 border-slate-800" : "bg-white border-slate-200/80 shadow-sm";
+  const bgMain = isDark ? "bg-slate-950 text-slate-100" : "bg-[#eef1f8] text-slate-900";
+  const glass = isDark
+    ? "bg-white/[0.045] border-white/[0.08] backdrop-blur-2xl"
+    : "bg-white/80 border-slate-200/80 backdrop-blur-2xl shadow-sm";
+  const glassSoft = isDark
+    ? "bg-white/[0.03] border-white/[0.07]"
+    : "bg-white/60 border-slate-200/70";
   const textSub = isDark ? "text-slate-400" : "text-slate-500";
-  const inputBg = isDark ? "bg-slate-950 border-slate-800 text-slate-100" : "bg-white border-slate-300 text-slate-900";
-  const cardHead = isDark ? "border-slate-800" : "border-slate-100";
+  const inputBg = isDark
+    ? "bg-white/[0.05] border-white/10 text-slate-100 focus:ring-indigo-500/60"
+    : "bg-white border-slate-300 text-slate-900 focus:ring-indigo-500/50";
+  const hairline = isDark ? "border-white/[0.07]" : "border-slate-200";
+  const hoverGlass = isDark ? "hover:bg-white/[0.06]" : "hover:bg-slate-100";
+  const navPill = (active) =>
+    active
+      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-950/40"
+      : isDark
+      ? "text-slate-400 hover:text-white hover:bg-white/[0.06]"
+      : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/60";
+  const filePill = (active) =>
+    active
+      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-950/40"
+      : isDark
+      ? "bg-white/[0.04] text-slate-300 border border-white/10 hover:border-indigo-500/50"
+      : "bg-white text-slate-600 border border-slate-200 hover:border-indigo-400";
 
   const NAV = [
     {
@@ -587,14 +607,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       id: "myFiles",
       label: t.navMyFiles,
       badge: customWorksSessions.length,
-      badgeCls: "bg-amber-400/15 text-amber-300",
       icon: "M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4",
     },
     {
       id: "archive",
       label: t.navArchive,
       badge: sessions.length,
-      badgeCls: "bg-indigo-400/15 text-indigo-300",
       icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
     },
     {
@@ -605,14 +623,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   ];
 
   const STATUS_META = {
-    done: { label: "Terminé", cls: "bg-emerald-500/10 text-emerald-600 border-emerald-500/30" },
-    transcribed: { label: "Transcrit", cls: "bg-sky-500/10 text-sky-600 border-sky-500/30" },
-    processing: { label: "En cours", cls: "bg-amber-500/10 text-amber-600 border-amber-500/30 animate-pulse" },
-    error: { label: "Erreur", cls: "bg-red-500/10 text-red-600 border-red-500/30" },
-    uploaded: { label: "En attente", cls: "bg-slate-500/10 text-slate-500 border-slate-400/30" },
+    done: { label: "Terminé", dot: "bg-emerald-400", cls: "text-emerald-400 bg-emerald-500/10 border-emerald-500/25" },
+    transcribed: { label: "Transcrit", dot: "bg-sky-400", cls: "text-sky-400 bg-sky-500/10 border-sky-500/25" },
+    processing: { label: "En cours", dot: "bg-amber-400 animate-pulse", cls: "text-amber-400 bg-amber-500/10 border-amber-500/25" },
+    error: { label: "Erreur", dot: "bg-red-400", cls: "text-red-400 bg-red-500/10 border-red-500/25" },
+    uploaded: { label: "En attente", dot: "bg-slate-400", cls: "text-slate-400 bg-slate-500/10 border-slate-500/25" },
   };
   const statusMeta = (s) => STATUS_META[s.status] || STATUS_META.uploaded;
-  const isVideo = (s) => (s.kind === "video") || /\.(mp4|webm|mov|m4v|mkv|avi)$/i.test(s.filename || "");
+  const isVideo = (s) =>
+    s.kind === "video" || /\.(mp4|webm|mov|m4v|mkv|avi)$/i.test(s.filename || "");
 
   const PIPELINE_STEPS = [
     { key: "uploading", label: "Envoi" },
@@ -622,141 +641,86 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const phaseOrder = ["idle", "uploading", "transcribing", "diarizing", "done"];
   const activeStep = phase === "error" ? -1 : Math.max(0, phaseOrder.indexOf(phase) - 1);
 
-  const navButton = (item) => {
-    const active = activeTab === item.id;
-    return (
-      <button
-        key={item.id}
-        onClick={() => setActiveTab(item.id)}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all duration-200 ${
-          active
-            ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-950/50"
-            : "text-slate-400 hover:bg-white/5 hover:text-white"
-        }`}
-      >
-        <svg className="w-[18px] h-[18px] shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {item.icon.split(" M").map((d, i) => (
-            <path key={i} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d={i === 0 ? d : "M" + d} />
-          ))}
-        </svg>
-        <span className="flex-1 text-start truncate">{item.label}</span>
-        {item.badge !== undefined && item.badge > 0 && (
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.badgeCls}`}>{item.badge}</span>
-        )}
-      </button>
-    );
-  };
-
   return (
-    <div className={`min-h-screen ${bgMain} transition-colors duration-200`} dir={uiLang === "ar" ? "rtl" : "ltr"}>
-      {/* ── Fixed dark sidebar ─────────────────────────────────────── */}
-      <aside className="hidden lg:flex w-[264px] bg-slate-950 border-r border-white/5 flex-col fixed inset-y-0 z-40">
-        <div className="p-5">
-          <div className="flex items-center gap-3 px-2">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-lg shadow-lg shadow-indigo-950">
-              🎙️
-            </div>
-            <div>
-              <h1 className="text-white font-black tracking-tight leading-none">Zendocs</h1>
-              <p className="text-[10px] text-indigo-300/70 mt-1">Studio de transcription IA</p>
-            </div>
-          </div>
-        </div>
+    <div className={`min-h-screen ${bgMain} relative transition-colors duration-300`} dir={uiLang === "ar" ? "rtl" : "ltr"}>
+      {/* ── Aurora background ── */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className={`absolute -top-48 -left-40 w-[640px] h-[640px] rounded-full blur-[140px] ${isDark ? "bg-indigo-600/[0.16]" : "bg-indigo-400/[0.15]"}`}></div>
+        <div className={`absolute top-1/4 -right-48 w-[560px] h-[560px] rounded-full blur-[140px] ${isDark ? "bg-fuchsia-600/[0.10]" : "bg-fuchsia-400/[0.10]"}`}></div>
+        <div className={`absolute -bottom-40 left-1/4 w-[520px] h-[520px] rounded-full blur-[140px] ${isDark ? "bg-violet-600/[0.09]" : "bg-violet-400/[0.09]"}`}></div>
+      </div>
 
-        <nav className="px-3 space-y-1.5 flex-1 overflow-y-auto">{NAV.map(navButton)}</nav>
-
-        <div className="p-4">
-          <div className="rounded-2xl bg-white/[0.04] border border-white/10 p-3.5">
-            <div className="flex items-center justify-between text-[11px] font-semibold">
-              <span className="text-slate-400">{t.systemState}</span>
-              <span className="text-emerald-400 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                {systemHealth ? t.connected : t.active}
-              </span>
-            </div>
-            <div className="mt-2.5 pt-2.5 border-t border-white/5 text-[10px] text-slate-500 flex items-center justify-between">
-              <span>Groq · Whisper AI</span>
-              <span className="text-slate-600">v2.0</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* ── Main column ────────────────────────────────────────────── */}
-      <div className="lg:ml-[264px] flex flex-col min-h-screen">
-        {/* Top navbar with account box */}
-        <header
-          className={`sticky top-0 z-30 border-b backdrop-blur-xl ${
-            isDark ? "bg-slate-100/85 border-slate-200" : "bg-white/85 border-slate-200"
-          }`}
-        >
-          <div className="px-4 sm:px-6 h-16 flex items-center gap-3">
-            <div className="lg:hidden flex items-center gap-2 shrink-0">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-sm">
+      <div className="relative">
+        {/* ── Floating glass navbar ── */}
+        <header className="sticky top-0 z-40 px-3 sm:px-5 pt-3 pb-1">
+          <div className={`max-w-6xl mx-auto rounded-[26px] border backdrop-blur-2xl px-4 h-16 flex items-center gap-3 ${
+            isDark ? "bg-slate-950/60 border-white/[0.08] shadow-xl shadow-black/20" : "bg-white/80 border-slate-200 shadow-lg shadow-slate-900/5"
+          }`}>
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-lg shadow-lg shadow-indigo-950/40">
                 🎙️
               </div>
-              <span className="font-black tracking-tight text-slate-900">Zendocs</span>
+              <div className="hidden sm:block leading-none">
+                <p className="font-black tracking-tight text-[15px]">Zendocs</p>
+                <p className={`text-[9px] mt-1 ${textSub}`}>Transcription IA</p>
+              </div>
             </div>
 
-            <div className="relative flex-1 max-w-lg ml-auto hidden sm:block">
-              <svg
-                className="w-4 h-4 absolute inset-y-0 my-auto start-3 text-slate-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <input
-                type="text"
-                placeholder={t.searchPlaceholder}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={`w-full rounded-2xl border ps-10 pe-4 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-indigo-500/60 focus:border-indigo-400 transition ${inputBg}`}
-              />
-            </div>
+            <nav className="hidden md:flex items-center gap-1 mx-auto">
+              {NAV.map((item) => {
+                const active = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all ${navPill(active)}`}
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {item.icon.split(" M").map((d, i) => (
+                        <path key={i} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d={i === 0 ? d : "M" + d} />
+                      ))}
+                    </svg>
+                    <span className="hidden xl:block whitespace-nowrap">{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${active ? "bg-white/25" : isDark ? "bg-white/10" : "bg-slate-200"}`}>
+                        {item.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
 
-            <div className="flex items-center gap-2 ms-auto">
+            <div className="flex items-center gap-2 ms-auto md:ms-0">
               <select
                 value={uiLang}
                 onChange={(e) => setUiLang(e.target.value)}
-                className={`hidden md:block text-xs rounded-xl px-2.5 py-2 border font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${inputBg} cursor-pointer`}
+                className={`hidden xl:block text-xs rounded-xl px-2.5 py-2 border font-bold focus:outline-none ${inputBg} cursor-pointer`}
               >
-                <option value="ar">العربية</option>
+                <option value="ar">ع</option>
                 <option value="en">EN</option>
                 <option value="fr">FR</option>
               </select>
               <button
                 onClick={() => setTheme(isDark ? "light" : "dark")}
-                className={`w-9 h-9 rounded-xl border flex items-center justify-center text-sm transition ${
-                  isDark
-                    ? "bg-slate-950 border-slate-700 hover:bg-slate-800"
-                    : "bg-white border-slate-200 hover:bg-slate-50"
-                }`}
+                className={`w-9 h-9 rounded-2xl border flex items-center justify-center text-sm transition ${inputBg} ${hoverGlass}`}
                 title={isDark ? t.lightMode : t.darkMode}
               >
                 {isDark ? "☀️" : "🌙"}
               </button>
-              <div className={`w-px h-8 ${isDark ? "bg-slate-300" : "bg-slate-200"} mx-1 hidden sm:block`}></div>
               <UserMenu user={user} onLogout={onLogout} />
             </div>
           </div>
 
-          {/* Mobile nav pills */}
-          <div className="lg:hidden flex gap-1.5 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">
+          {/* mobile tabs */}
+          <div className="md:hidden flex gap-1.5 overflow-x-auto px-1 pt-2 pb-1 [scrollbar-width:none] max-w-6xl mx-auto">
             {NAV.map((item) => {
               const active = activeTab === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition ${
-                    active
-                      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/30"
-                      : isDark
-                      ? "bg-slate-950 text-slate-400 border border-slate-800"
-                      : "bg-white text-slate-500 border border-slate-200"
-                  }`}
+                  className={`shrink-0 px-4 py-2 rounded-full text-[11px] font-bold transition ${filePill(active)}`}
                 >
                   {item.label}
                 </button>
@@ -765,313 +729,275 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
           </div>
         </header>
 
-        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
-          {/* ── Stats ────────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[
-              { label: t.totalSessions, value: totalSessionsCount, grad: "from-indigo-500 to-violet-500", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
-              { label: t.completedSessions, value: completedSessionsCount, grad: "from-emerald-500 to-teal-500", icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" },
-              { label: t.totalSegments, value: totalSegmentsCount, grad: "from-violet-500 to-fuchsia-500", icon: "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" },
-              { label: t.systemStatus, value: null, grad: "from-amber-500 to-orange-500", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
-            ].map((st) => (
-              <div
-                key={st.label}
-                className={`${bgCard} rounded-3xl p-5 border relative overflow-hidden group hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300`}
-              >
-                <div className={`absolute -top-8 -end-8 w-24 h-24 rounded-full bg-gradient-to-br ${st.grad} opacity-[0.07] blur-xl group-hover:opacity-20 transition-opacity`}></div>
-                <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${st.grad} text-white flex items-center justify-center shadow-lg`}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={st.icon} />
-                  </svg>
-                </div>
-                <p className={`text-[11px] font-semibold ${textSub} mt-3 uppercase tracking-wide`}>{st.label}</p>
-                <h3 className="text-2xl font-black mt-0.5">
-                  {st.value === null ? (
-                    <span className="text-emerald-500 flex items-center gap-2 text-sm font-bold">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      {t.connected}
-                    </span>
-                  ) : (
-                    st.value
-                  )}
-                </h3>
-              </div>
-            ))}
-          </div>
-
-          {/* ══ HOME ══════════════════════════════════════════════════ */}
+        <main className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-16 space-y-8">
+          {/* ══ HOME — Bento grid ══ */}
           {activeTab === "home" && (
-            <div className="space-y-6">
-              {/* Hero */}
-              <div className="relative overflow-hidden rounded-[28px] bg-slate-950 p-8 sm:p-12">
-                <div className="absolute -top-32 -end-16 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-40 -start-10 w-80 h-80 bg-fuchsia-600/20 rounded-full blur-3xl"></div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
+              {/* Hero bento tile */}
+              <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-[30px] bg-slate-950 p-8 flex flex-col justify-between min-h-[340px]">
+                <div className="absolute -top-24 -end-20 w-80 h-80 bg-indigo-600/30 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-28 -start-16 w-72 h-72 bg-fuchsia-600/25 rounded-full blur-3xl"></div>
                 <div
-                  className="absolute inset-0 opacity-[0.15]"
-                  style={{
-                    backgroundImage:
-                      "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.25) 1px, transparent 0)",
-                    backgroundSize: "26px 26px",
-                  }}
+                  className="absolute inset-0 opacity-[0.12]"
+                  style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)", backgroundSize: "24px 24px" }}
                 ></div>
-                <div className="relative flex flex-wrap items-end justify-between gap-8">
-                  <div className="space-y-4 max-w-xl">
-                    <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur text-indigo-200 px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wide">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                      PROPULSÉ PAR L'IA · WHISPER + GROQ
-                    </span>
-                    <h2 className="text-3xl sm:text-4xl font-black text-white leading-[1.15] tracking-tight">
-                      {t.welcomeBack}
-                    </h2>
-                    <p className="text-slate-400 text-sm leading-relaxed">{t.welcomeDesc}</p>
-                  </div>
-                  <div className="flex gap-3 flex-wrap">
-                    <button
-                      onClick={() => setActiveTab("transcribe")}
-                      className="px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-bold text-sm hover:bg-indigo-50 shadow-xl transition-all hover:-translate-y-0.5"
-                    >
-                      {t.startNewTranscribe}
-                    </button>
-                    <button
-                      onClick={() => setActiveTab("myFiles")}
-                      className="px-6 py-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur text-white font-bold text-sm hover:bg-white/20 transition-all"
-                    >
-                      {t.browseMyFiles}
-                    </button>
-                  </div>
+                <div className="relative space-y-4">
+                  <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur text-indigo-200 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    WHISPER + GROQ · IA
+                  </span>
+                  <h2 className="text-3xl sm:text-[34px] font-black text-white leading-[1.12] tracking-tight">
+                    {t.welcomeBack}
+                  </h2>
+                  <p className="text-slate-400 text-[13px] leading-relaxed max-w-sm">{t.welcomeDesc}</p>
+                </div>
+                <div className="relative flex gap-3 flex-wrap">
+                  <button
+                    onClick={() => setActiveTab("transcribe")}
+                    className="px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-black text-sm hover:bg-indigo-50 shadow-xl transition-all hover:-translate-y-0.5"
+                  >
+                    ⚡ {t.startNewTranscribe}
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("myFiles")}
+                    className="px-6 py-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur text-white font-bold text-sm hover:bg-white/20 transition-all"
+                  >
+                    📁 {t.browseMyFiles}
+                  </button>
                 </div>
               </div>
 
-              {/* Favorites + Folders */}
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className={`${bgCard} border rounded-3xl p-6 space-y-4`}>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-black text-sm flex items-center gap-2 uppercase tracking-wide">
-                      <span className="text-amber-500">★</span> {t.favoriteFiles}
-                    </h3>
-                    <button
-                      onClick={() => setActiveTab("myFiles")}
-                      className="text-xs text-indigo-500 font-bold hover:underline"
-                    >
-                      {t.viewAll}
-                    </button>
+              {/* Stat tiles */}
+              {[
+                { label: t.totalSessions, value: totalSessionsCount, grad: "from-indigo-500 to-violet-500" },
+                { label: t.completedSessions, value: completedSessionsCount, grad: "from-emerald-500 to-teal-500" },
+                { label: t.totalSegments, value: totalSegmentsCount, grad: "from-violet-500 to-fuchsia-500" },
+                { label: t.systemStatus, value: null, grad: "from-amber-500 to-orange-500" },
+              ].map((st) => (
+                <div key={st.label} className={`${glass} rounded-[26px] p-5 border relative overflow-hidden group hover:-translate-y-1 transition-all duration-300`}>
+                  <div className={`absolute -top-10 -end-10 w-28 h-28 rounded-full bg-gradient-to-br ${st.grad} opacity-[0.12] blur-2xl group-hover:opacity-25 transition-opacity`}></div>
+                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${st.grad} text-white flex items-center justify-center text-xs font-black shadow-lg`}>
+                    {st.value === null ? "⚡" : String(st.value).slice(0, 2)}
                   </div>
-                  {customWorksSessions.length === 0 ? (
-                    <p className={`text-xs ${textSub} py-8 text-center rounded-2xl border border-dashed ${isDark ? "border-slate-800" : "border-slate-200"}`}>
-                      {t.noFavorites}
-                    </p>
-                  ) : (
-                    <div className="space-y-2">
-                      {customWorksSessions.slice(0, 4).map((s) => (
-                        <div
-                          key={s.id}
-                          onClick={() => openSession(s)}
-                          className={`p-3.5 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all hover:border-indigo-400 hover:shadow-md ${inputBg}`}
-                        >
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0 ${isVideo(s) ? "bg-violet-500/15 text-violet-500" : "bg-indigo-500/15 text-indigo-500"}`}>
-                            {isVideo(s) ? "🎬" : "🎵"}
-                          </div>
-                          <span className="font-semibold text-xs truncate flex-1">
-                            {customFileNames[s.id] || s.filename}
-                          </span>
-                          <span className="text-[10px] text-indigo-500 font-bold">{t.open} ↗</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  <p className={`text-[10px] font-bold ${textSub} mt-4 uppercase tracking-widest`}>{st.label}</p>
+                  <h3 className="text-2xl font-black mt-1">
+                    {st.value === null ? (
+                      <span className="text-emerald-400 flex items-center gap-2 text-[13px] font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                        {t.active}
+                      </span>
+                    ) : (
+                      st.value
+                    )}
+                  </h3>
                 </div>
+              ))}
 
-                <div className={`${bgCard} border rounded-3xl p-6 space-y-4`}>
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-black text-sm flex items-center gap-2 uppercase tracking-wide">
-                      <span className="text-indigo-500">▣</span> {t.availableFolders}
-                    </h3>
-                    <button
-                      onClick={handleCreateFolder}
-                      className="text-xs text-indigo-500 font-bold hover:underline"
-                    >
-                      {t.createNewFolder}
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {folders.map((f) => {
-                      const count = sessions.filter((s) => (sessionFolderMap[s.id] || "default") === f.id).length;
-                      return (
-                        <div
-                          key={f.id}
-                          onClick={() => {
-                            setSelectedFolderFilter(f.id);
-                            setActiveTab("myFiles");
-                          }}
-                          className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all hover:border-indigo-400 hover:shadow-md ${inputBg}`}
-                        >
-                          <span className="font-semibold text-xs truncate">📂 {f.name}</span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-500 font-bold">
-                            {count}
-                          </span>
+              {/* Favorites tile */}
+              <div className={`${glass} rounded-[26px] p-6 border col-span-2 space-y-4`}>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-amber-400">★</span> {t.favoriteFiles}
+                  </h3>
+                  <button onClick={() => setActiveTab("myFiles")} className="text-[11px] text-indigo-400 font-bold hover:underline">
+                    {t.viewAll}
+                  </button>
+                </div>
+                {customWorksSessions.length === 0 ? (
+                  <p className={`text-xs ${textSub} py-8 text-center rounded-2xl border border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
+                    {t.noFavorites}
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {customWorksSessions.slice(0, 4).map((s) => (
+                      <div
+                        key={s.id}
+                        onClick={() => openSession(s)}
+                        className={`p-3 rounded-2xl border flex items-center gap-3 cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-slate-200 hover:border-indigo-400"}`}
+                      >
+                        <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs shrink-0 ${isVideo(s) ? "bg-fuchsia-500/15 text-fuchsia-400" : "bg-indigo-500/15 text-indigo-400"}`}>
+                          {isVideo(s) ? "🎬" : "🎵"}
                         </div>
-                      );
-                    })}
+                        <span className="font-semibold text-xs truncate flex-1">{customFileNames[s.id] || s.filename}</span>
+                        <span className="text-[10px] text-indigo-400 font-black">{t.open} ↗</span>
+                      </div>
+                    ))}
                   </div>
+                )}
+              </div>
+
+              {/* Folders tile */}
+              <div className={`${glass} rounded-[26px] p-6 border col-span-2 space-y-4`}>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
+                    <span className="text-indigo-400">▣</span> {t.availableFolders}
+                  </h3>
+                  <button onClick={handleCreateFolder} className="text-[11px] text-indigo-400 font-bold hover:underline">
+                    {t.createNewFolder}
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {folders.map((f) => {
+                    const count = sessions.filter((s) => (sessionFolderMap[s.id] || "default") === f.id).length;
+                    return (
+                      <div
+                        key={f.id}
+                        onClick={() => {
+                          setSelectedFolderFilter(f.id);
+                          setActiveTab("myFiles");
+                        }}
+                        className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-slate-200 hover:border-indigo-400"}`}
+                      >
+                        <span className="font-semibold text-xs truncate">📂 {f.name}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isDark ? "bg-white/10" : "bg-slate-200/80"}`}>{count}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           )}
 
-          {/* ══ TRANSCRIBE ════════════════════════════════════════════ */}
+          {/* ══ TRANSCRIBE ══ */}
           {activeTab === "transcribe" && (
-            <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start">
-              <div className="space-y-6">
-                <div className={`${bgCard} rounded-3xl p-6 sm:p-8 border`}>
-                  <h2 className="text-base font-black mb-5 flex items-center gap-2.5">
-                    <span className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center text-sm">
-                      ↑
-                    </span>
-                    {t.uploadTitle}
-                  </h2>
-                  <div
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setDragOver(true);
-                    }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setDragOver(false);
-                      const f = e.dataTransfer.files?.[0];
+            <div className="grid lg:grid-cols-[1fr_370px] gap-5 items-start">
+              <div className={`${glass} rounded-[30px] p-6 sm:p-8 border`}>
+                <h2 className="text-base font-black mb-5">{t.uploadTitle}</h2>
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const f = e.dataTransfer.files?.[0];
+                    if (f) {
+                      setFile(f);
+                      resetRecording();
+                      setError("");
+                    }
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={`cursor-pointer border-2 border-dashed rounded-[26px] p-10 text-center transition-all duration-300 ${
+                    dragOver
+                      ? "border-indigo-400 bg-indigo-500/10 scale-[1.01]"
+                      : isDark
+                      ? "border-white/10 hover:border-indigo-500/60 bg-white/[0.02]"
+                      : "border-slate-300 hover:border-indigo-400 bg-white/60"
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ACCEPTED}
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
                       if (f) {
                         setFile(f);
                         resetRecording();
                         setError("");
                       }
                     }}
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`cursor-pointer border-2 border-dashed rounded-3xl p-10 text-center transition-all duration-300 ${
-                      dragOver
-                        ? "border-indigo-500 bg-indigo-500/10 scale-[1.01]"
-                        : isDark
-                        ? "border-slate-800 hover:border-indigo-500/60 bg-slate-950/40"
-                        : "border-slate-300 hover:border-indigo-400 bg-slate-50/50"
+                  />
+                  <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center text-3xl mb-4">
+                    🎧
+                  </div>
+                  <p className="font-bold text-sm">{t.uploadTitle}</p>
+                  <p className={`text-xs ${textSub} mt-1.5`}>{t.uploadDesc}</p>
+                  {file && (
+                    <div className="mt-5 inline-flex items-center gap-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 px-4 py-2.5 rounded-2xl text-sm font-bold">
+                      <span>📄 {file.name}</span>
+                      <button
+                        className="text-slate-400 hover:text-red-400 font-black"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFile(null);
+                        }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="my-7 flex items-center gap-3">
+                  <div className={`h-px flex-1 ${isDark ? "bg-white/[0.07]" : "bg-slate-200"}`} />
+                  <span className={`text-[10px] ${textSub} uppercase tracking-[0.25em] font-black`}>{t.orRecord}</span>
+                  <div className={`h-px flex-1 ${isDark ? "bg-white/[0.07]" : "bg-slate-200"}`} />
+                </div>
+
+                {!recording && !recBlob && (
+                  <button
+                    onClick={startRecording}
+                    className={`w-full rounded-3xl border-2 py-4 text-center font-bold transition-all flex items-center justify-center gap-2.5 ${
+                      isDark
+                        ? "border-white/10 bg-white/[0.02] hover:border-red-500/60 hover:bg-red-500/10 text-slate-200"
+                        : "border-slate-300 bg-white hover:border-red-400 hover:bg-red-50 text-slate-700"
                     }`}
                   >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept={ACCEPTED}
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) {
-                          setFile(f);
-                          resetRecording();
-                          setError("");
-                        }
-                      }}
-                    />
-                    <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 border border-indigo-500/20 flex items-center justify-center text-3xl mb-4">
-                      🎧
+                    <span className="w-3 h-3 rounded-full bg-red-500 shadow shadow-red-500/50"></span>
+                    {t.recordMic}
+                  </button>
+                )}
+
+                {recording && (
+                  <div className="rounded-3xl border-2 border-red-500/50 bg-red-500/10 p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="w-3.5 h-3.5 rounded-full bg-red-500 animate-ping" />
+                      <span className="font-black text-red-500 tabular-nums">
+                        {String(Math.floor(recSeconds / 60)).padStart(2, "0")}:{String(recSeconds % 60).padStart(2, "0")}
+                      </span>
+                      <span className="text-xs text-red-400 font-semibold">{t.recording}</span>
                     </div>
-                    <p className="font-bold text-sm">{t.uploadTitle}</p>
-                    <p className={`text-xs ${textSub} mt-1.5`}>{t.uploadDesc}</p>
-                    {file && (
-                      <div className="mt-5 inline-flex items-center gap-3 bg-indigo-500/10 text-indigo-600 border border-indigo-500/30 px-4 py-2.5 rounded-2xl text-sm font-semibold">
-                        <span>📄 {file.name}</span>
-                        <button
-                          className="text-slate-400 hover:text-red-500 font-black"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFile(null);
-                          }}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    )}
+                    <button
+                      onClick={stopRecording}
+                      className="px-5 py-2.5 rounded-2xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-600/30 text-sm"
+                    >
+                      {t.stopRecord}
+                    </button>
                   </div>
+                )}
 
-                  <div className="my-7 flex items-center gap-3">
-                    <div className={`h-px flex-1 ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
-                    <span className={`text-[10px] ${textSub} uppercase tracking-[0.2em] font-bold`}>
-                      {t.orRecord}
-                    </span>
-                    <div className={`h-px flex-1 ${isDark ? "bg-slate-800" : "bg-slate-200"}`} />
-                  </div>
-
-                  <div>
-                    {!recording && !recBlob && (
+                {recUrl && (
+                  <div className={`rounded-3xl border p-4 space-y-3 ${isDark ? "border-white/10 bg-white/[0.03]" : "border-slate-200 bg-white"}`}>
+                    <audio src={recUrl} controls className="w-full accent-indigo-500" />
+                    <div className="flex gap-2">
                       <button
-                        onClick={startRecording}
-                        className={`w-full rounded-2xl border-2 py-4 text-center font-bold transition-all flex items-center justify-center gap-2.5 ${
-                          isDark
-                            ? "border-slate-800 bg-slate-950/50 hover:border-red-500 hover:bg-red-500/10 text-slate-200"
-                            : "border-slate-200 bg-white hover:border-red-400 hover:bg-red-50 text-slate-700"
-                        }`}
+                        onClick={() => {
+                          setRecUrl(null);
+                          setRecBlob(null);
+                        }}
+                        className={`px-4 py-2 rounded-xl border text-xs font-bold ${isDark ? "border-white/10 text-slate-300 hover:bg-white/10" : "border-slate-300 text-slate-600 hover:bg-slate-100"}`}
                       >
-                        <span className="w-3 h-3 rounded-full bg-red-500 shadow shadow-red-500/50"></span>
-                        {t.recordMic}
+                        {t.discardRecord}
                       </button>
-                    )}
-
-                    {recording && (
-                      <div className="rounded-2xl border-2 border-red-500/50 bg-red-500/10 p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="w-3.5 h-3.5 rounded-full bg-red-500 animate-ping" />
-                          <span className="font-black text-red-500 tabular-nums">
-                            {String(Math.floor(recSeconds / 60)).padStart(2, "0")}:{String(recSeconds % 60).padStart(2, "0")}
-                          </span>
-                          <span className="text-xs text-red-400 font-semibold">{t.recording}</span>
-                        </div>
-                        <button
-                          onClick={stopRecording}
-                          className="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 shadow-lg shadow-red-600/30 text-sm"
-                        >
-                          {t.stopRecord}
-                        </button>
-                      </div>
-                    )}
-
-                    {recUrl && (
-                      <div className={`rounded-2xl border p-4 space-y-3 ${isDark ? "border-slate-800 bg-slate-950/60" : "border-slate-200 bg-slate-50"}`}>
-                        <audio src={recUrl} controls className="w-full accent-indigo-600" />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => {
-                              setRecUrl(null);
-                              setRecBlob(null);
-                            }}
-                            className={`px-4 py-2 rounded-xl border text-xs font-bold ${isDark ? "border-slate-800 hover:bg-slate-800 text-slate-300" : "border-slate-300 hover:bg-slate-100 text-slate-700"}`}
-                          >
-                            {t.discardRecord}
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (mediaRecorderRef.current) resetRecording();
-                              startRecording();
-                            }}
-                            className={`px-4 py-2 rounded-xl border text-xs font-bold ${isDark ? "border-slate-800 hover:bg-slate-800 text-slate-300" : "border-slate-300 hover:bg-slate-100 text-slate-700"}`}
-                          >
-                            {t.reRecord}
-                          </button>
-                        </div>
-                      </div>
-                    )}
+                      <button
+                        onClick={() => {
+                          if (mediaRecorderRef.current) resetRecording();
+                          startRecording();
+                        }}
+                        className={`px-4 py-2 rounded-xl border text-xs font-bold ${isDark ? "border-white/10 text-slate-300 hover:bg-white/10" : "border-slate-300 text-slate-600 hover:bg-slate-100"}`}
+                      >
+                        {t.reRecord}
+                      </button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* Options + CTA panel */}
-              <div className={`${bgCard} rounded-3xl p-6 border space-y-5 lg:sticky lg:top-24`}>
-                <h2 className="text-base font-black flex items-center gap-2.5">
-                  <span className="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-500 flex items-center justify-center text-sm">⚙</span>
-                  {t.aiOptions}
-                </h2>
+              {/* Right rail */}
+              <div className={`${glass} rounded-[30px] p-6 border space-y-5 lg:sticky lg:top-24`}>
+                <h2 className="text-sm font-black uppercase tracking-widest">{t.aiOptions}</h2>
 
                 <div>
-                  <label className={`block text-xs font-bold ${textSub} mb-2`}>{t.audioLang}</label>
+                  <label className={`block text-[11px] font-bold ${textSub} mb-2 uppercase tracking-wide`}>{t.audioLang}</label>
                   <select
                     value={language}
                     onChange={(e) => setLanguage(e.target.value)}
-                    className={`w-full rounded-2xl border px-3.5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/60 ${inputBg}`}
+                    className={`w-full rounded-2xl border px-3.5 py-3 text-sm focus:outline-none focus:ring-2 ${inputBg}`}
                   >
                     {LANGUAGES.map((l) => (
                       <option key={l.value} value={l.value}>
@@ -1082,12 +1008,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 </div>
 
                 <div>
-                  <label className={`block text-xs font-bold ${textSub} mb-2`}>{t.expectedSpeakers}</label>
+                  <label className={`block text-[11px] font-bold ${textSub} mb-2 uppercase tracking-wide`}>{t.expectedSpeakers}</label>
                   <select
                     value={numSpeakers}
                     onChange={(e) => setNumSpeakers(Number(e.target.value))}
                     disabled={!detectSpeakers}
-                    className={`w-full rounded-2xl border px-3.5 py-3 text-sm disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-indigo-500/60 ${inputBg}`}
+                    className={`w-full rounded-2xl border px-3.5 py-3 text-sm disabled:opacity-40 focus:outline-none focus:ring-2 ${inputBg}`}
                   >
                     {[1, 2, 3, 4, 5, 6].map((n) => (
                       <option key={n} value={n}>
@@ -1097,18 +1023,17 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   </select>
                 </div>
 
-                <label className="flex items-center gap-3 text-sm font-semibold cursor-pointer">
+                <label className="flex items-center gap-3 text-sm font-bold cursor-pointer">
                   <input
                     type="checkbox"
                     checked={detectSpeakers}
                     onChange={(e) => setDetectSpeakers(e.target.checked)}
-                    className="w-4 h-4 rounded accent-indigo-600"
+                    className="w-4 h-4 rounded accent-indigo-500"
                   />
                   {t.autoSpeakers}
                 </label>
 
-                {/* Pipeline steps */}
-                <div className={`rounded-2xl border p-4 space-y-3 ${isDark ? "border-slate-800 bg-slate-950/40" : "border-slate-200 bg-slate-50/60"}`}>
+                <div className={`rounded-3xl border p-4 space-y-3 ${glassSoft}`}>
                   {PIPELINE_STEPS.map((step, i) => {
                     const done = activeStep > i || phase === "done";
                     const active = activeStep === i && busy;
@@ -1119,19 +1044,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             done
                               ? "bg-emerald-500 text-white"
                               : active
-                              ? "bg-indigo-600 text-white animate-pulse"
+                              ? "bg-indigo-500 text-white animate-pulse"
                               : isDark
-                              ? "bg-slate-800 text-slate-500"
+                              ? "bg-white/[0.06] text-slate-500"
                               : "bg-slate-200 text-slate-400"
                           }`}
                         >
                           {done ? "✓" : i + 1}
                         </span>
-                        <span
-                          className={`text-xs font-bold ${
-                            active ? "text-indigo-500" : done ? "text-emerald-600" : textSub
-                          }`}
-                        >
+                        <span className={`text-xs font-bold ${active ? "text-indigo-400" : done ? "text-emerald-400" : textSub}`}>
                           {step.label}
                         </span>
                       </div>
@@ -1142,11 +1063,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     <div className="space-y-1.5 pt-2">
                       <div className={`flex justify-between text-xs font-bold ${textSub}`}>
                         <span>Upload…</span>
-                        <span className="text-indigo-500">{progress}%</span>
+                        <span className="text-indigo-400">{progress}%</span>
                       </div>
-                      <div className={`h-2 rounded-full overflow-hidden ${isDark ? "bg-slate-800" : "bg-slate-200"}`}>
+                      <div className={`h-2 rounded-full overflow-hidden ${isDark ? "bg-white/[0.07]" : "bg-slate-200"}`}>
                         <div
-                          className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 transition-all duration-300"
+                          className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 transition-all duration-300"
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -1155,14 +1076,14 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
                   {(phase === "transcribing" || phase === "diarizing") && (
                     <div className="space-y-2 pt-2">
-                      <div className="h-2 rounded-full overflow-hidden bg-gradient-to-r from-indigo-500/30 via-indigo-500 to-indigo-500/30 animate-pulse" />
-                      <p className="text-[11px] text-amber-500 font-medium leading-relaxed">{t.largeFileTip}</p>
+                      <div className="h-2 rounded-full bg-gradient-to-r from-indigo-500/30 via-fuchsia-500 to-indigo-500/30 animate-pulse" />
+                      <p className="text-[11px] text-amber-400 font-medium leading-relaxed">{t.largeFileTip}</p>
                     </div>
                   )}
                 </div>
 
                 {phase === "error" && (
-                  <div className="text-xs text-red-500 bg-red-500/10 border border-red-500/30 rounded-2xl p-3.5 font-semibold">
+                  <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-2xl p-3.5 font-semibold">
                     ⚠️ {error}
                   </div>
                 )}
@@ -1170,7 +1091,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <button
                   onClick={handleProcess}
                   disabled={!hasAudio || busy}
-                  className="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black text-sm hover:from-indigo-500 hover:to-violet-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-indigo-600/25 transition-all hover:-translate-y-0.5"
+                  className="w-full py-4 rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white font-black text-sm hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-indigo-950/50 transition-all hover:-translate-y-0.5"
                 >
                   {busy ? "⏳ " + t.processing : "⚡ " + t.startTranscribe}
                 </button>
@@ -1178,27 +1099,41 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
             </div>
           )}
 
-          {/* ══ ARCHIVE ═══════════════════════════════════════════════ */}
+          {/* ══ ARCHIVE ══ */}
           {activeTab === "archive" && (
-            <div className={`${bgCard} rounded-3xl p-6 sm:p-8 border space-y-6`}>
+            <div className={`${glass} rounded-[30px] p-6 sm:p-8 border space-y-6`}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <h2 className="text-lg font-black">{t.archiveTitle}</h2>
-                  <p className={`text-xs ${textSub} mt-0.5`}>{t.archiveDesc}</p>
+                  <h2 className="text-xl font-black">{t.archiveTitle}</h2>
+                  <p className={`text-xs ${textSub} mt-1`}>{t.archiveDesc}</p>
                 </div>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className={`rounded-2xl border px-3.5 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/60 ${inputBg} cursor-pointer`}
-                >
-                  <option value="all">{t.allStatus}</option>
-                  <option value="done">{t.completedOnly}</option>
-                  <option value="processing">{t.processingStatus}</option>
-                </select>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <svg className="w-4 h-4 absolute inset-y-0 my-auto start-3 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder={t.searchPlaceholder}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className={`rounded-2xl border ps-9 pe-3 py-2.5 text-xs w-52 focus:outline-none focus:ring-2 ${inputBg}`}
+                    />
+                  </div>
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className={`rounded-2xl border px-3.5 py-2.5 text-xs font-bold focus:outline-none ${inputBg} cursor-pointer`}
+                  >
+                    <option value="all">{t.allStatus}</option>
+                    <option value="done">{t.completedOnly}</option>
+                    <option value="processing">{t.processingStatus}</option>
+                  </select>
+                </div>
               </div>
 
               {filteredSessions.length === 0 ? (
-                <div className={`text-center py-20 ${textSub} rounded-3xl border-2 border-dashed ${isDark ? "border-slate-800" : "border-slate-200"}`}>
+                <div className={`text-center py-20 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"} ${textSub}`}>
                   <p className="text-4xl mb-3">📭</p>
                   <p className="font-bold text-sm">Aucune session trouvée</p>
                 </div>
@@ -1212,32 +1147,34 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                       <div
                         key={s.id}
                         onClick={() => openSession(s)}
-                        className={`group flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 ${
-                          isDark ? "bg-slate-950/50 border-slate-800 hover:border-indigo-500/60" : "bg-white border-slate-200 hover:border-indigo-400"
+                        className={`group flex items-center gap-4 p-4 rounded-3xl border cursor-pointer transition-all duration-200 ${
+                          isDark
+                            ? "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-indigo-500/40"
+                            : "bg-white/70 border-slate-200 hover:border-indigo-400 hover:shadow-md"
                         }`}
                       >
                         <div
                           className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg shrink-0 ${
                             isVideo(s)
-                              ? "bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 border border-violet-500/20 text-violet-500"
-                              : "bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 text-indigo-500"
+                              ? "bg-gradient-to-br from-fuchsia-500/20 to-pink-500/20 border border-fuchsia-500/20"
+                              : "bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20"
                           }`}
                         >
                           {isVideo(s) ? "🎬" : "🎵"}
                         </div>
 
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-bold text-sm truncate max-w-full group-hover:text-indigo-500 transition-colors" title={displayName}>
+                          <div className="flex items-center gap-2.5 flex-wrap">
+                            <h3 className="font-bold text-sm truncate max-w-full group-hover:text-indigo-400 transition-colors" title={displayName}>
                               {displayName}
                             </h3>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${st.cls}`}>
+                            <span className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold border ${st.cls}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`}></span>
                               {st.label}
                             </span>
                           </div>
                           <p className={`text-[11px] ${textSub} mt-1 truncate`}>
-                            📅 {new Date(s.created_at).toLocaleString()} · 📝 {s.segments?.length ?? 0} segments · 🌐{" "}
-                            {s.language || "auto"}
+                            {new Date(s.created_at).toLocaleString()} · {s.segments?.length ?? 0} segments · {s.language || "auto"}
                           </p>
                         </div>
 
@@ -1245,7 +1182,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                           <button
                             onClick={(e) => toggleCustomWork(e, s.id)}
                             className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm transition ${
-                              isCustom ? "text-amber-500 bg-amber-500/15" : "text-slate-400 hover:text-amber-500 hover:bg-amber-500/10"
+                              isCustom ? "text-amber-400 bg-amber-400/15" : "text-slate-500 hover:text-amber-400 hover:bg-amber-400/10"
                             }`}
                             title={isCustom ? t.removeFromCustom : t.addToCustom}
                           >
@@ -1253,21 +1190,18 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                           </button>
                           <button
                             onClick={(e) => handleRename(e, s.id)}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 transition"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
                             title={t.renameFile}
                           >
                             ✏️
                           </button>
                           <button
                             onClick={(e) => deleteSession(e, s.id)}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
                             title={t.delete}
                           >
                             🗑
                           </button>
-                          <svg className={`w-4 h-4 ms-2 hidden sm:block ${textSub} group-hover:text-indigo-500 transition-colors`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                          </svg>
                         </div>
                       </div>
                     );
@@ -1277,50 +1211,36 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
             </div>
           )}
 
-          {/* ══ MY FILES ══════════════════════════════════════════════ */}
+          {/* ══ MY FILES ══ */}
           {activeTab === "myFiles" && (
-            <div className={`${bgCard} rounded-3xl p-6 sm:p-8 border space-y-6`}>
+            <div className={`${glass} rounded-[30px] p-6 sm:p-8 border space-y-6`}>
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
-                  <h2 className="text-lg font-black">{t.myFilesTitle}</h2>
-                  <p className={`text-xs ${textSub} mt-0.5`}>{t.myFilesDesc}</p>
+                  <h2 className="text-xl font-black">{t.myFilesTitle}</h2>
+                  <p className={`text-xs ${textSub} mt-1`}>{t.myFilesDesc}</p>
                 </div>
                 <button
                   onClick={handleCreateFolder}
-                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-xs hover:from-indigo-500 hover:to-violet-500 shadow-lg shadow-indigo-600/25 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-xs hover:brightness-110 shadow-lg shadow-indigo-950/40 transition-all flex items-center gap-1.5"
                 >
-                  <span>＋</span> {t.createNewFolder}
+                  {t.createNewFolder}
                 </button>
               </div>
 
-              {/* Folder pills */}
               <div className="flex items-center gap-2 flex-wrap">
                 <button
                   onClick={() => setSelectedFolderFilter("all")}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition ${
-                    selectedFolderFilter === "all"
-                      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/30"
-                      : isDark
-                      ? "bg-slate-950 text-slate-400 border border-slate-800 hover:border-indigo-500/50"
-                      : "bg-white text-slate-500 border border-slate-200 hover:border-indigo-400"
-                  }`}
+                  className={`px-4 py-2 rounded-full text-xs font-bold transition ${filePill(selectedFolderFilter === "all")}`}
                 >
                   {t.allFiles} ({customWorksSessions.length})
                 </button>
                 {folders.map((f) => {
                   const count = customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === f.id).length;
-                  const active = selectedFolderFilter === f.id;
                   return (
                     <button
                       key={f.id}
                       onClick={() => setSelectedFolderFilter(f.id)}
-                      className={`px-4 py-2 rounded-full text-xs font-bold transition ${
-                        active
-                          ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-md shadow-indigo-500/30"
-                          : isDark
-                          ? "bg-slate-950 text-slate-400 border border-slate-800 hover:border-indigo-500/50"
-                          : "bg-white text-slate-500 border border-slate-200 hover:border-indigo-400"
-                      }`}
+                      className={`px-4 py-2 rounded-full text-xs font-bold transition ${filePill(selectedFolderFilter === f.id)}`}
                     >
                       📂 {f.name} ({count})
                     </button>
@@ -1329,7 +1249,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               </div>
 
               {folderFilteredSessions.length === 0 ? (
-                <div className={`text-center py-20 rounded-3xl border-2 border-dashed ${isDark ? "border-slate-800" : "border-slate-200"}`}>
+                <div className={`text-center py-20 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
                   <div className="text-4xl mb-3">🗂️</div>
                   <p className="font-bold text-sm">{t.noFilesFolder}</p>
                   <p className={`text-xs mt-1.5 ${textSub}`}>{t.noFilesFolderDesc}</p>
@@ -1343,25 +1263,22 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                       <div
                         key={s.id}
                         onClick={() => openSession(s)}
-                        className={`group flex items-center gap-4 p-4 rounded-2xl border cursor-pointer transition-all hover:shadow-lg hover:-translate-y-0.5 ${
-                          isDark ? "bg-slate-950/50 border-slate-800 hover:border-indigo-500/60" : "bg-white border-slate-200 hover:border-indigo-400"
+                        className={`group flex items-center gap-4 p-4 rounded-3xl border cursor-pointer transition-all duration-200 ${
+                          isDark
+                            ? "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-indigo-500/40"
+                            : "bg-white/70 border-slate-200 hover:border-indigo-400 hover:shadow-md"
                         }`}
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 border border-amber-500/20 flex items-center justify-center text-lg shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/25 flex items-center justify-center text-lg shrink-0 text-amber-400">
                           ★
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-sm truncate group-hover:text-indigo-500 transition-colors">
-                            {displayName}
-                          </h3>
+                          <h3 className="font-bold text-sm truncate group-hover:text-indigo-400 transition-colors">{displayName}</h3>
                           <p className={`text-[11px] ${textSub} mt-1 truncate`}>
-                            📅 {new Date(s.created_at).toLocaleString()} · 📝 {s.segments?.length ?? 0} segments
+                            {new Date(s.created_at).toLocaleString()} · {s.segments?.length ?? 0} segments
                           </p>
                         </div>
-                        <div
-                          className="flex items-center gap-2 shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
                           <select
                             value={currentFolderId}
                             onChange={(e) => handleMoveToFolder(s.id, e.target.value)}
@@ -1376,14 +1293,14 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                           </select>
                           <button
                             onClick={(e) => handleRename(e, s.id)}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/10 transition"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
                             title={t.renameFile}
                           >
                             ✏️
                           </button>
                           <button
                             onClick={(e) => deleteSession(e, s.id)}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition"
+                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
                             title={t.delete}
                           >
                             🗑
@@ -1397,63 +1314,55 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
             </div>
           )}
 
-          {/* ══ SETTINGS ══════════════════════════════════════════════ */}
+          {/* ══ SETTINGS ══ */}
           {activeTab === "settings" && (
-            <div className="space-y-6 max-w-2xl">
-              <div className={`${bgCard} rounded-3xl p-6 sm:p-8 border space-y-5`}>
-                <div className={`flex items-center gap-3 pb-4 border-b ${cardHead}`}>
-                  <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20 flex items-center justify-center">⚙️</span>
+            <div className="space-y-5 max-w-2xl">
+              <div className={`${glass} rounded-[30px] p-6 sm:p-8 border space-y-1`}>
+                <div className={`flex items-center gap-3 pb-5 border-b ${hairline}`}>
+                  <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center">⚙️</span>
                   <div>
                     <h2 className="text-lg font-black">{t.settingsTitle}</h2>
                     <p className={`text-xs ${textSub}`}>Préférences de l'espace de travail</p>
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-4 py-5">
                   <div>
                     <h4 className="text-sm font-bold">{t.autoSave}</h4>
                     <p className={`text-xs ${textSub} mt-0.5`}>{t.autoSaveDesc}</p>
                   </div>
                   <button
                     onClick={() => setAutoSaveEnabled(!autoSaveEnabled)}
-                    className={`w-12 h-7 rounded-full relative transition-colors shrink-0 ${
-                      autoSaveEnabled ? "bg-indigo-600" : isDark ? "bg-slate-800" : "bg-slate-300"
-                    }`}
+                    className={`w-12 h-7 rounded-full relative transition-colors shrink-0 ${autoSaveEnabled ? "bg-indigo-500" : isDark ? "bg-white/10" : "bg-slate-300"}`}
                   >
                     <span
-                      className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all ${
-                        autoSaveEnabled ? "start-6" : "start-1"
-                      }`}
+                      className={`absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-all ${autoSaveEnabled ? "start-6" : "start-1"}`}
                     ></span>
                   </button>
                 </div>
 
-                <div className={`flex items-center justify-between gap-4 pt-5 border-t ${cardHead}`}>
+                <div className={`flex items-center justify-between gap-4 py-5 border-t ${hairline}`}>
                   <div>
                     <h4 className="text-sm font-bold">{t.themeMode}</h4>
-                    <p className={`text-xs ${textSub} mt-0.5`}>Mode sombre ou clair</p>
+                    <p className={`text-xs ${textSub} mt-0.5`}>Aurora sombre ou porcelain clair</p>
                   </div>
-                  <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-slate-950" : "bg-slate-100"}`}>
+                  <div className={`flex gap-1 p-1 rounded-2xl ${isDark ? "bg-white/[0.05]" : "bg-slate-200/70"}`}>
                     <button
                       onClick={() => setTheme("dark")}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                        theme === "dark" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition ${theme === "dark" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"}`}
                     >
                       🌙 {t.darkMode}
                     </button>
                     <button
                       onClick={() => setTheme("light")}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
-                        theme === "light" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"
-                      }`}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition ${theme === "light" ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow" : "text-slate-400"}`}
                     >
                       ☀️ {t.lightMode}
                     </button>
                   </div>
                 </div>
 
-                <div className={`flex items-center justify-between gap-4 pt-5 border-t ${cardHead}`}>
+                <div className={`flex items-center justify-between gap-4 py-5 border-t ${hairline}`}>
                   <div>
                     <h4 className="text-sm font-bold">{t.languageUi}</h4>
                     <p className={`text-xs ${textSub} mt-0.5`}>Langue de l'interface</p>
@@ -1461,7 +1370,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   <select
                     value={uiLang}
                     onChange={(e) => setUiLang(e.target.value)}
-                    className={`text-xs rounded-xl px-3 py-2.5 border font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 ${inputBg} cursor-pointer`}
+                    className={`text-xs rounded-xl px-3 py-2.5 border font-bold focus:outline-none ${inputBg} cursor-pointer`}
                   >
                     <option value="ar">العربية (Arabic)</option>
                     <option value="en">English</option>
@@ -1470,15 +1379,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 </div>
               </div>
 
-              <div className={`${bgCard} rounded-3xl p-6 border ${textSub} text-xs leading-relaxed`}>
-                <p className="font-bold text-slate-500 mb-1">Zendocs Studio v2.0</p>
-                <p>Transcription par IA (Groq · Whisper) · Détection des locuteurs · Stockage cloud sécurisé.</p>
+              <div className={`${glass} rounded-[30px] p-6 border ${textSub} text-xs leading-relaxed`}>
+                <p className="font-black text-slate-400 mb-1">Zendocs Studio · Aurora Edition</p>
+                <p>Transcription IA (Groq · Whisper) · Détection des locuteurs par empreinte vocale · Stockage cloud chiffré.</p>
               </div>
             </div>
           )}
         </main>
 
-        <footer className={`py-6 text-center text-[11px] ${textSub}`}>
+        <footer className={`relative pb-8 text-center text-[11px] ${textSub}`}>
           Zendocs — Studio de transcription audio & vidéo par IA
         </footer>
       </div>
