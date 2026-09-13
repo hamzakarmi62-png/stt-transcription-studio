@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils.js";
-import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Scissors, Trash, User } from "./Icons.jsx";
+import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Scissors, Trash } from "./Icons.jsx";
 
-// Document-style segment: transparent body on the white reading panel, a
-// floating hover toolbar (move / split / copy / merge / edit / delete /
-// per-paragraph speaker) and amber word highlight.
+// Rev-style paragraph: every segment carries its own header — speaker name
+// (dotted underline, click to change) + play button + its own timestamp —
+// followed by the text, with a floating hover toolbar.
 export default function Segment({
   segment,
   speaker,
@@ -19,7 +19,6 @@ export default function Segment({
   canMoveDown = true,
   onMoveUp,
   onMoveDown,
-  showOwnTime = false,
   onAddSpeakerFor,
   onStartEdit,
   onCommitEdit,
@@ -32,6 +31,7 @@ export default function Segment({
   currentTime,
 }) {
   const textareaRef = useRef(null);
+  const paragraphRef = useRef(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -53,10 +53,41 @@ export default function Segment({
     }
   };
 
+  // Character offset of the current mouse selection inside the paragraph, so
+  // the scissors splits exactly where the user highlighted (Rev-style).
+  const getSelectionCaret = () => {
+    try {
+      const sel = window.getSelection();
+      const p = paragraphRef.current;
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed || !p) return -1;
+      const range = sel.getRangeAt(0);
+      if (!p.contains(range.endContainer)) return -1;
+      const pre = range.cloneRange();
+      pre.selectNodeContents(p);
+      pre.setEnd(range.endContainer, range.endOffset);
+      return pre.toString().length;
+    } catch {
+      return -1;
+    }
+  };
+
   const doSplit = () => {
     const mid = Math.max(1, Math.floor(segment.text.length / 2));
-    const caret = editing ? (textareaRef.current?.selectionStart ?? mid) : mid;
+    const fromSelection = getSelectionCaret();
+    const caret = editing
+      ? (textareaRef.current?.selectionStart ?? mid)
+      : fromSelection > 0
+      ? fromSelection
+      : mid;
     onSplit(segment.id, caret);
+  };
+
+  const handleSpeakerChange = (e) => {
+    if (e.target.value === "__new__") {
+      onAddSpeakerFor && onAddSpeakerFor(segment.id);
+    } else {
+      onReassign(segment.id, e.target.value);
+    }
   };
 
   const toolBtn =
@@ -98,7 +129,7 @@ export default function Segment({
           <ChevronDown className="w-4 h-4" />
         </button>
         <span className="h-4 w-px bg-slate-200 mx-0.5"></span>
-        <button onClick={doSplit} className={toolBtn} title="Couper / diviser le segment">
+        <button onClick={doSplit} className={toolBtn} title="Couper à la sélection / au curseur">
           <Scissors className="w-4 h-4" />
         </button>
         <button onClick={copyText} className={toolBtn} title="Copier le texte">
@@ -123,21 +154,20 @@ export default function Segment({
         >
           <Trash className="w-4 h-4" />
         </button>
-        <span className="h-4 w-px bg-slate-200 mx-0.5"></span>
-        <span className="inline-flex items-center gap-1 ps-1 pe-1.5">
-          <User className="w-3.5 h-3.5 text-slate-400" />
+      </div>
+
+      {/* Per-paragraph header: speaker (click to change) + play + own time */}
+      <div className="flex items-center gap-3 mb-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
+        <label
+          className="inline-flex items-center gap-1.5 cursor-pointer border-b-2 border-dotted pb-0.5"
+          style={{ borderColor: speakerColor }}
+          title="Changer le locuteur de ce paragraphe"
+        >
           <select
             value={segment.speaker || ""}
-            onChange={(e) => {
-              if (e.target.value === "__new__") {
-                onAddSpeakerFor && onAddSpeakerFor(segment.id);
-              } else {
-                onReassign(segment.id, e.target.value);
-              }
-            }}
-            className="appearance-none bg-transparent text-[11px] font-bold outline-none cursor-pointer max-w-[96px] truncate"
+            onChange={handleSpeakerChange}
+            className="appearance-none bg-transparent font-bold text-[15px] outline-none cursor-pointer max-w-[160px] truncate"
             style={{ color: speakerColor }}
-            title="Locuteur de ce paragraphe"
           >
             {speakers.map((s) => (
               <option key={s.id} value={s.id}>
@@ -146,7 +176,17 @@ export default function Segment({
             ))}
             <option value="__new__">+ Nouveau locuteur</option>
           </select>
-        </span>
+          <Pencil className="w-3.5 h-3.5 opacity-70" style={{ color: speakerColor }} />
+        </label>
+        <span className="h-5 w-px bg-slate-200"></span>
+        <button
+          onClick={() => onSeek(segment.start)}
+          className="inline-flex items-center gap-2 text-slate-800 hover:text-indigo-600 transition"
+          title="Lire depuis le début du paragraphe"
+        >
+          <Play className="w-[18px] h-[18px] text-slate-700" filled />
+          <span className="font-bold tabular-nums text-[15px]">{formatTime(segment.start)}</span>
+        </button>
       </div>
 
       {editing ? (
@@ -174,20 +214,7 @@ export default function Segment({
           </p>
         </div>
       ) : (
-        <p dir="auto" className="text-[17px] leading-[1.9] text-slate-800 select-text">
-          {showOwnTime && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onSeek(segment.start);
-              }}
-              className="inline-flex items-center gap-1 me-2 align-middle text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5 hover:bg-indigo-100 transition"
-              title={`Lire depuis ce paragraphe (${formatTime(segment.start)}) — le paragraphe garde toujours son propre temps`}
-            >
-              <Play className="w-3 h-3" filled />
-              {formatTime(segment.start)}
-            </button>
-          )}
+        <p ref={paragraphRef} dir="auto" className="text-[17px] leading-[1.9] text-slate-800 select-text">
           {segment.words && segment.words.length > 0 ? (
             segment.words.map((w, i) => {
               const wKey = `${segment.id}-w${i}`;

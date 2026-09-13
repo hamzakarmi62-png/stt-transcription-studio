@@ -455,14 +455,15 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     mutate((prev) => ({ ...prev, segments: prev.segments.filter((s) => s.id !== id) }));
 
   const splitSegment = (id, caret) => {
-    if (!caret || caret <= 0) return;
     mutate((prev) => {
       const seg = prev.segments.find((s) => s.id === id);
-      if (!seg || caret <= 0 || caret >= seg.text.length) return prev;
-      const before = seg.text.slice(0, caret);
-      const after = seg.text.slice(caret);
+      if (!seg || seg.text.trim().length < 2) return prev;
+      // Clamp: the caret may come from a text selection past edge cases.
+      const c = Math.min(Math.max(Math.floor(caret), 1), seg.text.length - 1);
+      const before = seg.text.slice(0, c);
+      const after = seg.text.slice(c);
       if (!before.trim() || !after.trim()) return prev;
-      const ratio = before.length / Math.max(seg.text.length, 1);
+      const ratio = c / Math.max(seg.text.length, 1);
       const mid = (seg.start + (seg.end - seg.start) * ratio).toFixed(3);
       const leftWords = (seg.words || []).filter((w) => w.start < Number(mid));
       const rightWords = (seg.words || []).filter((w) => w.start >= Number(mid));
@@ -1034,86 +1035,37 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               </div>
             ) : (
               <div className="pb-10">
-                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-9">
-                  {groupedTurns.map((turn) => {
-                    const speaker = speakerById[turn.speaker];
-                    const startColor = speaker?.color || "#475569";
-                    return (
-                      <div key={turn.id}>
-                        <div
-                          className="flex items-center gap-3 mb-1.5 flex-wrap"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <label
-                            className="inline-flex items-center gap-1.5 cursor-pointer border-b-2 border-dotted pb-0.5"
-                            style={{ borderColor: startColor }}
-                            title="Changer de locuteur"
-                          >
-                            <select
-                              value={turn.segments[0]?.seg.speaker || ""}
-                              onChange={(e) =>
-                                turn.segments.forEach(({ seg }) => reassign(seg.id, e.target.value))
-                              }
-                              className="appearance-none bg-transparent font-bold text-[15px] outline-none cursor-pointer"
-                              style={{ color: startColor }}
-                            >
-                              {speakers.map((s) => (
-                                <option key={s.id} value={s.id}>
-                                  {s.name}
-                                </option>
-                              ))}
-                            </select>
-                            <Pencil className="w-3.5 h-3.5 opacity-70" style={{ color: startColor }} />
-                          </label>
-                          <span className="h-5 w-px bg-slate-200"></span>
-                          <button
-                            onClick={() => seekTo(turn.start)}
-                            className="inline-flex items-center gap-2 text-slate-800 hover:text-indigo-600 transition"
-                            title="Lire depuis le début du passage"
-                          >
-                            <Play className="w-[18px] h-[18px] text-slate-700" filled />
-                            <span className="font-bold tabular-nums text-[15px]">
-                              {formatTime(turn.start)}
-                            </span>
-                          </button>
-                        </div>
-
-                        <div className="space-y-3">
-                          {turn.segments.map(({ seg, index }) => (
-                            <Segment
-                              key={seg.id}
-                              segment={seg}
-                              speaker={speaker}
-                              isActive={activeSegment?.id === seg.id}
-                              activeWordKey={activeWordKey}
-                              editingWordKey={editingWordKey}
-                              onSetEditingWordKey={setEditingWordKey}
-                              onUpdateWord={updateWordText}
-                              editing={editingId === seg.id}
-                              canMerge={index < segments.length - 1}
-                              canMoveUp={index > 0}
-                              canMoveDown={index < segments.length - 1}
-                              onMoveUp={moveSegmentUp}
-                              onMoveDown={moveSegmentDown}
-                              showOwnTime={turn.segments[0].seg.id !== seg.id}
-                              onAddSpeakerFor={addSpeakerForSegment}
-                              speakers={speakers}
-                              onStartEdit={(id) => setEditingId(id)}
-                              onCommitEdit={updateSegmentText}
-                              onDelete={(id) => {
-                                if (editingId === id) setEditingId(null);
-                                deleteSegment(id);
-                              }}
-                              onSplit={splitSegment}
-                              onMerge={mergeWithNext}
-                              onReassign={reassign}
-                              onSeek={seekTo}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-7">
+                  {segments.map((seg, index) => (
+                    <Segment
+                      key={seg.id}
+                      segment={seg}
+                      speaker={speakerById[seg.speaker]}
+                      isActive={activeSegment?.id === seg.id}
+                      activeWordKey={activeWordKey}
+                      editingWordKey={editingWordKey}
+                      onSetEditingWordKey={setEditingWordKey}
+                      onUpdateWord={updateWordText}
+                      editing={editingId === seg.id}
+                      canMerge={index < segments.length - 1}
+                      canMoveUp={index > 0}
+                      canMoveDown={index < segments.length - 1}
+                      onMoveUp={moveSegmentUp}
+                      onMoveDown={moveSegmentDown}
+                      onAddSpeakerFor={addSpeakerForSegment}
+                      speakers={speakers}
+                      onStartEdit={(id) => setEditingId(id)}
+                      onCommitEdit={updateSegmentText}
+                      onDelete={(id) => {
+                        if (editingId === id) setEditingId(null);
+                        deleteSegment(id);
+                      }}
+                      onSplit={splitSegment}
+                      onMerge={mergeWithNext}
+                      onReassign={reassign}
+                      onSeek={seekTo}
+                    />
+                  ))}
                 </div>
               </div>
             )}
