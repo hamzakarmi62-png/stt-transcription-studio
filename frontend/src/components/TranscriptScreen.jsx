@@ -5,87 +5,9 @@ import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
-import { ArrowLeft, Play, Zap, LayoutGrid, AlignLeft, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, MoreHorizontal, RotateCcw, RotateCw, Pause } from "./Icons.jsx";
+import { ArrowLeft, Play, LayoutGrid, AlignLeft, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause } from "./Icons.jsx";
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
-
-const SYNC_PRESETS = [0, 0.15, 0.25, 0.4, 0.6];
-
-const clampOffset = (v) => Math.round(Math.min(1.5, Math.max(-1.5, v)) * 100) / 100;
-const fmtOffset = (v) => (v > 0 ? "+" : "") + v.toFixed(2) + "s";
-
-// Fine-grained highlight-sync tuner: slider (0.01s steps), ±0.01/±0.05 nudges
-// and quick presets. The value persists per device via localStorage.
-function SyncControls({ value, onChange }) {
-  const nudge =
-    "px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[11px] font-bold text-slate-200 hover:bg-white/10 transition";
-  return (
-    <div className="space-y-2.5">
-      <div className="flex items-center justify-between gap-2">
-        <span
-          className={`text-xs font-black tabular-nums px-2 py-0.5 rounded-lg ${
-            value < -0.05
-              ? "bg-sky-500/15 text-sky-400"
-              : value > 0.3
-              ? "bg-amber-500/15 text-amber-400"
-              : "bg-emerald-500/15 text-emerald-400"
-          }`}
-        >
-          {fmtOffset(value)}
-        </span>
-        <button
-          onClick={() => onChange(0.25)}
-          className="text-[10px] text-slate-400 hover:text-slate-200 font-bold transition"
-          title="Revenir à la valeur idéale"
-        >
-          Réinitialiser
-        </button>
-      </div>
-      <input
-        type="range"
-        min="-1.5"
-        max="1.5"
-        step="0.01"
-        value={value}
-        onChange={(e) => onChange(clampOffset(parseFloat(e.target.value)))}
-        className="w-full accent-indigo-500 cursor-pointer"
-        dir="ltr"
-      />
-      <div className="flex items-center justify-between gap-1" dir="ltr">
-        <button className={nudge} onClick={() => onChange(clampOffset(value - 0.05))}>
-          −0.05
-        </button>
-        <button className={nudge} onClick={() => onChange(clampOffset(value - 0.01))}>
-          −0.01
-        </button>
-        <button className={nudge} onClick={() => onChange(clampOffset(value + 0.01))}>
-          +0.01
-        </button>
-        <button className={nudge} onClick={() => onChange(clampOffset(value + 0.05))}>
-          +0.05
-        </button>
-      </div>
-      <div className="flex items-center gap-1 flex-wrap">
-        {SYNC_PRESETS.map((p) => (
-          <button
-            key={p}
-            onClick={() => onChange(p)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-bold tabular-nums transition ${
-              Math.abs(value - p) < 0.005
-                ? "bg-indigo-600 text-white"
-                : "bg-white/5 border border-white/10 text-slate-300 hover:bg-white/10"
-            }`}
-          >
-            {p === 0 ? "0.00" : "+" + p.toFixed(2)}
-          </button>
-        ))}
-      </div>
-      <p className="text-[10px] text-slate-500 leading-relaxed">
-        Lancez la lecture et ajustez jusqu'à ce que le mot jaune s'allume exactement au moment où il est prononcé. Positif = retarde le surlignage, négatif = l'avance. Réglage enregistré automatiquement.
-      </p>
-    </div>
-  );
-}
 
 export default function TranscriptScreen({ initialSession, onBack, user, onLogout }) {
   const [session, setSession] = useState(initialSession || {});
@@ -127,8 +49,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [playbackSpeed, setPlaybackSpeed] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
-  const [syncOpen, setSyncOpen] = useState(false);
 
   const audioRef = useRef(null);
   const saveTimerRef = useRef(null);
@@ -695,25 +615,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             >
               Save
             </button>
-            <div className="hidden md:block relative">
-              <button
-                onClick={() => setSyncOpen(!syncOpen)}
-                className="inline-flex items-center gap-1.5 bg-white/[0.04] border border-white/10 px-2.5 py-1.5 rounded-xl text-xs font-semibold text-slate-300 hover:bg-white/10 transition"
-                title="Réglage précis de la synchro du surlignage (au 0,01 s)"
-              >
-                <Zap className="w-3 h-3 text-indigo-400" />
-                Sync
-                <span className="tabular-nums text-slate-200 font-bold">{fmtOffset(highlightOffset)}</span>
-              </button>
-              {syncOpen && (
-                <div className="absolute end-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-3 z-50">
-                  <div className="text-[11px] font-bold text-slate-400 px-1 pb-2.5">
-                    Synchroniseur du surlignage — précision 0,01 s
-                  </div>
-                  <SyncControls value={highlightOffset} onChange={setHighlightOffset} />
-                </div>
-              )}
-            </div>
             <div className="flex items-center bg-white/[0.06] p-1 rounded-xl border border-white/10">
               <button
                 onClick={() => setViewMode("cards")}
@@ -881,25 +782,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               >
                 <Search className="w-4 h-4" />
               </button>
-
-              {/* 13. More options */}
-              <div className="relative">
-                <button
-                  onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                  className="p-2 rounded-xl hover:bg-white/10 text-slate-300 font-bold transition-colors"
-                  title="Plus"
-                >
-                  <MoreHorizontal className="w-4 h-4" />
-                </button>
-                {moreMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-72 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl border border-white/10 p-3 z-50 space-y-2">
-                    <div className="text-[11px] font-bold text-slate-400 px-1">
-                      Synchronisation du surlignage — précision 0,01 s
-                    </div>
-                    <SyncControls value={highlightOffset} onChange={setHighlightOffset} />
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
