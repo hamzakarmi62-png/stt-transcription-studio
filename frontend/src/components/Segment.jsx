@@ -19,6 +19,8 @@ export default function Segment({
   canMoveDown = true,
   onMoveUp,
   onMoveDown,
+  showOwnTime = false,
+  onAddSpeakerFor,
   onStartEdit,
   onCommitEdit,
   onDelete,
@@ -126,7 +128,13 @@ export default function Segment({
           <User className="w-3.5 h-3.5 text-slate-400" />
           <select
             value={segment.speaker || ""}
-            onChange={(e) => onReassign(segment.id, e.target.value)}
+            onChange={(e) => {
+              if (e.target.value === "__new__") {
+                onAddSpeakerFor && onAddSpeakerFor(segment.id);
+              } else {
+                onReassign(segment.id, e.target.value);
+              }
+            }}
             className="appearance-none bg-transparent text-[11px] font-bold outline-none cursor-pointer max-w-[96px] truncate"
             style={{ color: speakerColor }}
             title="Locuteur de ce paragraphe"
@@ -136,6 +144,7 @@ export default function Segment({
                 {s.name}
               </option>
             ))}
+            <option value="__new__">+ Nouveau locuteur</option>
           </select>
         </span>
       </div>
@@ -166,6 +175,19 @@ export default function Segment({
         </div>
       ) : (
         <p dir="auto" className="text-[17px] leading-[1.9] text-slate-800 select-text">
+          {showOwnTime && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSeek(segment.start);
+              }}
+              className="inline-flex items-center gap-1 me-2 align-middle text-[11px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full px-2 py-0.5 hover:bg-indigo-100 transition"
+              title={`Lire depuis ce paragraphe (${formatTime(segment.start)}) — le paragraphe garde toujours son propre temps`}
+            >
+              <Play className="w-3 h-3" filled />
+              {formatTime(segment.start)}
+            </button>
+          )}
           {segment.words && segment.words.length > 0 ? (
             segment.words.map((w, i) => {
               const wKey = `${segment.id}-w${i}`;

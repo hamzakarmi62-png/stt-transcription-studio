@@ -590,6 +590,21 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       };
     });
 
+  // Create a brand-new speaker and assign exactly one paragraph to it.
+  const addSpeakerForSegment = (segId) =>
+    mutate((prev) => {
+      const spk = {
+        id: uid(),
+        name: `Speaker ${prev.speakers.length + 1}`,
+        color: nextColor(prev.speakers.length),
+      };
+      return {
+        ...prev,
+        speakers: [...prev.speakers, spk],
+        segments: prev.segments.map((s) => (s.id === segId ? { ...s, speaker: spk.id } : s)),
+      };
+    });
+
   const renameSpeaker = (id, name) =>
     mutate((prev) => ({
       ...prev,
@@ -1080,6 +1095,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                               canMoveDown={index < segments.length - 1}
                               onMoveUp={moveSegmentUp}
                               onMoveDown={moveSegmentDown}
+                              showOwnTime={turn.segments[0].seg.id !== seg.id}
+                              onAddSpeakerFor={addSpeakerForSegment}
                               speakers={speakers}
                               onStartEdit={(id) => setEditingId(id)}
                               onCommitEdit={updateSegmentText}
