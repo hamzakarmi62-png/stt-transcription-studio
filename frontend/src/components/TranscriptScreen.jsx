@@ -566,12 +566,45 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       };
     });
 
-  // Stream keyboard workflow: Enter moves the active paragraph down,
-  // Delete moves it up. Corrections stay a single click on the word.
-  const keyHandlersRef = useRef({ up: null, down: null });
-  keyHandlersRef.current = { up: moveSegmentUp, down: moveSegmentDown };
+  // Full keyboard control (Rev-style):
+  // - Select text + Entrée → split the paragraph at the selection (new one
+  //   gets its own computed time) — exactly like the reference video
+  // - Entrée (no selection) → move the active paragraph down (with its time)
+  // - Suppr → move the active paragraph up
+  // - Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) → undo / redo
+  const keyHandlersRef = useRef({ up: null, down: null, split: null, undo: null, redo: null });
+  keyHandlersRef.current = {
+    up: moveSegmentUp,
+    down: moveSegmentDown,
+    split: splitSegment,
+    undo,
+    redo,
+  };
 
   useEffect(() => {
+    const findSelectionCaret = () => {
+      try {
+        const sel = window.getSelection();
+        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+        const range = sel.getRangeAt(0);
+        let el =
+          range.endContainer.nodeType === 3
+            ? range.endContainer.parentElement
+            : range.endContainer;
+        while (el && !(el.id && el.id.startsWith("seg-"))) el = el.parentElement;
+        if (!el) return null;
+        const p = el.querySelector("p[dir='auto']") || el.querySelector("p");
+        if (!p || !p.contains(range.endContainer)) return null;
+        const pre = range.cloneRange();
+        pre.selectNodeContents(p);
+        pre.setEnd(range.endContainer, range.endOffset);
+        const caret = pre.toString().length;
+        return caret > 0 ? { segId: el.id.slice(4), caret } : null;
+      } catch {
+        return null;
+      }
+    };
+
     const onKey = (e) => {
       const t = e.target;
       if (
@@ -583,14 +616,37 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       ) {
         return;
       }
-      const seg = activeSegRef.current;
-      if (!seg) return;
+      const h = keyHandlersRef.current;
+
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        const k = e.key.toLowerCase();
+        if (k === "z" && !e.shiftKey) {
+          e.preventDefault();
+          h.undo?.();
+          return;
+        }
+        if (k === "y" || (k === "z" && e.shiftKey)) {
+          e.preventDefault();
+          h.redo?.();
+          return;
+        }
+        return;
+      }
+
       if (e.key === "Enter") {
         e.preventDefault();
-        keyHandlersRef.current.down?.(seg.id);
+        const selHit = findSelectionCaret();
+        if (selHit) {
+          h.split?.(selHit.segId, selHit.caret);
+          window.getSelection()?.removeAllRanges();
+        } else {
+          const seg = activeSegRef.current;
+          if (seg) h.down?.(seg.id);
+        }
       } else if (e.key === "Delete") {
         e.preventDefault();
-        keyHandlersRef.current.up?.(seg.id);
+        const seg = activeSegRef.current;
+        if (seg) h.up?.(seg.id);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -945,7 +1001,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Entrée = déplacer le paragraphe vers le bas · Suppr = vers le haut · Cliquez sur un mot pour le corriger
+                  Sélectionnez du texte + Entrée = diviser le paragraphe (avec son temps) · Entrée = déplacer en bas ·
+                  Suppr = déplacer en haut · Ctrl+Z / Ctrl+Y = annuler / rétablir · Cliquez sur un mot pour le corriger
                 </p>
               </div>
             )}
