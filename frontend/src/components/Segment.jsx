@@ -240,10 +240,6 @@ export default function Segment({
                   key={wKey}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSeek(w.start);
-                  }}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation();
                     onSetEditingWordKey(wKey);
                   }}
                   className={`cursor-pointer rounded px-0.5 transition-colors ${
@@ -251,7 +247,7 @@ export default function Segment({
                       ? "bg-amber-300 text-slate-900 font-semibold"
                       : "hover:bg-indigo-100"
                   }`}
-                  title="Cliquez pour lire depuis ce mot · double-cliquez pour corriger"
+                  title="Cliquez pour corriger ce mot"
                 >
                   {w.word}{" "}
                 </span>

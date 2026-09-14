@@ -226,7 +226,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   }, [currentTime, segments]);
 
   const activeSegment = activeIdx >= 0 ? segments[activeIdx] : null;
-
+  const activeSegRef = useRef(null);
+  activeSegRef.current = activeSegment;
 
   useEffect(() => {
     if (!playing || !activeSegment) return;
@@ -564,6 +565,37 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         segments: prev.segments.map((s) => (s.id === segId ? { ...s, speaker: spk.id } : s)),
       };
     });
+
+  // Stream keyboard workflow: Enter moves the active paragraph down,
+  // Delete moves it up. Corrections stay a single click on the word.
+  const keyHandlersRef = useRef({ up: null, down: null });
+  keyHandlersRef.current = { up: moveSegmentUp, down: moveSegmentDown };
+
+  useEffect(() => {
+    const onKey = (e) => {
+      const t = e.target;
+      if (
+        t &&
+        (t.tagName === "INPUT" ||
+          t.tagName === "TEXTAREA" ||
+          t.tagName === "SELECT" ||
+          t.isContentEditable)
+      ) {
+        return;
+      }
+      const seg = activeSegRef.current;
+      if (!seg) return;
+      if (e.key === "Enter") {
+        e.preventDefault();
+        keyHandlersRef.current.down?.(seg.id);
+      } else if (e.key === "Delete") {
+        e.preventDefault();
+        keyHandlersRef.current.up?.(seg.id);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const renameSpeaker = (id, name) =>
     mutate((prev) => ({
@@ -912,6 +944,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     />
                   ))}
                 </div>
+                <p className="text-[11px] text-slate-400 text-center mt-4">
+                  Entrée = déplacer le paragraphe vers le bas · Suppr = vers le haut · Cliquez sur un mot pour le corriger
+                </p>
               </div>
             )}
           </section>
