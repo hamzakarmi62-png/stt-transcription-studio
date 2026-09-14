@@ -32,8 +32,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     }));
   };
   const [saveState, setSaveState] = useState("saved");
-  const [renamingId, setRenamingId] = useState(null);
-  const [renameValue, setRenameValue] = useState("");
   const [playerMode, setPlayerMode] = useState("docked");
   const [highlightOffset, setHighlightOffset] = useState(() => {
     try {
@@ -901,63 +899,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               onMode={setPlayerMode}
               mediaRef={audioRef}
             />
-            <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-3xl p-4 flex items-center gap-2 flex-wrap">
-              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wide">
-                Speakers
-              </span>
-              {speakers.map((s) =>
-                renamingId === s.id ? (
-                  <input
-                    key={s.id}
-                    autoFocus
-                    value={renameValue}
-                    onChange={(e) => setRenameValue(e.target.value)}
-                    onBlur={() => {
-                      if (renameValue.trim()) renameSpeaker(s.id, renameValue.trim());
-                      setRenamingId(null);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                    }}
-                    className="text-sm px-2 py-1 rounded-full border-2 focus:outline-none"
-                    style={{ borderColor: s.color }}
-                  />
-                ) : (
-                  <span
-                    key={s.id}
-                    className="inline-flex items-center rounded-full"
-                    style={{ backgroundColor: s.color }}
-                  >
-                    <button
-                      onClick={() => {
-                        setRenamingId(s.id);
-                        setRenameValue(s.name);
-                      }}
-                      className="ps-3 pe-1.5 py-1.5 text-sm font-medium text-white"
-                      title="Cliquez pour renommer"
-                    >
-                      {s.name}
-                    </button>
-                    {speakers.length > 1 && (
-                      <button
-                        onClick={() => deleteSpeaker(s.id)}
-                        className="pe-2.5 py-2 text-white/70 hover:text-white transition"
-                        title="Supprimer ce locuteur — ses paragraphes passent au premier locuteur restant"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </span>
-                )
-              )}
-              <button
-                onClick={addSpeaker}
-                className="px-3 py-1.5 rounded-full text-sm border border-dashed border-white/20 text-slate-300 hover:bg-white/10"
-                title="Add a new speaker"
-              >
-                + Add speaker
-              </button>
-            </div>
           </aside>
 
           <section>
@@ -986,6 +927,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onMoveUp={moveSegmentUp}
                       onMoveDown={moveSegmentDown}
                       onAddSpeakerFor={addSpeakerForSegment}
+                      onRenameSpeaker={renameSpeaker}
+                      onDeleteSpeaker={deleteSpeaker}
                       speakers={speakers}
                       onStartEdit={(id) => setEditingId(id)}
                       onCommitEdit={updateSegmentText}

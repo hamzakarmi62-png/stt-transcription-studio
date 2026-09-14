@@ -20,6 +20,8 @@ export default function Segment({
   onMoveUp,
   onMoveDown,
   onAddSpeakerFor,
+  onRenameSpeaker,
+  onDeleteSpeaker,
   onStartEdit,
   onCommitEdit,
   onDelete,
@@ -33,6 +35,8 @@ export default function Segment({
   const textareaRef = useRef(null);
   const paragraphRef = useRef(null);
   const [copied, setCopied] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameText, setRenameText] = useState("");
 
   useEffect(() => {
     if (editing) {
@@ -85,9 +89,18 @@ export default function Segment({
   const handleSpeakerChange = (e) => {
     if (e.target.value === "__new__") {
       onAddSpeakerFor && onAddSpeakerFor(segment.id);
+    } else if (e.target.value === "__delete__") {
+      onDeleteSpeaker && onDeleteSpeaker(segment.speaker);
     } else {
       onReassign(segment.id, e.target.value);
     }
+  };
+
+  const commitRename = () => {
+    if (renameText.trim() && onRenameSpeaker) {
+      onRenameSpeaker(segment.speaker, renameText.trim());
+    }
+    setRenaming(false);
   };
 
   const toolBtn =
@@ -156,28 +169,55 @@ export default function Segment({
         </button>
       </div>
 
-      {/* Per-paragraph header: speaker (click to change) + play + own time */}
+      {/* Per-paragraph header: speaker (click name or pencil) + play + own time */}
       <div className="flex items-center gap-3 mb-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
-        <label
-          className="inline-flex items-center gap-1.5 cursor-pointer border-b-2 border-dotted pb-0.5"
-          style={{ borderColor: speakerColor }}
-          title="Changer le locuteur de ce paragraphe"
-        >
-          <select
-            value={segment.speaker || ""}
-            onChange={handleSpeakerChange}
-            className="appearance-none bg-transparent font-bold text-[15px] outline-none cursor-pointer max-w-[160px] truncate"
-            style={{ color: speakerColor }}
+        {renaming ? (
+          <input
+            autoFocus
+            value={renameText}
+            onChange={(e) => setRenameText(e.target.value)}
+            onBlur={commitRename}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+              if (e.key === "Escape") setRenaming(false);
+            }}
+            className="bg-transparent border-0 border-b-2 border-dotted font-bold text-[15px] outline-none max-w-[180px] px-0 py-0"
+            style={{ color: speakerColor, borderColor: speakerColor }}
+            dir="auto"
+          />
+        ) : (
+          <label
+            className="inline-flex items-center gap-1.5 cursor-pointer border-b-2 border-dotted pb-0.5"
+            style={{ borderColor: speakerColor }}
+            title="Cliquez sur le nom pour changer · le crayon pour renommer"
           >
-            {speakers.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-            <option value="__new__">+ Nouveau locuteur</option>
-          </select>
-          <Pencil className="w-3.5 h-3.5 opacity-70" style={{ color: speakerColor }} />
-        </label>
+            <select
+              value={segment.speaker || ""}
+              onChange={handleSpeakerChange}
+              className="appearance-none bg-transparent font-bold text-[15px] outline-none cursor-pointer max-w-[160px] truncate"
+              style={{ color: speakerColor }}
+            >
+              {speakers.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+              <option value="__new__">+ Nouveau locuteur</option>
+              {speakers.length > 1 && <option value="__delete__">× Supprimer ce locuteur</option>}
+            </select>
+            <button
+              onClick={() => {
+                setRenameText(currentSpeaker?.name || "");
+                setRenaming(true);
+              }}
+              className="opacity-70 hover:opacity-100 transition"
+              style={{ color: speakerColor }}
+              title="Renommer ce locuteur"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+          </label>
+        )}
         <span className="h-5 w-px bg-slate-200"></span>
         <button
           onClick={() => onSeek(segment.start)}
