@@ -43,11 +43,15 @@ export default function Segment({
 
   // Rev-style: entering edit mode focuses the paragraph and places the caret
   // exactly where the user clicked (or at the end for the toolbar pencil).
+  // The page must NOT move: focus with preventScroll and restore the exact
+  // scroll position afterwards, even for words at the very bottom.
   useEffect(() => {
     if (!editing) return;
     const el = textRef.current;
     if (!el) return;
-    el.focus();
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    el.focus({ preventScroll: true });
     const target = pendingCaretRef.current;
     pendingCaretRef.current = null;
     const len = (el.textContent || "").length;
@@ -63,6 +67,7 @@ export default function Segment({
     } catch {
       /* caret placement is best-effort */
     }
+    window.scrollTo(sx, sy);
   }, [editing]);
 
   const currentSpeaker = speakers.find((s) => s.id === segment.speaker);
