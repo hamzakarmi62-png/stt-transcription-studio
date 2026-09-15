@@ -227,11 +227,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const activeSegRef = useRef(null);
   activeSegRef.current = activeSegment;
 
-  useEffect(() => {
-    if (!playing || !activeSegment) return;
-    const el = document.getElementById(`seg-${activeSegment.id}`);
-    if (el) el.scrollIntoView({ block: "center", behavior: "smooth" });
-  }, [activeSegment, playing]);
+  // No auto-scroll while playing: the page stays exactly where the reader
+  // put it (hovering a word, correcting…), even as playback advances.
 
   useEffect(() => {
     if (segments.length === 0) {
