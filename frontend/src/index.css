@@ -4,6 +4,11 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Native select dropdowns (and other browser widgets) render dark. */
+select {
+  color-scheme: dark;
+}
+
 body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
