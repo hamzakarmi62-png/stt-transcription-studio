@@ -48,7 +48,7 @@ export default function ExportMenu({ sessionId, filename }) {
         <Download className="w-4 h-4" /> Export
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 p-3 z-20">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 p-3 z-50">
           <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
             Options
           </div>
