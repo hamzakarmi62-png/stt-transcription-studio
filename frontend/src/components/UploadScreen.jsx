@@ -567,7 +567,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   // ---- Aurora Glass design tokens ----
   const isDark = theme === "dark";
-  const bgMain = isDark ? "bg-slate-950 text-slate-100" : "bg-[#eef1f8] text-slate-900";
+  const bgMain = isDark ? "bg-black text-slate-100" : "bg-[#eef1f8] text-slate-900";
   const glass = isDark
     ? "bg-white/[0.045] border-white/[0.08] backdrop-blur-2xl"
     : "bg-white/80 border-slate-200/80 backdrop-blur-2xl shadow-sm";

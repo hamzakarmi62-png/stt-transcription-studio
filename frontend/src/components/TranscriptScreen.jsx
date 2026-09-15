@@ -706,7 +706,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-saved";
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 relative">
+    <div className="min-h-screen bg-black text-slate-100 relative">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-600/[0.13] blur-[130px]"></div>
         <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full bg-fuchsia-600/[0.09] blur-[130px]"></div>
