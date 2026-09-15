@@ -713,7 +713,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         <div className="absolute -bottom-32 left-1/4 w-[420px] h-[420px] rounded-full bg-violet-600/[0.08] blur-[130px]"></div>
       </div>
       <div className="relative">
-      <header className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/[0.06] sticky top-0 z-30">
+      <header className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/[0.06]">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
           <button
             onClick={onBack}
@@ -753,7 +753,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       </header>
 
       {/* Rich Toolbar matching user's reference image */}
-      <div className="sticky top-[61px] z-20 bg-slate-950/70 backdrop-blur-xl pt-2 pb-2">
+      <div className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl pt-2 pb-2 border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-3xl px-4 py-2.5 flex items-center justify-between gap-2 overflow-x-auto flex-wrap">
             <div className="flex items-center gap-1.5 sm:gap-3">
@@ -927,7 +927,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           className={`grid gap-6 ${playerMode === "docked" ? "lg:grid-cols-[340px_1fr]" : "grid-cols-1"}`}
         >
           <aside className="h-fit space-y-4">
-            <div className={playerMode === "docked" ? "lg:fixed lg:left-6 lg:top-[130px] lg:w-[340px] lg:z-20" : ""}>
+            <div className={playerMode === "docked" ? "lg:fixed lg:left-6 lg:top-[86px] lg:w-[340px] lg:z-20" : ""}>
               <PlayerPanel
                 src={api.audioUrl(session.id)}
                 kind={mediaKind}
