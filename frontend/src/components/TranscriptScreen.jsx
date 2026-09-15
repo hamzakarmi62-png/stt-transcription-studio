@@ -283,6 +283,13 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     }
   };
 
+  // Position the playhead WITHOUT starting playback — clicking a word or a
+  // paragraph must never auto-play; only the play buttons do.
+  const positionAt = (t) => {
+    const audio = audioRef.current;
+    if (audio) audio.currentTime = t;
+  };
+
   const generateWordsForText = (text, start, end) => {
     const parts = text.trim().split(/\s+/).filter(Boolean);
     if (parts.length === 0) return [];
@@ -585,15 +592,18 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
   // Full keyboard control (Rev-style):
   // - Select text + Entrée → split the paragraph at the selection (new one
-  //   gets its own computed time) — exactly like the reference video
-  // - Entrée (no selection) → move the active paragraph down (with its time)
-  // - Suppr → move the active paragraph up
+  //   gets its own computed time)
+  // - Entrée (no selection) → merge the active paragraph with the one BELOW
+  // - Suppr → merge the active paragraph with the one ABOVE
+  // - Alt+↑ / Alt+↓ → move the active paragraph (with its time)
   // - Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) → undo / redo
-  const keyHandlersRef = useRef({ up: null, down: null, split: null, undo: null, redo: null });
+  const keyHandlersRef = useRef({});
   keyHandlersRef.current = {
     up: moveSegmentUp,
     down: moveSegmentDown,
     split: splitSegment,
+    mergeNext: mergeWithNext,
+    mergePrev: mergeWithPrev,
     undo,
     redo,
   };
@@ -657,13 +667,19 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           h.split?.(selHit.segId, selHit.caret);
           window.getSelection()?.removeAllRanges();
         } else {
+          // Enter merges the active paragraph with the one BELOW it.
           const seg = activeSegRef.current;
-          if (seg) h.down?.(seg.id);
+          if (seg) h.mergeNext?.(seg.id);
         }
       } else if (e.key === "Delete") {
         e.preventDefault();
+        // Delete merges the active paragraph with the one ABOVE it.
         const seg = activeSegRef.current;
-        if (seg) h.up?.(seg.id);
+        if (seg) h.mergePrev?.(seg.id);
+      } else if (e.altKey && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+        e.preventDefault();
+        const seg = activeSegRef.current;
+        if (seg) (e.key === "ArrowDown" ? h.down : h.up)?.(seg.id);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -958,14 +974,15 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onSplit={splitSegment}
                       onMerge={mergeWithNext}
                       onMergePrev={mergeWithPrev}
+                      onPositionAt={positionAt}
                       onReassign={reassign}
                       onSeek={seekTo}
                     />
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Cliquez dans le texte pour corriger directement · Sélection + Entrée = diviser (avec son temps) ·
-                  Entrée = descendre · Suppr = monter · ⌫ en début de paragraphe = fusionner · Ctrl+Z / Ctrl+Y = annuler / rétablir
+                  Cliquez un mot : position audio + correction directe (lecture via ▶ uniquement) · Entrée = fusionner avec le paragraphe du bas ·
+                  Suppr = fusionner avec celui du haut · Alt+↑/↓ = déplacer · Ctrl+Z / Ctrl+Y = annuler / rétablir
                 </p>
               </div>
             )}

@@ -28,6 +28,7 @@ export default function Segment({
   onSplit,
   onMerge,
   onMergePrev,
+  onPositionAt,
   onReassign,
   onSeek,
   speakers,
@@ -109,10 +110,11 @@ export default function Segment({
     }
   };
 
-  // Click a word: audio jumps to it and the caret lands right after it,
-  // ready to type the correction (exactly like Rev).
+  // Click a word: playhead moves to that exact moment WITHOUT playing
+  // (playback starts only from a play button), and the caret lands right
+  // after the word ready to type the correction.
   const editAtWord = (i, wordStart) => {
-    onSeek(wordStart);
+    (onPositionAt || onSeek)?.(wordStart);
     pendingCaretRef.current = segment.words
       .slice(0, i + 1)
       .reduce((n, w) => n + w.word.length + 1, 0);
@@ -179,7 +181,7 @@ export default function Segment({
       id={`seg-${segment.id}`}
       onClick={(e) => {
         if (e.target.tagName !== "BUTTON" && e.target.tagName !== "SELECT" && !editing) {
-          onSeek(segment.start);
+          (onPositionAt || onSeek)?.(segment.start);
         }
       }}
       className={`group relative rounded-2xl -mx-3 px-3 py-2 transition-all ${
