@@ -666,10 +666,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         if (selHit) {
           h.split?.(selHit.segId, selHit.caret);
           window.getSelection()?.removeAllRanges();
-        } else {
-          // Enter merges the active paragraph with the one BELOW it.
+        } else if (e.shiftKey) {
+          // Shift+Enter merges the active paragraph with the one BELOW it.
           const seg = activeSegRef.current;
           if (seg) h.mergeNext?.(seg.id);
+        } else {
+          // Enter moves the active paragraph down (with its time).
+          const seg = activeSegRef.current;
+          if (seg) h.down?.(seg.id);
         }
       } else if (e.key === "Delete") {
         e.preventDefault();
@@ -981,8 +985,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Cliquez un mot : position audio + correction directe (lecture via ▶ uniquement) · Entrée = fusionner avec le paragraphe du bas ·
-                  Suppr = fusionner avec celui du haut · Alt+↑/↓ = déplacer · Ctrl+Z / Ctrl+Y = annuler / rétablir
+                  Cliquez un mot : position audio + correction directe (lecture via ▶ uniquement) · Entrée = descendre le paragraphe ·
+                  Maj+Entrée = fusionner avec le bas · Suppr = fusionner avec le haut · Alt+↑/↓ = monter / descendre · Ctrl+Z / Ctrl+Y = annuler / rétablir
                 </p>
               </div>
             )}
