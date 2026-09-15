@@ -318,12 +318,12 @@ export default function Segment({
           onKeyDown={onEditKeyDown}
           onBlur={commitAndClose}
           dir="auto"
-          className="text-[17px] leading-[1.9] text-slate-800 select-text focus:outline-none rounded-lg bg-indigo-50/70 -mx-2 px-2"
+          className="text-[19px] leading-[2] text-slate-800 select-text focus:outline-none rounded-lg bg-indigo-50/70 -mx-2 px-2"
         >
           {segment.text}
         </p>
       ) : (
-        <p ref={paragraphRef} dir="auto" className="text-[17px] leading-[1.9] text-slate-800 select-text">
+        <p ref={paragraphRef} dir="auto" className="text-[19px] leading-[2] text-slate-800 select-text">
           {segment.words && segment.words.length > 0 ? (
             segment.words.map((w, i) => {
               const wKey = `${segment.id}-w${i}`;

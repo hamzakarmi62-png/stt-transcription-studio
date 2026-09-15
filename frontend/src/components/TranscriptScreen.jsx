@@ -924,7 +924,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
       <main className="mx-auto max-w-7xl px-6 py-6">
         <div
-          className={`grid gap-6 ${playerMode === "docked" ? "lg:grid-cols-[440px_1fr]" : "grid-cols-1"}`}
+          className={`grid gap-6 ${playerMode === "docked" ? "lg:grid-cols-[340px_1fr]" : "grid-cols-1"}`}
         >
           <aside className="h-fit space-y-4 lg:sticky lg:top-[72px]">
             <PlayerPanel
