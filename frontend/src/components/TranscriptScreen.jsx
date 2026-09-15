@@ -926,15 +926,17 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         <div
           className={`grid gap-6 ${playerMode === "docked" ? "lg:grid-cols-[340px_1fr]" : "grid-cols-1"}`}
         >
-          <aside className="h-fit space-y-4 lg:sticky lg:top-[72px]">
-            <PlayerPanel
-              src={api.audioUrl(session.id)}
-              kind={mediaKind}
-              filename={session.filename}
-              mode={playerMode}
-              onMode={setPlayerMode}
-              mediaRef={audioRef}
-            />
+          <aside className="h-fit space-y-4">
+            <div className={playerMode === "docked" ? "lg:fixed lg:left-6 lg:top-[130px] lg:w-[340px] lg:z-20" : ""}>
+              <PlayerPanel
+                src={api.audioUrl(session.id)}
+                kind={mediaKind}
+                filename={session.filename}
+                mode={playerMode}
+                onMode={setPlayerMode}
+                mediaRef={audioRef}
+              />
+            </div>
           </aside>
 
           <section>
