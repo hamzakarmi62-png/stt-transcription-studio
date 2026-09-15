@@ -766,15 +766,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
               {/* Stat tiles */}
               {[
-                { label: t.totalSessions, value: totalSessionsCount, grad: "from-indigo-500 to-violet-500" },
-                { label: t.completedSessions, value: completedSessionsCount, grad: "from-emerald-500 to-teal-500" },
-                { label: t.totalSegments, value: totalSegmentsCount, grad: "from-violet-500 to-fuchsia-500" },
-                { label: t.systemStatus, value: null, grad: "from-amber-500 to-orange-500" },
+                { label: t.totalSessions, value: totalSessionsCount, grad: "from-indigo-500 to-violet-500", Icon: Box },
+                { label: t.completedSessions, value: completedSessionsCount, grad: "from-emerald-500 to-teal-500", Icon: Check },
+                { label: t.totalSegments, value: totalSegmentsCount, grad: "from-violet-500 to-fuchsia-500", Icon: AlignLeft },
+                { label: t.systemStatus, value: null, grad: "from-amber-500 to-orange-500", Icon: Zap },
               ].map((st) => (
                 <div key={st.label} className={`${glass} rounded-[26px] p-5 border relative overflow-hidden group hover:-translate-y-1 transition-all duration-300`}>
                   <div className={`absolute -top-10 -end-10 w-28 h-28 rounded-full bg-gradient-to-br ${st.grad} opacity-[0.12] blur-2xl group-hover:opacity-25 transition-opacity`}></div>
-                  <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${st.grad} text-white flex items-center justify-center text-xs font-black shadow-lg`}>
-                    {st.value === null ? <Zap className="w-4 h-4" /> : String(st.value).slice(0, 2)}
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white flex items-center justify-center shadow-lg shadow-indigo-950/40">
+                    <Mic className="w-5 h-5" />
                   </div>
                   <p className={`text-[10px] font-bold ${textSub} mt-4 uppercase tracking-widest`}>{st.label}</p>
                   <h3 className="text-2xl font-black mt-1">
