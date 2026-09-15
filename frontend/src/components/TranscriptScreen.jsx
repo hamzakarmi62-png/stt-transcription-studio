@@ -755,7 +755,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       {/* Rich Toolbar matching user's reference image */}
       <div className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl pt-2 pb-2 border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-3xl px-4 py-2.5 flex items-center justify-between gap-2 overflow-x-auto flex-wrap">
+          <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-3xl px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* 1. Replay 15s */}
               <button
@@ -926,17 +926,15 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         <div
           className={`grid gap-6 ${playerMode === "docked" ? "lg:grid-cols-[340px_1fr]" : "grid-cols-1"}`}
         >
-          <aside className="h-fit space-y-4">
-            <div className={playerMode === "docked" ? "lg:fixed lg:left-6 lg:top-[86px] lg:w-[340px] lg:z-20" : ""}>
-              <PlayerPanel
-                src={api.audioUrl(session.id)}
-                kind={mediaKind}
-                filename={session.filename}
-                mode={playerMode}
-                onMode={setPlayerMode}
-                mediaRef={audioRef}
-              />
-            </div>
+          <aside className="h-fit space-y-4 lg:sticky lg:top-[86px] lg:z-20">
+            <PlayerPanel
+              src={api.audioUrl(session.id)}
+              kind={mediaKind}
+              filename={session.filename}
+              mode={playerMode}
+              onMode={setPlayerMode}
+              mediaRef={audioRef}
+            />
           </aside>
 
           <section>
