@@ -509,6 +509,25 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       return { ...prev, segments: next };
     });
 
+  // Backspace at the start of a paragraph (Rev-style) merges it into the previous one.
+  const mergeWithPrev = (id) =>
+    mutate((prev) => {
+      const idx = prev.segments.findIndex((s) => s.id === id);
+      if (idx <= 0) return prev;
+      const cur = prev.segments[idx];
+      const prv = prev.segments[idx - 1];
+      const merged = {
+        ...prv,
+        text: `${prv.text} ${cur.text}`.trim(),
+        end: cur.end,
+        words: [...(prv.words || []), ...(cur.words || [])],
+      };
+      const next = [...prev.segments];
+      next[idx - 1] = merged;
+      next.splice(idx, 1);
+      return { ...prev, segments: next };
+    });
+
   const reassign = (id, speakerId) =>
     mutate((prev) => ({
       ...prev,
@@ -938,14 +957,15 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       }}
                       onSplit={splitSegment}
                       onMerge={mergeWithNext}
+                      onMergePrev={mergeWithPrev}
                       onReassign={reassign}
                       onSeek={seekTo}
                     />
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Sélectionnez du texte + Entrée = diviser le paragraphe (avec son temps) · Entrée = déplacer en bas ·
-                  Suppr = déplacer en haut · Ctrl+Z / Ctrl+Y = annuler / rétablir · Cliquez sur un mot pour le corriger
+                  Cliquez dans le texte pour corriger directement · Sélection + Entrée = diviser (avec son temps) ·
+                  Entrée = descendre · Suppr = monter · ⌫ en début de paragraphe = fusionner · Ctrl+Z / Ctrl+Y = annuler / rétablir
                 </p>
               </div>
             )}

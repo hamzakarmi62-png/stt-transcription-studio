@@ -27,25 +27,97 @@ export default function Segment({
   onDelete,
   onSplit,
   onMerge,
+  onMergePrev,
   onReassign,
   onSeek,
   speakers,
   currentTime,
 }) {
-  const textareaRef = useRef(null);
+  const textRef = useRef(null);
   const paragraphRef = useRef(null);
+  const pendingCaretRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [renameText, setRenameText] = useState("");
 
+  // Rev-style: entering edit mode focuses the paragraph and places the caret
+  // exactly where the user clicked (or at the end for the toolbar pencil).
   useEffect(() => {
-    if (editing) {
-      textareaRef.current?.focus();
+    if (!editing) return;
+    const el = textRef.current;
+    if (!el) return;
+    el.focus();
+    const target = pendingCaretRef.current;
+    pendingCaretRef.current = null;
+    const len = (el.textContent || "").length;
+    const off = target == null ? len : Math.min(Math.max(target, 0), len);
+    try {
+      const sel = window.getSelection();
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.setStart(el.firstChild || el, off);
+      range.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch {
+      /* caret placement is best-effort */
     }
   }, [editing]);
 
   const currentSpeaker = speakers.find((s) => s.id === segment.speaker);
   const speakerColor = currentSpeaker?.color || "#64748b";
+
+  const caretOffsetIn = (el) => {
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return -1;
+    const r = sel.getRangeAt(0);
+    const pre = r.cloneRange();
+    pre.selectNodeContents(el);
+    pre.setEnd(r.startContainer, r.startOffset);
+    return pre.toString().length;
+  };
+
+  // Direct typing like a word processor: save the typed text, then let
+  // Enter split at the caret / Backspace at position 0 merge with the previous.
+  const commitAndClose = () => {
+    const text = textRef.current?.textContent || "";
+    onCommitEdit(segment.id, text);
+    onStartEdit(null);
+  };
+
+  const onEditKeyDown = (e) => {
+    const el = textRef.current;
+    if (!el) return;
+    const len = (el.textContent || "").length;
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const off = Math.min(Math.max(caretOffsetIn(el), 0), len);
+      onCommitEdit(segment.id, el.textContent || "");
+      onStartEdit(null);
+      if (off > 0 && off < len) onSplit(segment.id, off);
+    } else if (e.key === "Backspace") {
+      const sel = window.getSelection();
+      if (caretOffsetIn(el) === 0 && sel && sel.isCollapsed) {
+        e.preventDefault();
+        onCommitEdit(segment.id, el.textContent || "");
+        onStartEdit(null);
+        onMergePrev && onMergePrev(segment.id);
+      }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      commitAndClose();
+    }
+  };
+
+  // Click a word: audio jumps to it and the caret lands right after it,
+  // ready to type the correction (exactly like Rev).
+  const editAtWord = (i, wordStart) => {
+    onSeek(wordStart);
+    pendingCaretRef.current = segment.words
+      .slice(0, i + 1)
+      .reduce((n, w) => n + w.word.length + 1, 0);
+    onStartEdit(segment.id);
+  };
 
   const copyText = async () => {
     try {
@@ -78,11 +150,7 @@ export default function Segment({
   const doSplit = () => {
     const mid = Math.max(1, Math.floor(segment.text.length / 2));
     const fromSelection = getSelectionCaret();
-    const caret = editing
-      ? (textareaRef.current?.selectionStart ?? mid)
-      : fromSelection > 0
-      ? fromSelection
-      : mid;
+    const caret = fromSelection > 0 ? fromSelection : mid;
     onSplit(segment.id, caret);
   };
 
@@ -230,64 +298,37 @@ export default function Segment({
       </div>
 
       {editing ? (
-        <div onClick={(e) => e.stopPropagation()}>
-          <textarea
-            ref={textareaRef}
-            value={segment.text}
-            onChange={(e) => onCommitEdit(segment.id, e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                const caret = textareaRef.current?.selectionStart ?? -1;
-                onSplit(segment.id, caret);
-              } else if (e.key === "Backspace" && !segment.text.trim()) {
-                e.preventDefault();
-                onDelete(segment.id);
-              }
-            }}
-            rows={Math.max(2, Math.ceil(segment.text.length / 80))}
-            className="w-full bg-indigo-50/60 border-0 rounded-lg px-2 py-1 text-[17px] leading-[1.9] text-slate-800 focus:outline-none resize-none"
-            dir="auto"
-          />
-          <p className="text-[11px] text-slate-400 mt-1">
-            Édition — ⏎ Entrée divise le paragraphe, ⌫ Retour arrière supprime le segment.
-          </p>
-        </div>
+        <p
+          ref={textRef}
+          contentEditable
+          suppressContentEditableWarning
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={onEditKeyDown}
+          onBlur={commitAndClose}
+          dir="auto"
+          className="text-[17px] leading-[1.9] text-slate-800 select-text focus:outline-none rounded-lg bg-indigo-50/70 -mx-2 px-2"
+        >
+          {segment.text}
+        </p>
       ) : (
         <p ref={paragraphRef} dir="auto" className="text-[17px] leading-[1.9] text-slate-800 select-text">
           {segment.words && segment.words.length > 0 ? (
             segment.words.map((w, i) => {
               const wKey = `${segment.id}-w${i}`;
-              const isEditingWord = editingWordKey === wKey;
               const isHighlighted = activeWordKey === wKey;
-              if (isEditingWord) {
-                return (
-                  <input
-                    key={wKey}
-                    autoFocus
-                    value={w.word}
-                    onChange={(e) => onUpdateWord(segment.id, i, e.target.value)}
-                    onBlur={() => onSetEditingWordKey(null)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") e.currentTarget.blur();
-                    }}
-                    className="w-24 bg-transparent border-b-2 border-indigo-400 px-1 text-[15px] text-slate-800 focus:outline-none inline-block mx-0.5"
-                  />
-                );
-              }
               return (
                 <span
                   key={wKey}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onSetEditingWordKey(wKey);
+                    editAtWord(i, w.start);
                   }}
-                  className={`cursor-pointer rounded px-0.5 transition-colors ${
+                  className={`cursor-text rounded px-0.5 transition-colors ${
                     isHighlighted
                       ? "bg-amber-300 text-slate-900 font-semibold"
                       : "hover:bg-indigo-100"
                   }`}
-                  title="Cliquez pour corriger ce mot"
+                  title="Cliquez : l'audio saute ici et vous corrigez directement"
                 >
                   {w.word}{" "}
                 </span>
