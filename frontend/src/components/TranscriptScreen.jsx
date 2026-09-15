@@ -982,8 +982,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Cliquez un mot : position audio + correction directe (lecture via ▶ uniquement) · Entrée = descendre le paragraphe ·
-                  Maj+Entrée = fusionner avec le bas · Suppr = fusionner avec le haut · Alt+↑/↓ = monter / descendre · Ctrl+Z / Ctrl+Y = annuler / rétablir
+                  Entrée = descendre le paragraphe (partout, même en correction) · Suppr = fusionner avec le haut ·
+                  Maj+Entrée = fusionner avec le bas · Alt+↑/↓ = monter / descendre · Ctrl+Z / Ctrl+Y = annuler / rétablir
                 </p>
               </div>
             )}

@@ -96,21 +96,26 @@ export default function Segment({
     if (!el) return;
     const len = (el.textContent || "").length;
     if (e.key === "Enter") {
+      // The user's rule: Enter ALWAYS moves the paragraph down — even while
+      // correcting text. Save what was typed, leave edit mode, move.
       e.preventDefault();
-      const off = Math.min(Math.max(caretOffsetIn(el), 0), len);
+      e.stopPropagation();
+      const id = segment.id;
       onCommitEdit(segment.id, el.textContent || "");
       onStartEdit(null);
-      if (off > 0 && off < len) onSplit(segment.id, off);
+      onMoveDown && onMoveDown(id);
     } else if (e.key === "Backspace") {
       const sel = window.getSelection();
       if (caretOffsetIn(el) === 0 && sel && sel.isCollapsed) {
         e.preventDefault();
+        e.stopPropagation();
         onCommitEdit(segment.id, el.textContent || "");
         onStartEdit(null);
         onMergePrev && onMergePrev(segment.id);
       }
     } else if (e.key === "Escape") {
       e.preventDefault();
+      e.stopPropagation();
       commitAndClose();
     }
   };
