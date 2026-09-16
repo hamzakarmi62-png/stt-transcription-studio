@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { api } from "../api.js";
-import { Mic, Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff } from "./Icons.jsx";
+import audLogo from "../assets/aud-logo.png";
+import { Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff } from "./Icons.jsx";
 
 const PAYS = [
   "Algérie", "Maroc", "Tunisie", "Mauritanie", "France", "Belgique",
   "Suisse", "Canada", "Émirats Arabes Unis", "Arabie Saoudite", "Autre",
 ];
 
-function Logo({ size = "w-14 h-14", text = "text-2xl" }) {
+function Logo({ size = "h-12" }) {
   return (
-    <div className={`${size} rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-indigo-500/40`}>
-      <Mic className="w-6 h-6 text-white" />
-    </div>
+    <img
+      src={audLogo}
+      alt="Aud — Transcription Services"
+      className={`${size} w-auto`}
+      draggable={false}
+    />
   );
 }
 
@@ -99,7 +103,7 @@ export default function LoginScreen({ onLogin }) {
           <div className="flex items-center gap-3">
             <Logo />
             <div>
-              <h1 className="text-white text-xl font-black tracking-tight">Zendocs</h1>
+              <h1 className="text-white text-xl font-black tracking-tight">Aud</h1>
               <p className="text-indigo-300/80 text-xs">Studio de transcription par IA</p>
             </div>
           </div>
@@ -142,7 +146,7 @@ export default function LoginScreen({ onLogin }) {
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <Logo size="w-11 h-11" text="text-xl" />
             <div>
-              <h1 className="text-white text-lg font-black">Zendocs</h1>
+              <h1 className="text-white text-lg font-black">Aud</h1>
               <p className="text-indigo-300/80 text-[11px]">Studio de transcription par IA</p>
             </div>
           </div>

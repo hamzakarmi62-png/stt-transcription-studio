@@ -1,7 +1,30 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import LoginScreen from "./components/LoginScreen.jsx";
 import UploadScreen from "./components/UploadScreen.jsx";
 import TranscriptScreen from "./components/TranscriptScreen.jsx";
+import audLogo from "./assets/aud-logo.png";
+
+// Branded splash: the Aud logo scales in with a soft glow, holds a beat,
+// then the veil fades to reveal the app.
+function Splash({ done }) {
+  return (
+    <div
+      className={`fixed inset-0 z-[999] bg-black flex flex-col items-center justify-center transition-opacity duration-500 ${
+        done ? "opacity-0 pointer-events-none" : "opacity-100"
+      }`}
+    >
+      <img
+        src={audLogo}
+        alt="Aud — Transcription Services"
+        className="w-[min(70vw,520px)] aud-splash-logo"
+        draggable={false}
+      />
+      <div className="mt-6 h-1 w-40 rounded-full bg-white/10 overflow-hidden">
+        <div className="aud-splash-bar h-full w-full bg-gradient-to-r from-blue-500 via-violet-500 to-fuchsia-500" />
+      </div>
+    </div>
+  );
+}
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -38,6 +61,17 @@ class ErrorBoundary extends React.Component {
 export default function App() {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
+  const [splashGone, setSplashGone] = useState(false);
+  const [splashFading, setSplashFading] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setSplashFading(true), 1400);
+    const t2 = setTimeout(() => setSplashGone(true), 1950);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
 
   const handleLogin = (u) => {
     setUser(u);
@@ -48,27 +82,28 @@ export default function App() {
     setSession(null);
   };
 
-  if (!user) {
-    return (
-      <ErrorBoundary>
-        <LoginScreen onLogin={handleLogin} />
-      </ErrorBoundary>
-    );
-  }
-
   return (
-    <ErrorBoundary>
-      {session ? (
-        <TranscriptScreen
-          key={session.id}
-          initialSession={session}
-          onBack={() => setSession(null)}
-          user={user}
-          onLogout={handleLogout}
-        />
+    <>
+      {!splashGone && <Splash done={splashFading} />}
+      {(!user) ? (
+        <ErrorBoundary>
+          <LoginScreen onLogin={handleLogin} />
+        </ErrorBoundary>
       ) : (
-        <UploadScreen onComplete={setSession} user={user} onLogout={handleLogout} />
+        <ErrorBoundary>
+          {session ? (
+            <TranscriptScreen
+              key={session.id}
+              initialSession={session}
+              onBack={() => setSession(null)}
+              user={user}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <UploadScreen onComplete={setSession} user={user} onLogout={handleLogout} />
+          )}
+        </ErrorBoundary>
       )}
-    </ErrorBoundary>
+    </>
   );
 }

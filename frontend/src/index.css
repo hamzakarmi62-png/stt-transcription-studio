@@ -25,3 +25,20 @@ body {
 .recording-dot {
   animation: pulse-soft 1.2s ease-in-out infinite;
 }
+/* ── Aud splash ── */
+@keyframes aud-logo-in {
+  0% { opacity: 0; transform: scale(0.72) translateY(14px); filter: blur(6px); }
+  55% { opacity: 1; transform: scale(1.04) translateY(0); filter: blur(0); }
+  100% { opacity: 1; transform: scale(1); filter: blur(0); }
+}
+.aud-splash-logo {
+  animation: aud-logo-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  filter: drop-shadow(0 0 42px rgba(124, 93, 250, 0.45));
+}
+@keyframes aud-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.aud-splash-bar {
+  animation: aud-bar 1.1s ease-in-out infinite;
+}

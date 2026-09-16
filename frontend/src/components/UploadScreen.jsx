@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import { sleep, uid } from "../utils.js";
 import UserMenu from "./UserMenu.jsx";
 import { Mic, Zap, Folder, FolderOpen, Star, FileVideo, FileAudio, FileText, Headphones, X, Check, AlertTriangle, Loader, Inbox, Pencil, Trash, Sun, Moon, Settings, ArrowUpRight, Lightbulb, Home, Box } from "./Icons.jsx";
+import audLogo from "../assets/aud-logo.png";
 
 const ACCEPTED = ".mp3,.wav,.m4a,.ogg,.mp4,.webm,.mkv,.avi";
 
@@ -658,13 +659,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
             isDark ? "bg-slate-950/60 border-white/[0.08] shadow-xl shadow-black/20" : "bg-white/80 border-slate-200 shadow-lg shadow-slate-900/5"
           }`}>
             <div className="flex items-center gap-2.5 shrink-0">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white shadow-lg shadow-indigo-950/40">
-                <Mic className="w-5 h-5" />
-              </div>
-              <div className="hidden sm:block leading-none">
-                <p className="font-black tracking-tight text-[15px]">Zendocs</p>
-                <p className={`text-[9px] mt-1 ${textSub}`}>Transcription IA</p>
-              </div>
+              <img src={audLogo} alt="Aud" className="h-9 w-auto" draggable={false} />
             </div>
 
             <nav className="hidden md:flex items-center gap-0.5 mx-auto min-w-0">
@@ -739,9 +734,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)", backgroundSize: "24px 24px" }}
                 ></div>
                 <div className="relative space-y-5">
-                  <div className="w-24 h-24 rounded-[26px] bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white flex items-center justify-center shadow-2xl shadow-indigo-950/60 ring-1 ring-white/20">
-                    <Mic className="w-12 h-12" />
-                  </div>
+                  <img
+                    src={audLogo}
+                    alt="Aud — Transcription Services"
+                    className="w-[min(60vw,360px)] -ml-1 drop-shadow-[0_10px_36px_rgba(109,86,245,0.35)]"
+                    draggable={false}
+                  />
                   <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur text-indigo-200 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     WHISPER + GROQ · IA
@@ -1345,7 +1343,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               </div>
 
               <div className={`${glass} rounded-[30px] p-6 border ${textSub} text-xs leading-relaxed`}>
-                <p className="font-black text-slate-400 mb-1">Zendocs Studio · Aurora Edition</p>
+                <p className="font-black text-slate-400 mb-1">Aud Studio · Aurora Edition</p>
                 <p>Transcription IA (Groq · Whisper) · Détection des locuteurs par empreinte vocale · Stockage cloud chiffré.</p>
               </div>
             </div>
@@ -1353,7 +1351,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
         </main>
 
         <footer className={`relative pb-8 text-center text-[11px] ${textSub}`}>
-          Zendocs — Studio de transcription audio & vidéo par IA
+          Aud — Studio de transcription audio & vidéo par IA
         </footer>
       </div>
     </div>
