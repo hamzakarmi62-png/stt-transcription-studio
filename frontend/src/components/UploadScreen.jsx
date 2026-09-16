@@ -729,24 +729,27 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
         <main className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-16 space-y-8">
           {/* ══ HOME — Bento grid ══ */}
           {activeTab === "home" && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-fr">
-              {/* Hero bento tile */}
-              <div className="col-span-2 lg:col-span-2 lg:row-span-2 relative overflow-hidden rounded-[30px] bg-slate-950 p-8 flex flex-col justify-between min-h-[340px]">
-                <div className="absolute -top-24 -end-20 w-80 h-80 bg-indigo-600/30 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-28 -start-16 w-72 h-72 bg-fuchsia-600/25 rounded-full blur-3xl"></div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Hero bento tile — full width, big logo badge */}
+              <div className="col-span-2 lg:col-span-4 relative overflow-hidden rounded-[30px] bg-slate-950 p-10 sm:p-14 flex flex-col justify-center min-h-[380px]">
+                <div className="absolute -top-24 -end-20 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-28 -start-16 w-80 h-80 bg-fuchsia-600/25 rounded-full blur-3xl"></div>
                 <div
                   className="absolute inset-0 opacity-[0.12]"
                   style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)", backgroundSize: "24px 24px" }}
                 ></div>
-                <div className="relative space-y-4">
+                <div className="relative space-y-5">
+                  <div className="w-24 h-24 rounded-[26px] bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white flex items-center justify-center shadow-2xl shadow-indigo-950/60 ring-1 ring-white/20">
+                    <Mic className="w-12 h-12" />
+                  </div>
                   <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur text-indigo-200 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     WHISPER + GROQ · IA
                   </span>
-                  <h2 className="text-3xl sm:text-[34px] font-black text-white leading-[1.12] tracking-tight">
+                  <h2 className="text-3xl sm:text-[40px] font-black text-white leading-[1.12] tracking-tight">
                     {t.welcomeBack}
                   </h2>
-                  <p className="text-slate-400 text-[13px] leading-relaxed max-w-sm">{t.welcomeDesc}</p>
+                  <p className="text-slate-400 text-[14px] leading-relaxed max-w-xl">{t.welcomeDesc}</p>
                 </div>
                 <div className="relative flex gap-3 flex-wrap">
                   <button
@@ -770,14 +773,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 { label: t.completedSessions, value: completedSessionsCount, grad: "from-emerald-500 to-teal-500" },
                 { label: t.totalSegments, value: totalSegmentsCount, grad: "from-violet-500 to-fuchsia-500" },
                 { label: t.systemStatus, value: null, grad: "from-amber-500 to-orange-500" },
-              ].map((st, i) => (
+              ].map((st) => (
                 <div key={st.label} className={`${glass} rounded-[26px] p-5 border relative overflow-hidden group hover:-translate-y-1 transition-all duration-300`}>
                   <div className={`absolute -top-10 -end-10 w-28 h-28 rounded-full bg-gradient-to-br ${st.grad} opacity-[0.12] blur-2xl group-hover:opacity-25 transition-opacity`}></div>
-                  {i === 0 && (
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-white flex items-center justify-center shadow-lg shadow-indigo-950/40">
-                      <Mic className="w-5 h-5" />
-                    </div>
-                  )}
                   <p className={`text-[10px] font-bold ${textSub} mt-4 uppercase tracking-widest`}>{st.label}</p>
                   <h3 className="text-2xl font-black mt-1">
                     {st.value === null ? (
