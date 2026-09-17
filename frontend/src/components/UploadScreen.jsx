@@ -733,35 +733,45 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   className="absolute inset-0 opacity-[0.12]"
                   style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)", backgroundSize: "24px 24px" }}
                 ></div>
-                <div className="relative space-y-5">
-                  <img
-                    src={audLogo}
-                    alt="Aud — Transcription Services"
-                    className="w-[min(60vw,360px)] -ml-1 drop-shadow-[0_10px_36px_rgba(109,86,245,0.35)]"
-                    draggable={false}
-                  />
-                  <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur text-indigo-200 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    WHISPER + GROQ · IA
-                  </span>
-                  <h2 className="text-3xl sm:text-[40px] font-black text-white leading-[1.12] tracking-tight">
-                    {t.welcomeBack}
-                  </h2>
-                  <p className="text-slate-400 text-[14px] leading-relaxed max-w-xl">{t.welcomeDesc}</p>
-                </div>
-                <div className="relative flex gap-3 flex-wrap">
-                  <button
-                    onClick={() => setActiveTab("transcribe")}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-black text-sm hover:bg-indigo-50 shadow-xl transition-all hover:-translate-y-0.5"
-                  >
-                    <Zap className="w-4 h-4" /> {t.startNewTranscribe}
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("myFiles")}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur text-white font-bold text-sm hover:bg-white/20 transition-all"
-                  >
-                    <Folder className="w-4 h-4" /> {t.browseMyFiles}
-                  </button>
+                <div className="relative w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
+                  {/* Left: message + actions */}
+                  <div className="relative space-y-5 flex-1 min-w-0 text-center lg:text-start">
+                    <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur text-indigo-200 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                      WHISPER + GROQ · IA
+                    </span>
+                    <h2 className="text-3xl sm:text-[40px] font-black text-white leading-[1.12] tracking-tight">
+                      {t.welcomeBack}
+                    </h2>
+                    <p className="text-slate-400 text-[14px] leading-relaxed max-w-xl mx-auto lg:mx-0">{t.welcomeDesc}</p>
+                    <div className="relative flex gap-3 flex-wrap justify-center lg:justify-start pt-1">
+                      <button
+                        onClick={() => setActiveTab("transcribe")}
+                        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-black text-sm hover:bg-indigo-50 shadow-xl transition-all hover:-translate-y-0.5"
+                      >
+                        <Zap className="w-4 h-4" /> {t.startNewTranscribe}
+                      </button>
+                      <button
+                        onClick={() => setActiveTab("myFiles")}
+                        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur text-white font-bold text-sm hover:bg-white/20 transition-all"
+                      >
+                        <Folder className="w-4 h-4" /> {t.browseMyFiles}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right: the Aud mark on a light stage */}
+                  <div className="relative shrink-0 w-60 h-60 sm:w-80 sm:h-80 flex items-center justify-center">
+                    <div className="absolute inset-6 rounded-full bg-gradient-to-br from-blue-600/25 via-violet-600/20 to-fuchsia-600/20 blur-3xl"></div>
+                    <div className="aud-hero-ring absolute inset-2 rounded-[38px] border border-white/[0.07]"></div>
+                    <img
+                      src={audLogo}
+                      alt="Aud — Transcription Services"
+                      className="relative w-full h-full object-contain aud-hero-logo"
+                      draggable={false}
+                    />
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-6 rounded-[100%] bg-blue-500/25 blur-xl"></div>
+                  </div>
                 </div>
               </div>
 

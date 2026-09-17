@@ -56,3 +56,17 @@ body {
   100% { transform: translateX(100%); }
 }
 .aud-splash-bar { animation: aud-bar 1.4s ease-in-out infinite; }
+
+/* ── Hero logo stage ── */
+@keyframes aud-hero-float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-12px) scale(1.02); }
+}
+.aud-hero-logo {
+  animation: aud-hero-float 5.5s ease-in-out infinite;
+  filter: drop-shadow(0 22px 44px rgba(37, 99, 235, 0.35));
+}
+@keyframes aud-hero-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
