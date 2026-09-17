@@ -100,11 +100,20 @@ export default function LoginScreen({ onLogin }) {
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-fuchsia-600/10 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          <div className="flex items-center gap-3">
-            <Logo />
-            <div>
-              <h1 className="text-white text-xl font-black tracking-tight">Aud</h1>
-              <p className="text-indigo-300/80 text-xs">Studio de transcription par IA</p>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="absolute -inset-2 rounded-2xl bg-blue-500/25 blur-lg"></div>
+              <div className="relative rounded-xl ring-1 ring-white/15 shadow-xl shadow-black/40">
+                <Logo />
+              </div>
+            </div>
+            <div className="leading-tight">
+              <h1 className="text-2xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-100 to-blue-200 bg-clip-text text-transparent">
+                Aud
+              </h1>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-indigo-300/70 mt-1">
+                Studio de transcription par IA
+              </p>
             </div>
           </div>
 
@@ -144,10 +153,19 @@ export default function LoginScreen({ onLogin }) {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <Logo size="h-11" />
-            <div>
-              <h1 className="text-white text-lg font-black">Aud</h1>
-              <p className="text-indigo-300/80 text-[11px]">Studio de transcription par IA</p>
+            <div className="relative">
+              <div className="absolute -inset-1.5 rounded-xl bg-blue-500/25 blur-md"></div>
+              <div className="relative rounded-lg ring-1 ring-white/15">
+                <Logo size="h-11" />
+              </div>
+            </div>
+            <div className="leading-tight">
+              <h1 className="text-xl font-black tracking-tight bg-gradient-to-r from-white via-indigo-100 to-blue-200 bg-clip-text text-transparent">
+                Aud
+              </h1>
+              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-indigo-300/70 mt-0.5">
+                Studio de transcription par IA
+              </p>
             </div>
           </div>
 
