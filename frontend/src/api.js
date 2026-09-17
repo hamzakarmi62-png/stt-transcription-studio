@@ -208,4 +208,21 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ identifier, password }),
     }),
+
+  // ── Post-transcription insights (never touches the transcript itself) ──
+  startTranslate: (id, language) =>
+    request(`${BASE}/sessions/${id}/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ language }),
+    }),
+
+  translateStatus: (id) => request(`${BASE}/sessions/${id}/translate/status`),
+
+  startSummary: (id) =>
+    request(`${BASE}/sessions/${id}/summary`, { method: "POST" }),
+
+  summaryStatus: (id) => request(`${BASE}/sessions/${id}/summary/status`),
+
+  stats: (id) => request(`${BASE}/sessions/${id}/stats`),
 };

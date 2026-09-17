@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import BACKEND_DIR, settings
 from .db import init_db, recover_orphan_processing
-from .routers import auth, diarization, export, sessions, transcription, uploads
+from .routers import auth, diarization, export, sessions, transcription, uploads, insights
 
 app = FastAPI(title="Speech-to-Text Transcription Studio", version="0.1.0")
 
@@ -24,6 +24,7 @@ app.include_router(transcription.router)
 app.include_router(diarization.router)
 app.include_router(sessions.router)
 app.include_router(export.router)
+app.include_router(insights.router)
 
 
 @app.on_event("startup")

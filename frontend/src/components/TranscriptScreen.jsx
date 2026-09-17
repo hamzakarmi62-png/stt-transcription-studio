@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
-import { nextColor, uid } from "../utils.js";
+import { formatTime, nextColor, uid } from "../utils.js";
 import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
-import { ArrowLeft, Play, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause } from "./Icons.jsx";
+import { ArrowLeft, Play, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause, Languages, Sparkles, Chart } from "./Icons.jsx";
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
 
@@ -50,6 +50,18 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const audioRef = useRef(null);
   const saveTimerRef = useRef(null);
   const sessionRef = useRef(session);
+
+  // ── Insights drawer (translation / summary / stats) — additive only ──
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [insightsTab, setInsightsTab] = useState("translate");
+  const [translateJob, setTranslateJob] = useState(null);
+  const [translations, setTranslations] = useState({});
+  const [activeLang, setActiveLang] = useState(null);
+  const [summaryJob, setSummaryJob] = useState(null);
+  const [summary, setSummary] = useState(null);
+  const [stats, setStats] = useState(null);
+  const [insightsError, setInsightsError] = useState("");
+  const [translateTarget, setTranslateTarget] = useState("fr");
 
   useEffect(() => {
     sessionRef.current = session;
@@ -702,6 +714,96 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       ],
     }));
 
+  // ── Insights helpers (translation / summary / stats) ──
+  const openInsights = (tab) => {
+    setInsightsTab(tab);
+    setInsightsOpen(true);
+    setInsightsError("");
+  };
+
+  const startTranslation = async (language) => {
+    setInsightsError("");
+    try {
+      const res = await api.startTranslate(session.id, language);
+      setTranslateJob(res.job);
+    } catch (e) {
+      setInsightsError(e.message);
+    }
+  };
+
+  const startSummary = async () => {
+    setInsightsError("");
+    try {
+      const res = await api.startSummary(session.id);
+      setSummaryJob(res.job);
+    } catch (e) {
+      setInsightsError(e.message);
+    }
+  };
+
+  const downloadTxt = (name, text) => {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
+  const LANG_NAMES = {
+    fr: "Français", en: "English", ar: "العربية",
+    es: "Español", de: "Deutsch", tr: "Türkçe",
+  };
+
+  // Poll the translate job while it runs
+  useEffect(() => {
+    if (translateJob?.status !== "running") return;
+    const t = setInterval(async () => {
+      try {
+        const s = await api.translateStatus(session.id);
+        setTranslateJob(s.job);
+        setTranslations(s.translations || {});
+      } catch { /* keep polling */ }
+    }, 2500);
+    return () => clearInterval(t);
+  }, [translateJob?.status, session.id]);
+
+  // Poll the summary job while it runs
+  useEffect(() => {
+    if (summaryJob?.status !== "running") return;
+    const t = setInterval(async () => {
+      try {
+        const s = await api.summaryStatus(session.id);
+        setSummaryJob(s.job);
+        if (s.summary) setSummary(s.summary);
+      } catch { /* keep polling */ }
+    }, 2500);
+    return () => clearInterval(t);
+  }, [summaryJob?.status, session.id]);
+
+  // One-time load of existing translations/summary + stats for the drawer
+  useEffect(() => {
+    if (!insightsOpen) return;
+    api.translateStatus(session.id)
+      .then((s) => {
+        setTranslateJob(s.job);
+        setTranslations(s.translations || {});
+        const done = Object.entries(s.translations || {}).find(([, v]) => Array.isArray(v));
+        if (done && !activeLang) setActiveLang(done[0]);
+      })
+      .catch(() => {});
+    api.summaryStatus(session.id)
+      .then((s) => {
+        setSummaryJob(s.job);
+        if (s.summary) setSummary(s.summary);
+      })
+      .catch(() => {});
+    if (insightsTab === "stats" && !stats) {
+      api.stats(session.id).then(setStats).catch(() => setStats({ error: true }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insightsOpen, insightsTab, session.id]);
+
   const saveLabel =
     saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-saved";
 
@@ -853,6 +955,29 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <Highlighter className="w-4 h-4" />
               </button>
 
+              {/* 7b. Insights — translation / summary / stats */}
+              <button
+                onClick={() => openInsights("translate")}
+                className={`p-2 rounded-xl hover:bg-white/10 transition-colors ${insightsOpen && insightsTab === "translate" ? "text-indigo-400" : "text-slate-300"}`}
+                title="Traduction du transcript"
+              >
+                <Languages className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => openInsights("summary")}
+                className={`p-2 rounded-xl hover:bg-white/10 transition-colors ${insightsOpen && insightsTab === "summary" ? "text-amber-400" : "text-slate-300"}`}
+                title="Résumé IA"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => openInsights("stats")}
+                className={`p-2 rounded-xl hover:bg-white/10 transition-colors ${insightsOpen && insightsTab === "stats" ? "text-sky-400" : "text-slate-300"}`}
+                title="Statistiques du dialogue"
+              >
+                <Chart className="w-4 h-4" />
+              </button>
+
               <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
 
               {/* 8. Undo */}
@@ -942,6 +1067,54 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <div className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-10 text-center text-slate-400">
                 No transcript available for this session yet.
               </div>
+            ) : activeLang && translations[activeLang] ? (
+              <div className="pb-10">
+                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-7">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
+                    <h3 className="font-black text-slate-800 text-sm flex items-center gap-2">
+                      <Languages className="w-4 h-4 text-indigo-500" />
+                      Traduction — {LANG_NAMES[activeLang] || activeLang}
+                    </h3>
+                    <button
+                      onClick={() => setActiveLang(null)}
+                      className="text-[11px] font-bold text-indigo-500 hover:underline"
+                    >
+                      Revenir à l'original
+                    </button>
+                  </div>
+                  {translations[activeLang].map((tr, i) => {
+                    const seg = segments[i] || {};
+                    const spk = speakerById[seg.speaker];
+                    const color = spk?.color || "#475569";
+                    return (
+                      <div key={i}>
+                        <div className="flex items-center gap-3 mb-1 flex-wrap">
+                          <span
+                            className="font-bold text-[15px] border-b-2 border-dotted pb-0.5"
+                            style={{ color, borderColor: color }}
+                          >
+                            {spk?.name || "—"}
+                          </span>
+                          <span className="h-5 w-px bg-slate-200"></span>
+                          <button
+                            onClick={() => seekTo(seg.start || 0)}
+                            className="inline-flex items-center gap-2 text-slate-800 hover:text-indigo-600 transition"
+                            title="Lire depuis le début du paragraphe"
+                          >
+                            <Play className="w-[18px] h-[18px] text-slate-700" filled />
+                            <span className="font-bold tabular-nums text-[15px]">
+                              {formatTime(seg.start || 0)}
+                            </span>
+                          </button>
+                        </div>
+                        <p dir="auto" className="text-[19px] leading-[2] text-slate-800 select-text">
+                          {tr.text}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             ) : (
 
               <div className="pb-10">
@@ -990,6 +1163,221 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           </section>
         </div>
       </main>
+
+      {/* ── Insights drawer: translation / summary / stats ── */}
+      <div
+        className={`fixed inset-y-0 right-0 w-[92vw] max-w-[430px] z-40 transform transition-transform duration-300 ${
+          insightsOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
+        <div className="h-full bg-slate-950/95 backdrop-blur-2xl border-s border-white/10 p-5 overflow-y-auto flex flex-col">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-black text-sm uppercase tracking-widest text-slate-300">
+              {insightsTab === "translate" ? "Traduction IA" : insightsTab === "summary" ? "Résumé IA" : "Statistiques"}
+            </h3>
+            <button
+              onClick={() => setInsightsOpen(false)}
+              className="p-2 rounded-xl hover:bg-white/10 text-slate-400 transition"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {insightsError && (
+            <div className="mb-3 text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+              {insightsError}
+            </div>
+          )}
+
+          {insightsTab === "translate" && (
+            <div className="space-y-4">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Traduisez tout le dialogue vers une autre langue avec l'IA (Llama 3.3 · Groq).
+                Le texte original reste intact — vous basculez à tout moment.
+              </p>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5">
+                  Langue cible
+                </label>
+                <select
+                  value={translateTarget}
+                  onChange={(e) => setTranslateTarget(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm font-bold text-slate-200 focus:outline-none cursor-pointer"
+                >
+                  {Object.entries(LANG_NAMES).map(([k, v]) => (
+                    <option key={k} value={k}>{v}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={() => startTranslation(translateTarget)}
+                disabled={translateJob?.status === "running"}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black text-sm hover:brightness-110 disabled:opacity-40 transition shadow-lg shadow-indigo-950/50"
+              >
+                {translateJob?.status === "running" ? "Traduction en cours…" : "Traduire maintenant"}
+              </button>
+
+              {translateJob?.status === "running" && (
+                <div>
+                  <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+                    <span>Traduction…</span>
+                    <span className="text-indigo-400 font-bold">
+                      {Math.round(((translateJob.progress || 0) / (segments.length || 1)) * 100)}%
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-violet-500 transition-all duration-300"
+                      style={{ width: `${Math.round(((translateJob.progress || 0) / (segments.length || 1)) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {translateJob?.status === "error" && (
+                <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                  {translateJob.error}
+                </div>
+              )}
+
+              {Object.keys(translations).length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                    Traductions prêtes — cliquez pour afficher
+                  </p>
+                  {Object.entries(translations).map(([lang, arr]) => (
+                    <div
+                      key={lang}
+                      onClick={() => setActiveLang(activeLang === lang ? null : lang)}
+                      className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
+                        activeLang === lang
+                          ? "border-indigo-500/50 bg-indigo-500/10"
+                          : "border-white/10 bg-white/[0.03] hover:border-indigo-500/40"
+                      }`}
+                    >
+                      <span className="text-sm font-bold text-slate-200">
+                        {LANG_NAMES[lang] || lang} · {arr.length} segments
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          downloadTxt(
+                            `${(session.filename || "transcript").replace(/\.[^.]+$/, "")}-${lang}.txt`,
+                            arr.map((t) => t.text).join("\n")
+                          );
+                        }}
+                        className="text-[10px] font-black text-indigo-400 hover:underline"
+                      >
+                        .txt
+                      </button>
+                    </div>
+                  ))}
+                  {activeLang && (
+                    <p className="text-[11px] text-emerald-400">
+                      Affichage actuel : {LANG_NAMES[activeLang] || activeLang} — « Revenir à l'original » en haut du document.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {insightsTab === "summary" && (
+            <div className="space-y-4">
+              <p className="text-xs text-slate-400 leading-relaxed">
+                L'IA lit tout le dialogue et produit un résumé structuré : points clés puis actions.
+              </p>
+              <button
+                onClick={startSummary}
+                disabled={summaryJob?.status === "running"}
+                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-sm hover:brightness-110 disabled:opacity-40 transition shadow-lg"
+              >
+                {summaryJob?.status === "running"
+                  ? "Analyse du dialogue…"
+                  : summary?.text
+                  ? "Régénérer le résumé"
+                  : "Générer le résumé"}
+              </button>
+
+              {summaryJob?.status === "running" && (
+                <div className="h-2 rounded-full bg-gradient-to-r from-amber-500/40 via-fuchsia-500 to-indigo-500/40 animate-pulse" />
+              )}
+
+              {summaryJob?.status === "error" && (
+                <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                  {summaryJob.error}
+                </div>
+              )}
+
+              {summary?.text && (
+                <>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+                    {summary.text}
+                  </div>
+                  <button
+                    onClick={() =>
+                      downloadTxt(
+                        `${(session.filename || "transcript").replace(/\.[^.]+$/, "")}-resume.txt`,
+                        summary.text
+                      )
+                    }
+                    className="text-[11px] font-black text-indigo-400 hover:underline"
+                  >
+                    Télécharger le résumé (.txt)
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          {insightsTab === "stats" && (
+            <div className="space-y-4">
+              {!stats ? (
+                <p className="text-xs text-slate-500">Chargement…</p>
+              ) : stats.error ? (
+                <p className="text-xs text-red-400">Impossible de charger les statistiques.</p>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { label: "Durée", value: formatTime(stats.duration || 0) },
+                      { label: "Mots", value: String(stats.words ?? 0) },
+                      { label: "Segments", value: String(stats.segments ?? 0) },
+                    ].map((c) => (
+                      <div key={c.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center">
+                        <p className="text-lg font-black text-white">{c.value}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">{c.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-2.5">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Temps de parole</p>
+                    {(stats.speakers || []).map((s) => {
+                      const maxS = Math.max(...(stats.speakers || []).map((x) => x.seconds || 1), 1);
+                      return (
+                        <div key={s.name} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="text-sm font-bold text-slate-200">{s.name}</span>
+                            <span className="text-xs font-bold text-indigo-400 tabular-nums">
+                              {formatTime(s.seconds)} · {s.words} mots
+                            </span>
+                          </div>
+                          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
+                              style={{ width: `${Math.round(((s.seconds || 0) / maxS) * 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
           </div>
     </div>
   );
