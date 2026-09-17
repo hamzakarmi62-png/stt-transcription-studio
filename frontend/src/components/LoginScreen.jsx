@@ -144,7 +144,7 @@ export default function LoginScreen({ onLogin }) {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <Logo size="w-11 h-11" text="text-xl" />
+            <Logo size="h-11" />
             <div>
               <h1 className="text-white text-lg font-black">Aud</h1>
               <p className="text-indigo-300/80 text-[11px]">Studio de transcription par IA</p>

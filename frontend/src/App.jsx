@@ -19,29 +19,17 @@ function Splash({ done }) {
       <div className="absolute bottom-1/4 right-1/4 w-[380px] h-[380px] rounded-full bg-fuchsia-600/10 blur-[130px]"></div>
 
       <div className="relative">
-        <div className="aud-splash-ring absolute -inset-7 rounded-full border-2 border-violet-500/30"></div>
-        <div className="aud-splash-ring aud-splash-ring-2 absolute -inset-7 rounded-full border border-fuchsia-400/20"></div>
+        <div className="aud-splash-ring absolute -inset-8 rounded-full border-2 border-violet-500/30"></div>
+        <div className="aud-splash-ring aud-splash-ring-2 absolute -inset-8 rounded-full border border-fuchsia-400/20"></div>
         <img
           src={audLogo}
           alt="Aud"
-          className="relative w-36 h-36 sm:w-44 sm:h-44 object-contain aud-splash-logo"
+          className="relative w-52 h-52 sm:w-64 sm:h-64 object-contain aud-splash-logo"
           draggable={false}
         />
       </div>
 
-      <div className="mt-8 flex items-baseline overflow-hidden">
-        {["A", "U", "D"].map((ch, i) => (
-          <span
-            key={ch}
-            className="aud-splash-letter text-5xl sm:text-6xl font-black bg-gradient-to-r from-blue-400 via-violet-300 to-fuchsia-400 bg-clip-text text-transparent"
-            style={{ animationDelay: `${0.35 + i * 0.13}s` }}
-          >
-            {ch}
-          </span>
-        ))}
-      </div>
-
-      <p className="aud-splash-tag mt-3 text-[10px] sm:text-xs font-bold uppercase text-slate-400">
+      <p className="aud-splash-tag mt-7 text-[10px] sm:text-xs font-bold uppercase text-slate-400">
         Transcription Services · Intelligence Artificielle
       </p>
 
