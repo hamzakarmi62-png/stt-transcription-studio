@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import { sleep, uid } from "../utils.js";
 import UserMenu from "./UserMenu.jsx";
-import { Mic, Zap, Folder, FolderOpen, Star, FileVideo, FileAudio, FileText, Headphones, X, Check, AlertTriangle, Loader, Inbox, Pencil, Trash, Sun, Moon, Settings, ArrowUpRight, Lightbulb, Home, Box } from "./Icons.jsx";
+import { Mic, Zap, Folder, FolderOpen, Star, FileVideo, FileAudio, FileText, Headphones, X, Check, AlertTriangle, Loader, Inbox, Pencil, Trash, Sun, Moon, Settings, ArrowUpRight, Lightbulb, Home, Box, AlignLeft } from "./Icons.jsx";
 import audLogo from "../assets/aud-logo.png";
 
 const ACCEPTED = ".mp3,.wav,.m4a,.ogg,.mp4,.webm,.mkv,.avi";
@@ -245,7 +245,7 @@ const LANGUAGES = [
 export default function UploadScreen({ onComplete, user, onLogout }) {
   const [activeTab, setActiveTab] = useState("home"); // home | transcribe | myFiles | archive | settings
   const [uiLang, setUiLang] = useState("fr"); // ar | en | fr (Default to French)
-  const [theme, setTheme] = useState("dark"); // dark | light
+  const [theme, setTheme] = useState("light"); // dark | light (light = Rev cream by default)
 
   const [file, setFile] = useState(null);
   const [language, setLanguage] = useState("");
@@ -585,33 +585,33 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       ? customWorksSessions
       : customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === selectedFolderFilter);
 
-  // ---- Aurora Glass design tokens ----
+  // ---- Rev Cream design tokens (light) / Aurora Glass (dark) ----
   const isDark = theme === "dark";
-  const bgMain = isDark ? "bg-black text-slate-100" : "bg-[#eef1f8] text-slate-900";
+  const bgMain = isDark ? "bg-black text-slate-100" : "bg-[#f6f3ed] text-[#18123b]";
   const glass = isDark
     ? "bg-white/[0.045] border-white/[0.08] backdrop-blur-2xl"
-    : "bg-white/80 border-slate-200/80 backdrop-blur-2xl shadow-sm";
+    : "bg-white/85 border-[#18123b]/[0.08] backdrop-blur-2xl shadow-sm";
   const glassSoft = isDark
     ? "bg-white/[0.03] border-white/[0.07]"
-    : "bg-white/60 border-slate-200/70";
-  const textSub = isDark ? "text-slate-400" : "text-slate-500";
+    : "bg-white/60 border-[#18123b]/[0.07]";
+  const textSub = isDark ? "text-slate-400" : "text-[#4b4763]";
   const inputBg = isDark
     ? "bg-white/[0.05] border-white/10 text-slate-100 focus:ring-indigo-500/60"
-    : "bg-white border-slate-300 text-slate-900 focus:ring-indigo-500/50";
-  const hairline = isDark ? "border-white/[0.07]" : "border-slate-200";
-  const hoverGlass = isDark ? "hover:bg-white/[0.06]" : "hover:bg-slate-100";
+    : "bg-white border-[#18123b]/20 text-[#18123b] focus:ring-[#6415f5]/50";
+  const hairline = isDark ? "border-white/[0.07]" : "border-[#18123b]/10";
+  const hoverGlass = isDark ? "hover:bg-white/[0.06]" : "hover:bg-[#18123b]/[0.05]";
   const navPill = (active) =>
     active
-      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-950/40"
+      ? "bg-[#6415f5] text-white shadow-md shadow-[#6415f5]/30"
       : isDark
       ? "text-slate-400 hover:text-white hover:bg-white/[0.06]"
-      : "text-slate-500 hover:text-slate-900 hover:bg-slate-200/60";
+      : "text-[#18123b]/70 hover:text-[#18123b] hover:bg-[#18123b]/[0.06]";
   const filePill = (active) =>
     active
-      ? "bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-950/40"
+      ? "bg-[#6415f5] text-white shadow-md shadow-[#6415f5]/30"
       : isDark
-      ? "bg-white/[0.04] text-slate-300 border border-white/10 hover:border-indigo-500/50"
-      : "bg-white text-slate-600 border border-slate-200 hover:border-indigo-400";
+      ? "bg-white/[0.04] text-slate-300 border border-white/10 hover:border-[#6415f5]/50"
+      : "bg-white text-[#4b4763] border border-[#18123b]/10 hover:border-[#6415f5]/40";
 
   const NAV = [
     {
@@ -666,16 +666,16 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     <div className={`min-h-screen ${bgMain} relative transition-colors duration-300`} dir={uiLang === "ar" ? "rtl" : "ltr"}>
       {/* ── Aurora background ── */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className={`absolute -top-48 -left-40 w-[640px] h-[640px] rounded-full blur-[140px] ${isDark ? "bg-indigo-600/[0.16]" : "bg-indigo-400/[0.15]"}`}></div>
-        <div className={`absolute top-1/4 -right-48 w-[560px] h-[560px] rounded-full blur-[140px] ${isDark ? "bg-fuchsia-600/[0.10]" : "bg-fuchsia-400/[0.10]"}`}></div>
-        <div className={`absolute -bottom-40 left-1/4 w-[520px] h-[520px] rounded-full blur-[140px] ${isDark ? "bg-violet-600/[0.09]" : "bg-violet-400/[0.09]"}`}></div>
+        <div className={`absolute -top-48 -left-40 w-[640px] h-[640px] rounded-full blur-[140px] ${isDark ? "bg-indigo-600/[0.16]" : "bg-[#6415f5]/[0.07]"}`}></div>
+        <div className={`absolute top-1/4 -right-48 w-[560px] h-[560px] rounded-full blur-[140px] ${isDark ? "bg-fuchsia-600/[0.10]" : "bg-[#6415f5]/[0.04]"}`}></div>
+        <div className={`absolute -bottom-40 left-1/4 w-[520px] h-[520px] rounded-full blur-[140px] ${isDark ? "bg-violet-600/[0.09]" : "bg-[#6415f5]/[0.03]"}`}></div>
       </div>
 
       <div className="relative">
         {/* ── Floating glass navbar ── */}
         <header className="sticky top-0 z-40 px-3 sm:px-5 pt-3 pb-1">
           <div className={`max-w-7xl mx-auto rounded-[26px] border backdrop-blur-2xl px-4 sm:px-5 h-16 flex items-center gap-2 ${
-            isDark ? "bg-slate-950/60 border-white/[0.08] shadow-xl shadow-black/20" : "bg-white/80 border-slate-200 shadow-lg shadow-slate-900/5"
+            isDark ? "bg-slate-950/60 border-white/[0.08] shadow-xl shadow-black/20" : "bg-white/85 border-[#18123b]/[0.08] shadow-lg shadow-[#18123b]/5"
           }`}>
             <div className="flex items-center gap-2.5 shrink-0">
               <img src={audLogo} alt="Aud" className="h-9 w-auto" draggable={false} />
@@ -744,35 +744,35 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
           {/* ══ HOME — Bento grid ══ */}
           {activeTab === "home" && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Hero bento tile — full width, big logo badge */}
-              <div className="col-span-2 lg:col-span-4 relative overflow-hidden rounded-[30px] bg-slate-950 p-10 sm:p-14 flex flex-col justify-center min-h-[380px]">
-                <div className="absolute -top-24 -end-20 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-28 -start-16 w-80 h-80 bg-fuchsia-600/25 rounded-full blur-3xl"></div>
+              {/* Hero bento tile — full width, Rev-style light hero */}
+              <div className="col-span-2 lg:col-span-4 relative overflow-hidden rounded-[30px] bg-white border border-[#18123b]/[0.08] p-10 sm:p-14 flex flex-col justify-center min-h-[380px]">
+                <div className="absolute -top-24 -end-20 w-96 h-96 bg-[#6415f5]/[0.09] rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-28 -start-16 w-80 h-80 bg-[#6415f5]/[0.06] rounded-full blur-3xl"></div>
                 <div
-                  className="absolute inset-0 opacity-[0.12]"
-                  style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)", backgroundSize: "24px 24px" }}
+                  className="absolute inset-0 opacity-[0.07]"
+                  style={{ backgroundImage: "radial-gradient(circle at 1px 1px, rgba(24,18,59,0.55) 1px, transparent 0)", backgroundSize: "24px 24px" }}
                 ></div>
                 <div className="relative w-full flex flex-col lg:flex-row items-center gap-10 lg:gap-14">
                   {/* Left: message + actions */}
                   <div className="relative space-y-5 flex-1 min-w-0 text-center lg:text-start">
-                    <span className="inline-flex items-center gap-2 bg-white/10 border border-white/15 backdrop-blur text-indigo-200 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="inline-flex items-center gap-2 bg-[#6415f5]/[0.06] border border-[#6415f5]/25 text-[#6415f5] px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       WHISPER + GROQ · IA
                     </span>
-                    <h2 className="text-3xl sm:text-[40px] font-black text-white leading-[1.12] tracking-tight">
+                    <h2 className="text-3xl sm:text-[40px] font-semibold text-[#18123b] leading-[1.12] tracking-[-0.02em]">
                       {t.welcomeBack}
                     </h2>
-                    <p className="text-slate-400 text-[14px] leading-relaxed max-w-xl mx-auto lg:mx-0">{t.welcomeDesc}</p>
+                    <p className="text-[#4b4763] text-[14px] leading-relaxed max-w-xl mx-auto lg:mx-0">{t.welcomeDesc}</p>
                     <div className="relative flex gap-3 flex-wrap justify-center lg:justify-start pt-1">
                       <button
                         onClick={() => setActiveTab("transcribe")}
-                        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white text-slate-950 font-black text-sm hover:bg-indigo-50 shadow-xl transition-all hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#6415f5] text-white font-bold text-sm hover:bg-[#5311cf] shadow-lg shadow-[#6415f5]/25 transition-all hover:-translate-y-0.5"
                       >
                         <Zap className="w-4 h-4" /> {t.startNewTranscribe}
                       </button>
                       <button
                         onClick={() => setActiveTab("myFiles")}
-                        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl bg-white/10 border border-white/15 backdrop-blur text-white font-bold text-sm hover:bg-white/20 transition-all"
+                        className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white border-[1.5px] border-[#6415f5] text-[#6415f5] font-bold text-sm hover:bg-[#6415f5]/[0.05] transition-all"
                       >
                         <Folder className="w-4 h-4" /> {t.browseMyFiles}
                       </button>
@@ -781,33 +781,35 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
                   {/* Right: the Aud mark on a light stage */}
                   <div className="relative shrink-0 w-60 h-60 sm:w-80 sm:h-80 flex items-center justify-center">
-                    <div className="absolute inset-6 rounded-full bg-gradient-to-br from-blue-600/25 via-violet-600/20 to-fuchsia-600/20 blur-3xl"></div>
-                    <div className="aud-hero-ring absolute inset-2 rounded-[38px] border border-white/[0.07]"></div>
+                    <div className="absolute inset-6 rounded-full bg-gradient-to-br from-blue-600/15 via-[#6415f5]/12 to-fuchsia-600/10 blur-3xl"></div>
+                    <div className="aud-hero-ring absolute inset-2 rounded-[38px] border border-[#18123b]/[0.07]"></div>
                     <img
                       src={audLogo}
                       alt="Aud — Transcription Services"
                       className="relative w-full h-full object-contain aud-hero-logo"
                       draggable={false}
                     />
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-6 rounded-[100%] bg-blue-500/25 blur-xl"></div>
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-40 h-6 rounded-[100%] bg-[#6415f5]/20 blur-xl"></div>
                   </div>
                 </div>
               </div>
 
-              {/* Stat tiles */}
+              {/* Stat tiles — Rev-style outlined icon containers */}
               {[
-                { label: t.totalSessions, value: totalSessionsCount, grad: "from-indigo-500 to-violet-500" },
-                { label: t.completedSessions, value: completedSessionsCount, grad: "from-emerald-500 to-teal-500" },
-                { label: t.totalSegments, value: totalSegmentsCount, grad: "from-violet-500 to-fuchsia-500" },
-                { label: t.systemStatus, value: null, grad: "from-amber-500 to-orange-500" },
+                { label: t.totalSessions, value: totalSessionsCount, Icon: FileVideo },
+                { label: t.completedSessions, value: completedSessionsCount, Icon: Check },
+                { label: t.totalSegments, value: totalSegmentsCount, Icon: AlignLeft },
+                { label: t.systemStatus, value: null, Icon: Zap },
               ].map((st) => (
-                <div key={st.label} className={`${glass} rounded-[26px] p-5 border relative overflow-hidden group hover:-translate-y-1 transition-all duration-300`}>
-                  <div className={`absolute -top-10 -end-10 w-28 h-28 rounded-full bg-gradient-to-br ${st.grad} opacity-[0.12] blur-2xl group-hover:opacity-25 transition-opacity`}></div>
-                  <p className={`text-[10px] font-bold ${textSub} mt-4 uppercase tracking-widest`}>{st.label}</p>
-                  <h3 className="text-2xl font-black mt-1">
+                <div key={st.label} className="bg-white border border-[#18123b]/[0.08] rounded-[22px] p-5 relative group hover:-translate-y-1 hover:shadow-md transition-all duration-300">
+                  <div className="w-11 h-11 rounded-xl border-[1.5px] border-[#18123b]/25 flex items-center justify-center text-[#18123b]">
+                    <st.Icon className="w-5 h-5" />
+                  </div>
+                  <p className="text-[10px] font-bold text-[#4b4763] mt-4 uppercase tracking-widest">{st.label}</p>
+                  <h3 className="text-2xl font-extrabold mt-1 text-[#18123b]">
                     {st.value === null ? (
-                      <span className="text-emerald-400 flex items-center gap-2 text-[13px] font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      <span className="text-emerald-600 flex items-center gap-2 text-[13px] font-bold">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                         {t.active}
                       </span>
                     ) : (
@@ -818,12 +820,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               ))}
 
               {/* Folders tile */}
-              <div className={`${glass} rounded-[26px] p-6 border col-span-2 lg:col-span-4 space-y-4`}>
+              <div className="bg-white border border-[#18123b]/[0.08] rounded-[26px] p-6 col-span-2 lg:col-span-4 space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-black text-xs uppercase tracking-widest flex items-center gap-2">
-                    <FolderOpen className="w-3.5 h-3.5 text-indigo-400" /> {t.availableFolders}
+                  <h3 className="font-bold text-xs uppercase tracking-widest text-[#18123b] flex items-center gap-2.5">
+                    <span className="w-8 h-8 rounded-lg border-[1.5px] border-[#18123b]/25 flex items-center justify-center text-[#18123b]">
+                      <FolderOpen className="w-3.5 h-3.5" />
+                    </span>
+                    {t.availableFolders}
                   </h3>
-                  <button onClick={handleCreateFolder} className="text-[11px] text-indigo-400 font-bold hover:underline">
+                  <button onClick={handleCreateFolder} className="text-[11px] text-[#6415f5] font-bold hover:underline">
                     {t.createNewFolder}
                   </button>
                 </div>
@@ -837,10 +842,10 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                           setSelectedFolderFilter(f.id);
                           setActiveTab("myFiles");
                         }}
-                        className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-slate-200 hover:border-indigo-400"}`}
+                        className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-[#18123b]/[0.1] hover:border-[#6415f5]/50"}`}
                       >
-                        <span className="font-semibold text-xs truncate flex items-center gap-1.5 min-w-0"><FolderOpen className="w-3.5 h-3.5 text-indigo-400 shrink-0" /><span className="truncate">{f.name}</span></span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isDark ? "bg-white/10" : "bg-slate-200/80"}`}>{count}</span>
+                        <span className="font-semibold text-xs truncate flex items-center gap-1.5 min-w-0 text-[#18123b]"><FolderOpen className="w-3.5 h-3.5 text-[#6415f5] shrink-0" /><span className="truncate">{f.name}</span></span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-black ${isDark ? "bg-white/10" : "bg-[#18123b]/[0.06] text-[#18123b]"}`}>{count}</span>
                       </div>
                     );
                   })}
