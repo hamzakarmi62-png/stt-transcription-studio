@@ -257,9 +257,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [error, setError] = useState("");
   const [sessions, setSessions] = useState([]);
   
+  const userKey = useCallback((key) => (user?.id ? `${key}_${user.id}` : key), [user?.id]);
+
   const [customWorkIds, setCustomWorkIds] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("custom_works") || "[]");
+      const k = user?.id ? `custom_works_${user.id}` : "custom_works";
+      return JSON.parse(localStorage.getItem(k) || "[]");
     } catch {
       return [];
     }
@@ -267,7 +270,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   const [customFileNames, setCustomFileNames] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("custom_file_names") || "{}");
+      const k = user?.id ? `custom_file_names_${user.id}` : "custom_file_names";
+      return JSON.parse(localStorage.getItem(k) || "{}");
     } catch {
       return {};
     }
@@ -275,7 +279,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   const [folders, setFolders] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("custom_folders") || '[{"id":"default","name":"Général"}]');
+      const k = user?.id ? `custom_folders_${user.id}` : "custom_folders";
+      return JSON.parse(localStorage.getItem(k) || '[{"id":"default","name":"Général"}]');
     } catch {
       return [{ id: "default", name: "Général" }];
     }
@@ -283,11 +288,25 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   const [sessionFolderMap, setSessionFolderMap] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem("session_folder_map") || "{}");
+      const k = user?.id ? `session_folder_map_${user.id}` : "session_folder_map";
+      return JSON.parse(localStorage.getItem(k) || "{}");
     } catch {
       return {};
     }
   });
+
+  // Sync state when user changes
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      setCustomWorkIds(JSON.parse(localStorage.getItem(`custom_works_${user.id}`) || "[]"));
+      setCustomFileNames(JSON.parse(localStorage.getItem(`custom_file_names_${user.id}`) || "{}"));
+      setFolders(JSON.parse(localStorage.getItem(`custom_folders_${user.id}`) || '[{"id":"default","name":"Général"}]'));
+      setSessionFolderMap(JSON.parse(localStorage.getItem(`session_folder_map_${user.id}`) || "{}"));
+    } catch {
+      /* ignore */
+    }
+  }, [user?.id]);
 
   const [selectedFolderFilter, setSelectedFolderFilter] = useState("all");
   const [dragOver, setDragOver] = useState(false);
@@ -328,39 +347,39 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   useEffect(() => {
     loadSessions();
     checkHealth();
-  }, [loadSessions, checkHealth]);
+  }, [loadSessions, checkHealth, user?.id]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("custom_works", JSON.stringify(customWorkIds));
+      localStorage.setItem(userKey("custom_works"), JSON.stringify(customWorkIds));
     } catch {
       /* ignore */
     }
-  }, [customWorkIds]);
+  }, [customWorkIds, userKey]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("custom_file_names", JSON.stringify(customFileNames));
+      localStorage.setItem(userKey("custom_file_names"), JSON.stringify(customFileNames));
     } catch {
       /* ignore */
     }
-  }, [customFileNames]);
+  }, [customFileNames, userKey]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("custom_folders", JSON.stringify(folders));
+      localStorage.setItem(userKey("custom_folders"), JSON.stringify(folders));
     } catch {
       /* ignore */
     }
-  }, [folders]);
+  }, [folders, userKey]);
 
   useEffect(() => {
     try {
-      localStorage.setItem("session_folder_map", JSON.stringify(sessionFolderMap));
+      localStorage.setItem(userKey("session_folder_map"), JSON.stringify(sessionFolderMap));
     } catch {
       /* ignore */
     }
-  }, [sessionFolderMap]);
+  }, [sessionFolderMap, userKey]);
 
   const toggleCustomWork = (e, id) => {
     e.stopPropagation();
