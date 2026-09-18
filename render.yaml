@@ -15,6 +15,8 @@ services:
         value: auto
       - key: GROQ_API_KEY
         sync: false
+      - key: AUTH_SECRET
+        sync: false
       - key: CORS_ORIGINS
         value: "*"
       - key: SUPABASE_URL

@@ -1,0 +1,9 @@
+{
+  "owner": {
+    "username": "GITHUB-USERNAME"
+  },
+  "records": {
+    "CNAME": "stt-transcription-studio.onrender.com"
+  },
+  "proxied": false
+}
