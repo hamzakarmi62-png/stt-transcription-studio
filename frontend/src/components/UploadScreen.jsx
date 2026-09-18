@@ -690,7 +690,6 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     onClick={() => setActiveTab(item.id)}
                     className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-2.5 rounded-2xl text-[11px] xl:text-xs font-bold transition-all ${navPill(active)}`}
                   >
-                    <item.Icon className="w-4 h-4" />
                     <span className="hidden xl:block whitespace-nowrap">{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
                       <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${active ? "bg-white/25" : isDark ? "bg-white/10" : "bg-slate-200"}`}>
