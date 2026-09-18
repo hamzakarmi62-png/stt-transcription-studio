@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Phone, Globe } from "./Icons.jsx";
+import audLogo from "../assets/aud-logo.png";
 
 export default function UserMenu({ user, onLogout, dark = false }) {
   const [open, setOpen] = useState(false);
@@ -14,6 +15,8 @@ export default function UserMenu({ user, onLogout, dark = false }) {
   }, []);
 
   if (!user) return null;
+  // The header chip is brand space: it always shows AUD, whoever is logged
+  // in. The account's real identity lives in the dropdown below.
   const displayName = user.full_name || user.username || "Utilisateur";
   const initials = displayName
     .trim()
@@ -30,11 +33,11 @@ export default function UserMenu({ user, onLogout, dark = false }) {
         className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 hover:bg-white/[0.07] transition"
         title="Mon compte"
       >
-        <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-indigo-950/50 ring-1 ring-white/20 shrink-0">
-          {initials}
+        <span className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-950/50 ring-1 ring-white/20 shrink-0 overflow-hidden bg-slate-950">
+          <img src={audLogo} alt="Aud" className="w-full h-full object-cover" draggable={false} />
         </span>
         <span className="hidden sm:block text-start leading-tight">
-          <span className="block text-xs font-bold text-white">{displayName}</span>
+          <span className="block text-xs font-black text-white tracking-[0.18em]">AUD</span>
           <span className="block text-[10px] text-slate-400">Compte gratuit</span>
         </span>
         <svg
