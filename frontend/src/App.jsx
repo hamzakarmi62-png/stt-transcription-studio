@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import LoginScreen from "./components/LoginScreen.jsx";
+import LandingScreen from "./components/LandingScreen.jsx";
 import UploadScreen from "./components/UploadScreen.jsx";
 import TranscriptScreen from "./components/TranscriptScreen.jsx";
 import audLogo from "./assets/aud-logo.png";
@@ -72,9 +73,26 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+import { setAuthToken } from "./api.js";
+
 export default function App() {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const token = localStorage.getItem("auth_token");
+      const savedUser = localStorage.getItem("auth_user");
+      if (token && savedUser) {
+        return JSON.parse(savedUser);
+      }
+      // If token is missing, clear stale user state to prevent unauthenticated session leaks
+      localStorage.removeItem("auth_user");
+      localStorage.removeItem("auth_token");
+      return null;
+    } catch {
+      return null;
+    }
+  });
   const [session, setSession] = useState(null);
+  const [showLogin, setShowLogin] = useState(false);
   const [splashGone, setSplashGone] = useState(false);
   const [splashFading, setSplashFading] = useState(false);
 
@@ -87,22 +105,44 @@ export default function App() {
     };
   }, []);
 
-  const handleLogin = (u) => {
+  const handleLogin = (u, token) => {
     setUser(u);
+    if (token) {
+      setAuthToken(token);
+    }
+    if (u) {
+      try {
+        localStorage.setItem("auth_user", JSON.stringify(u));
+      } catch {
+        /* ignore */
+      }
+    }
   };
 
   const handleLogout = () => {
     setUser(null);
     setSession(null);
+    setAuthToken(null);
+    try {
+      localStorage.removeItem("auth_user");
+    } catch {
+      /* ignore */
+    }
   };
 
   return (
     <>
       {!splashGone && <Splash done={splashFading} />}
       {(!user) ? (
-        <ErrorBoundary>
-          <LoginScreen onLogin={handleLogin} />
-        </ErrorBoundary>
+        showLogin ? (
+          <ErrorBoundary>
+            <LoginScreen onLogin={handleLogin} onBack={() => setShowLogin(false)} />
+          </ErrorBoundary>
+        ) : (
+          <ErrorBoundary>
+            <LandingScreen onStart={() => setShowLogin(true)} />
+          </ErrorBoundary>
+        )
       ) : (
         <ErrorBoundary>
           {session ? (

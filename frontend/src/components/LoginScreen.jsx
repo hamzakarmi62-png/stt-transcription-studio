@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { api } from "../api.js";
 import audLogo from "../assets/aud-logo.png";
-import { Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff } from "./Icons.jsx";
+import { Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff, ArrowLeft } from "./Icons.jsx";
 
 const PAYS = [
   "Algérie", "Maroc", "Tunisie", "Mauritanie", "France", "Belgique",
@@ -19,7 +19,7 @@ function Logo({ size = "h-12" }) {
   );
 }
 
-export default function LoginScreen({ onLogin }) {
+export default function LoginScreen({ onLogin, onBack }) {
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -74,7 +74,7 @@ export default function LoginScreen({ onLogin }) {
           country,
         });
         if (res.success && res.user) {
-          onLogin(res.user);
+          onLogin(res.user, res.token);
         }
       } else {
         if (!username || !password) {
@@ -83,7 +83,7 @@ export default function LoginScreen({ onLogin }) {
         setLoading(true);
         const res = await api.login(username, password);
         if (res.success && res.user) {
-          onLogin(res.user);
+          onLogin(res.user, res.token);
         }
       }
     } catch (err) {
@@ -185,6 +185,16 @@ export default function LoginScreen({ onLogin }) {
                 ? "Quelques informations et votre studio est prêt."
                 : "Connectez-vous pour accéder à vos transcriptions."}
             </p>
+
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="mb-4 inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-indigo-600 transition"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" /> Retour à l'accueil
+              </button>
+            )}
 
             {error && (
               <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl font-medium flex items-start gap-2">
