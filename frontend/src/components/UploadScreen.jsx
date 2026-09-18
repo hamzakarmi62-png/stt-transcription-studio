@@ -1088,7 +1088,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <button
                   onClick={handleProcess}
                   disabled={!hasAudio || busy}
-                  className="w-full py-4 rounded-xl bg-[#6415f5] text-white font-bold text-sm hover:bg-[#5311cf] disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#6415f5]/30 transition-all hover:-translate-y-0.5"
+                  className={`w-full py-4 rounded-xl font-bold text-sm transition-all hover:-translate-y-0.5 ${
+                    !hasAudio || busy
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-[#18123b] text-white hover:bg-[#2a2455] shadow-lg shadow-[#18123b]/20"
+                  }`}
                 >
                   <span className="inline-flex items-center justify-center gap-2">{busy ? <Loader className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}{busy ? t.processing : t.startTranscribe}</span>
                 </button>

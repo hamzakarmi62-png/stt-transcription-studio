@@ -30,7 +30,7 @@ export default function UserMenu({ user, onLogout, dark = false }) {
         className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 hover:bg-white/[0.07] transition"
         title="Mon compte"
       >
-        <span className="w-9 h-9 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-[11px] font-black shadow-lg shadow-indigo-950/50 ring-1 ring-white/20 shrink-0">
+        <span className="w-9 h-9 rounded-2xl border-[1.5px] border-[#18123b]/30 bg-white flex items-center justify-center text-[#18123b] text-[11px] font-black shrink-0">
           {initials}
         </span>
         <span className="hidden sm:block text-start leading-tight">
@@ -51,7 +51,7 @@ export default function UserMenu({ user, onLogout, dark = false }) {
         <div className="absolute end-0 mt-3 w-64 rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/60 overflow-hidden z-50">
           <div className="p-4 border-b border-white/[0.06]">
             <div className="flex items-center gap-3">
-              <span className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 flex items-center justify-center text-white text-sm font-black ring-1 ring-white/20 shrink-0">
+              <span className="w-11 h-11 rounded-2xl border-[1.5px] border-[#18123b]/30 bg-white flex items-center justify-center text-[#18123b] text-sm font-black shrink-0">
                 {initials}
               </span>
               <div className="min-w-0">
