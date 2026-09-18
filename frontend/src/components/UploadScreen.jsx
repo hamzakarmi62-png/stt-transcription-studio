@@ -793,18 +793,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 </div>
               </div>
 
-              {/* Stat tiles — Rev-style outlined icon containers */}
+              {/* Stat tiles — clean label + value */}
               {[
-                { label: t.totalSessions, value: totalSessionsCount, Icon: FileVideo },
-                { label: t.completedSessions, value: completedSessionsCount, Icon: Check },
-                { label: t.totalSegments, value: totalSegmentsCount, Icon: AlignLeft },
-                { label: t.systemStatus, value: null, Icon: Zap },
+                { label: t.totalSessions, value: totalSessionsCount },
+                { label: t.completedSessions, value: completedSessionsCount },
+                { label: t.totalSegments, value: totalSegmentsCount },
+                { label: t.systemStatus, value: null },
               ].map((st) => (
                 <div key={st.label} className="bg-white border border-[#18123b]/[0.08] rounded-[22px] p-5 relative group hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-                  <div className="w-11 h-11 rounded-xl border-[1.5px] border-[#18123b]/25 flex items-center justify-center text-[#18123b]">
-                    <st.Icon className="w-5 h-5" />
-                  </div>
-                  <p className="text-[10px] font-bold text-[#4b4763] mt-4 uppercase tracking-widest">{st.label}</p>
+                  <p className="text-[10px] font-bold text-[#4b4763] uppercase tracking-widest">{st.label}</p>
                   <h3 className="text-2xl font-extrabold mt-1 text-[#18123b]">
                     {st.value === null ? (
                       <span className="text-emerald-600 flex items-center gap-2 text-[13px] font-bold">
