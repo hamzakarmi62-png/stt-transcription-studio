@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     groq_model: str = "whisper-large-v3-turbo"
 
+    # Public URL of this deployment — used by the self keep-alive pinger so the
+    # Render free tier never spins the service down (even with the user's PC off).
+    public_url: str = "https://stt-transcription-studio.onrender.com"
+    keepalive_seconds: int = 600
+
     diarization_method: str = "auto"
     hf_token: str = ""
 

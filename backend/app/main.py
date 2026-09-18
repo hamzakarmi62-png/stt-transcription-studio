@@ -37,6 +37,34 @@ def on_startup():
     except Exception as exc:
         print("Startup recovery failed:", exc)
     _load_bucket_secrets()
+    _start_keepalive()
+
+
+def _start_keepalive() -> None:
+    """Self keep-alive: the service pings its own public URL every few minutes.
+
+    The request enters through Render's proxy, so it counts as inbound traffic
+    and resets the free-tier idle timer — the app stays warm 24/7 regardless of
+    whether the user's computer is on. Best-effort: failures are swallowed.
+    """
+    import threading
+    import time
+
+    def _loop():
+        url = f"{settings.public_url.rstrip('/')}/api/health"
+        time.sleep(45)
+        while True:
+            try:
+                import requests as _requests
+
+                code = _requests.get(url, timeout=30).status_code
+                print(f"[keepalive] {url} -> {code}")
+            except Exception as exc:
+                print(f"[keepalive] failed: {exc}")
+            time.sleep(max(60, settings.keepalive_seconds))
+
+    threading.Thread(target=_loop, daemon=True, name="render-keepalive").start()
+    print(f"[keepalive] self-ping enabled every {max(60, settings.keepalive_seconds)}s")
 
 
 def _load_bucket_secrets() -> None:
