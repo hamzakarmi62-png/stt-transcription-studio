@@ -767,7 +767,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         onClick={() => setActiveTab("transcribe")}
                         className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#6415f5] text-white font-bold text-sm hover:bg-[#5311cf] shadow-lg shadow-[#6415f5]/25 transition-all hover:-translate-y-0.5"
                       >
-                        <Zap className="w-4 h-4" /> {t.startNewTranscribe}
+                        {t.startNewTranscribe}
                       </button>
                       <button
                         onClick={() => setActiveTab("myFiles")}
