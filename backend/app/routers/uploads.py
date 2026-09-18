@@ -13,6 +13,7 @@ from .. import db
 from ..config import settings
 from ..services import storage
 from ..services.audio import extract_audio_track
+from .auth import ensure_session_owner, user_id_from_request
 
 router = APIRouter(prefix="/api")
 
@@ -81,8 +82,11 @@ async def upload_chunk(
 
 
 @router.post("/upload/complete")
-def complete_chunked_upload(req: CompleteRequest):
+def complete_chunked_upload(req: CompleteRequest, request: Request):
     """Assemble all chunks into a single file and create a session."""
+    user_id = user_id_from_request(request)
+    if not user_id:
+        raise HTTPException(401, "Authentification requise.")
     chunk_dir = _chunks_dir(req.upload_id)
     chunk_files = sorted(chunk_dir.glob("??????"))
     if not chunk_files:
@@ -124,7 +128,7 @@ def complete_chunked_upload(req: CompleteRequest):
     shutil.rmtree(chunk_dir, ignore_errors=True)
 
     mime_type = MIME_BY_EXT.get(ext, "application/octet-stream")
-    session = db.create_session(session_id, filename, str(dest))
+    session = db.create_session(session_id, filename, str(dest), user_id=user_id)
     threading.Thread(
         target=_publish_to_cloud, args=(session_id, dest, mime_type, total_size), daemon=True
     ).start()
@@ -246,11 +250,14 @@ def _cloud_key(session_or_path) -> str:
 
 @router.post("/upload")
 def upload_audio(file: UploadFile = File(...), request: Request = None):
+    user_id = user_id_from_request(request) if request else None
+    if not user_id:
+        raise HTTPException(401, "Authentification requise.")
     content_length = request.headers.get("content-length") if request else None
     if content_length and content_length.isdigit() and int(content_length) > MAX_BYTES + 1024 * 1024:
         raise HTTPException(413, f"الملف أكبر من الحد المسموح ({settings.max_upload_mb} MB)")
     session_id, filename, dest, mime_type, size = _validate_and_save(file)
-    session = db.create_session(session_id, filename, str(dest))
+    session = db.create_session(session_id, filename, str(dest), user_id=user_id)
     threading.Thread(
         target=_publish_to_cloud, args=(session_id, dest, mime_type, size), daemon=True
     ).start()
@@ -305,6 +312,7 @@ def get_audio(session_id: str, request: Request):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
+    ensure_session_owner(session, user_id_from_request(request))
 
     # Redirect to the cloud copy only once it actually exists, otherwise large
     # files would 404 and break playback. Signed, so the bucket can stay private.
@@ -370,10 +378,12 @@ def get_audio(session_id: str, request: Request):
 
 
 @router.delete("/sessions/{session_id}")
-def delete_session(session_id: str):
+def delete_session(session_id: str, request: Request = None):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
+
+    ensure_session_owner(session, user_id_from_request(request) if request else None)
 
     local = _local_path_for(session)
     key = _cloud_key(session)

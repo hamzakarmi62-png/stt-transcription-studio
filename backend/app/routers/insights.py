@@ -7,11 +7,12 @@ the transcription pipeline are only READ here, never rewritten.
 import re
 import threading
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from .. import db
 from ..services import groq_llm
+from .auth import ensure_session_owner, user_id_from_request
 
 router = APIRouter(prefix="/api/sessions/{session_id}")
 
@@ -41,10 +42,14 @@ def _fmt(t) -> str:
         return "00:00"
 
 
-def _get(session_id: str):
+def _get(session_id: str, request: Request = None):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
+    # request is None only for internal background threads, which run on
+    # behalf of the owner who already passed the HTTP check.
+    if request is not None:
+        ensure_session_owner(session, user_id_from_request(request))
     return session
 
 
@@ -174,10 +179,10 @@ def _run_summary(session_id: str) -> None:
 
 
 @router.post("/translate")
-def start_translation(session_id: str, req: TranslateRequest):
+def start_translation(session_id: str, req: TranslateRequest, request: Request = None):
     if req.language not in LANGS:
         raise HTTPException(400, "Langue non supportée")
-    session = _get(session_id)
+    session = _get(session_id, request)
     if not (session.get("segments") or []):
         raise HTTPException(400, "Aucun texte à traduire — transcrivez d'abord")
     if not groq_llm.available():
@@ -199,8 +204,8 @@ def start_translation(session_id: str, req: TranslateRequest):
 
 
 @router.get("/translate/status")
-def translation_status(session_id: str):
-    session = _get(session_id)
+def translation_status(session_id: str, request: Request = None):
+    session = _get(session_id, request)
     sm = dict(session.get("settings") or {})
     return {
         "job": sm.get("translate_job") or {"status": "idle"},
@@ -209,8 +214,8 @@ def translation_status(session_id: str):
 
 
 @router.post("/summary")
-def start_summary(session_id: str):
-    session = _get(session_id)
+def start_summary(session_id: str, request: Request = None):
+    session = _get(session_id, request)
     if not (session.get("segments") or []):
         raise HTTPException(400, "Aucun texte à résumer — transcrivez d'abord")
     if not groq_llm.available():
@@ -227,8 +232,8 @@ def start_summary(session_id: str):
 
 
 @router.get("/summary/status")
-def summary_status(session_id: str):
-    session = _get(session_id)
+def summary_status(session_id: str, request: Request = None):
+    session = _get(session_id, request)
     sm = dict(session.get("settings") or {})
     return {
         "job": sm.get("summary_job") or {"status": "idle"},
@@ -237,8 +242,8 @@ def summary_status(session_id: str):
 
 
 @router.get("/stats")
-def speaking_stats(session_id: str):
-    session = _get(session_id)
+def speaking_stats(session_id: str, request: Request = None):
+    session = _get(session_id, request)
     segments = session.get("segments") or []
     speakers = {s.get("id"): s.get("name", "?") for s in (session.get("speakers") or [])}
     per = {}

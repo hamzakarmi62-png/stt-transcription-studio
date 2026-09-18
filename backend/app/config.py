@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     # Public URL of this deployment — used by the self keep-alive pinger so the
     # Render free tier never spins the service down (even with the user's PC off).
     public_url: str = "https://stt-transcription-studio.onrender.com"
+
+    # HMAC secret for bearer tokens; stable so tokens survive restarts.
+    auth_secret: str = ""
     keepalive_seconds: int = 600
 
     diarization_method: str = "auto"

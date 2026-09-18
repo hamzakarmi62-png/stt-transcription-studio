@@ -141,7 +141,56 @@ def init_db() -> None:
                 conn.execute("ALTER TABLE users ADD COLUMN profile TEXT DEFAULT '{}'")
             except sqlite3.OperationalError:
                 pass  # column already exists
+            try:
+                conn.execute("ALTER TABLE sessions ADD COLUMN user_id TEXT")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+
+            # Assign orphan legacy sessions to primary user (hamza or earliest user)
+            try:
+                cur = conn.execute("SELECT id FROM users WHERE username = 'hamza' LIMIT 1")
+                primary = cur.fetchone()
+                if not primary:
+                    cur = conn.execute("SELECT id FROM users ORDER BY created_at ASC LIMIT 1")
+                    primary = cur.fetchone()
+                if primary and primary["id"]:
+                    conn.execute("UPDATE sessions SET user_id = ? WHERE user_id IS NULL OR user_id = ''", (primary["id"],))
+            except Exception as e:
+                print("Legacy session migration notice:", e)
+                primary = None
+
             conn.commit()
+
+            # The cloud catalog carries sessions created before accounts existed;
+            # on a fresh deploy the local users table is empty, so the primary
+            # user may need to come from the cloud users catalog instead.
+            try:
+                primary_id = primary["id"] if primary else None
+                if not primary_id and _catalog_enabled():
+                    catalog_users = _load_users_catalog()
+                    for u in catalog_users:
+                        if u.get("username") == "hamza":
+                            primary_id = u.get("id")
+                            break
+                    if not primary_id:
+                        dated = sorted(
+                            (u for u in catalog_users if u.get("created_at")),
+                            key=lambda u: u["created_at"],
+                        )
+                        if dated:
+                            primary_id = dated[0].get("id")
+                if primary_id and _catalog_enabled():
+                    cloud_catalog = _list_session_cloud_meta()
+                    orphans = [s for s in cloud_catalog if isinstance(s, dict) and not s.get("user_id")]
+                    if orphans:
+                        for s in orphans:
+                            s["user_id"] = primary_id
+                            _write_json(f"meta_{s.get('id')}.json", s)
+                        _write_json("sessions_catalog.json", cloud_catalog)
+                        print(f"Legacy cloud sessions assigned to primary user: {len(orphans)}")
+            except Exception as e:
+                print("Legacy cloud session migration notice:", e)
+
             conn.close()
     except Exception as e:
         print("Error in local init_db:", e)
@@ -308,6 +357,7 @@ def _format_session(data: dict) -> dict:
     audio_path = data.get("audio_path", "")
     return {
         "id": data["id"],
+        "user_id": data.get("user_id"),
         "filename": data.get("filename", "audio"),
         "audio_path": audio_path,
         "kind": media_kind(audio_path),
@@ -376,10 +426,11 @@ def _delete_session_cloud_meta(session_id: str):
         print("Cloud meta delete error:", e)
 
 
-def create_session(session_id: str, filename: str, audio_path: str) -> dict:
+def create_session(session_id: str, filename: str, audio_path: str, user_id: str | None = None) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     sess_data = {
         "id": session_id,
+        "user_id": user_id,
         "filename": filename,
         "audio_path": audio_path,
         "duration": 0,
@@ -409,12 +460,13 @@ def create_session(session_id: str, filename: str, audio_path: str) -> dict:
     with _lock:
         conn = _local_conn()
         conn.execute(
-            "INSERT OR REPLACE INTO sessions (id, filename, audio_path, created_at) VALUES (?, ?, ?, ?)",
-            (session_id, filename, audio_path, now),
+            "INSERT OR REPLACE INTO sessions (id, user_id, filename, audio_path, created_at) VALUES (?, ?, ?, ?, ?)",
+            (session_id, user_id, filename, audio_path, now),
         )
         conn.commit()
         conn.close()
 
+    _save_session_cloud_meta(formatted)
     return formatted
 
 
@@ -448,14 +500,14 @@ def get_session(session_id: str) -> dict | None:
     return None
 
 
-def list_sessions() -> list[dict]:
+def list_sessions(user_id: str | None = None) -> list[dict]:
     """Merge every source, newest first.
 
-    Each store used to short-circuit the others, so a stale cloud catalog hid
-    sessions that existed only locally — and on a fresh deploy the reverse.
-    Local rows win because they carry the media path and the latest results;
-    the cloud copies supply anything this disk does not have.
+    If user_id is not provided, returns [] to guarantee strict account isolation.
     """
+    if not user_id:
+        return []
+
     merged: dict[str, dict] = {}
 
     def add(items) -> None:
@@ -466,6 +518,8 @@ def list_sessions() -> list[dict]:
                 print("list_sessions format error:", e)
                 continue
             sid = session.get("id")
+            if session.get("user_id") != user_id:
+                continue
             if sid and sid not in merged:
                 merged[sid] = session
 
@@ -473,7 +527,8 @@ def list_sessions() -> list[dict]:
         conn = _local_conn()
         try:
             rows = conn.execute(
-                "SELECT * FROM sessions ORDER BY created_at DESC"
+                "SELECT * FROM sessions WHERE user_id = ? ORDER BY created_at DESC",
+                (user_id,),
             ).fetchall()
         except sqlite3.OperationalError as e:
             print("Local list_sessions error:", e)
@@ -486,14 +541,15 @@ def list_sessions() -> list[dict]:
 
     if _supabase_enabled():
         try:
-            url = f"{settings.supabase_url}/rest/v1/sessions?select=*&order=created_at.desc"
+            url = f"{settings.supabase_url}/rest/v1/sessions?user_id=eq.{user_id}&select=*&order=created_at.desc"
             r = requests.get(url, headers=_headers(), timeout=5)
             if r.status_code == 200 and isinstance(r.json(), list):
                 add(r.json())
         except Exception as e:
             print("Supabase list_sessions error:", e)
 
-    return sorted(merged.values(), key=lambda s: s.get("created_at", ""), reverse=True)
+    results = sorted(merged.values(), key=lambda s: s.get("created_at", ""), reverse=True)
+    return [s for s in results if s.get("user_id") == user_id]
 
 
 def update_session(session_id: str, **fields) -> dict | None:

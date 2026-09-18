@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from .. import db
 from ..services import export as export_service
+from .auth import ensure_session_owner, user_id_from_request
 
 router = APIRouter(prefix="/api")
 
@@ -21,12 +22,15 @@ def export_session(
     format: str = "txt",
     include_speakers: bool = True,
     include_timestamps: bool = True,
+    request: Request = None,
 ):
     if format not in EXPORT_FORMATS:
         raise HTTPException(400, f"Unsupported format '{format}'. Use one of: {', '.join(sorted(EXPORT_FORMATS))}")
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
+    user_id = user_id_from_request(request) if request else None
+    ensure_session_owner(session, user_id)
     segments = session["segments"]
     speakers = session["speakers"]
 

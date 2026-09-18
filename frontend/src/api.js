@@ -1,7 +1,32 @@
 const BASE = "/api";
 
-async function request(url, options) {
-  const res = await fetch(url, options);
+export function getAuthToken() {
+  try {
+    return localStorage.getItem("auth_token") || "";
+  } catch {
+    return "";
+  }
+}
+
+export function setAuthToken(token) {
+  try {
+    if (token) localStorage.setItem("auth_token", token);
+    else localStorage.removeItem("auth_token");
+  } catch {
+    /* ignore */
+  }
+}
+
+async function request(url, options = {}) {
+  const token = getAuthToken();
+  const headers = {
+    ...(options.headers || {}),
+  };
+  if (token && !headers["Authorization"] && !headers["authorization"]) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(url, { ...options, headers });
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -31,6 +56,10 @@ function _classicUpload(file, fileName, onProgress) {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${BASE}/upload`);
+    const token = getAuthToken();
+    if (token) {
+      xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    }
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
     };
@@ -60,8 +89,14 @@ function _classicUpload(file, fileName, onProgress) {
 
 /** Chunked upload for large files — bypasses proxy size limits. */
 async function _chunkedUpload(file, fileName, onProgress) {
+  const token = getAuthToken();
+  const authHeaders = token ? { Authorization: `Bearer ${token}` } : {};
+
   // 1. Init: get a fresh upload_id
-  const initRes = await fetch(`${BASE}/upload/init`, { method: "POST" });
+  const initRes = await fetch(`${BASE}/upload/init`, {
+    method: "POST",
+    headers: { ...authHeaders },
+  });
   if (!initRes.ok) throw new Error("فشل بدء الرفع السحابي");
   const { upload_id } = await initRes.json();
 
@@ -85,7 +120,11 @@ async function _chunkedUpload(file, fileName, onProgress) {
           form.append("chunk_index", String(i));
           form.append("file", blob, fileName);
 
-          const res = await fetch(`${BASE}/upload/chunk`, { method: "POST", body: form });
+          const res = await fetch(`${BASE}/upload/chunk`, {
+            method: "POST",
+            headers: { ...authHeaders },
+            body: form,
+          });
           if (res.ok) {
             success = true;
             break;
@@ -116,7 +155,7 @@ async function _chunkedUpload(file, fileName, onProgress) {
       try {
         completeRes = await fetch(`${BASE}/upload/complete`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders },
           body: JSON.stringify({ upload_id, filename: fileName, total_chunks: totalChunks }),
         });
         if (completeRes.ok) break;
@@ -137,7 +176,10 @@ async function _chunkedUpload(file, fileName, onProgress) {
     return await completeRes.json();
   } catch (err) {
     // Best-effort cleanup
-    fetch(`${BASE}/upload/abort/${upload_id}`, { method: "DELETE" }).catch(() => {});
+    fetch(`${BASE}/upload/abort/${upload_id}`, {
+      method: "DELETE",
+      headers: { ...authHeaders },
+    }).catch(() => {});
     throw err;
   }
 }
@@ -183,10 +225,16 @@ export const api = {
       include_speakers: String(includeSpeakers),
       include_timestamps: String(includeTimestamps),
     });
+    const token = getAuthToken();
+    if (token) params.set("token", token);
     return `${BASE}/sessions/${id}/export?${params.toString()}`;
   },
 
-  audioUrl: (id) => `${BASE}/sessions/${id}/audio`,
+  // <audio> tags cannot send headers, so the token rides in the query string.
+  audioUrl: (id) => {
+    const token = getAuthToken();
+    return `${BASE}/sessions/${id}/audio${token ? `?token=${encodeURIComponent(token)}` : ""}`;
+  },
 
   register: (username, email, password, profile = {}) =>
     request(`${BASE}/auth/register`, {

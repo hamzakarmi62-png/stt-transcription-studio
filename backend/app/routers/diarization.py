@@ -1,10 +1,11 @@
 import threading
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from .. import db
 from ..models import DiarizeRequest
 from ..services import diarization
+from .auth import ensure_session_owner, user_id_from_request
 from .uploads import ensure_local_audio
 
 router = APIRouter(prefix="/api")
@@ -37,10 +38,12 @@ def _run_diarization(session_id: str, num_speakers: int) -> None:
 
 
 @router.post("/sessions/{session_id}/diarize")
-def start_diarization(session_id: str, req: DiarizeRequest):
+def start_diarization(session_id: str, req: DiarizeRequest, request: Request = None):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
+    user_id = user_id_from_request(request) if request else None
+    ensure_session_owner(session, user_id)
     if session["status"] == "diarizing":
         return {"ok": True, "status": "diarizing"}
     thread = threading.Thread(

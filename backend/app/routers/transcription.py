@@ -1,11 +1,12 @@
 import threading
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from .. import db
 from ..config import settings
 from ..models import TranscribeRequest
 from ..services import groq_stt, transcription
+from .auth import ensure_session_owner, user_id_from_request
 from .uploads import ensure_local_audio
 
 router = APIRouter(prefix="/api")
@@ -43,10 +44,12 @@ def _run_transcription(session_id: str, language: str | None) -> None:
 
 
 @router.post("/sessions/{session_id}/transcribe")
-def start_transcription(session_id: str, req: TranscribeRequest):
+def start_transcription(session_id: str, req: TranscribeRequest, request: Request = None):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
+    user_id = user_id_from_request(request) if request else None
+    ensure_session_owner(session, user_id)
     if session["status"] == "processing":
         return {"ok": True, "status": "processing"}
     db.update_session(session_id, status="processing", error=None)
