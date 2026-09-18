@@ -793,28 +793,6 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 </div>
               </div>
 
-              {/* Stat tiles — clean label + value */}
-              {[
-                { label: t.totalSessions, value: totalSessionsCount },
-                { label: t.completedSessions, value: completedSessionsCount },
-                { label: t.totalSegments, value: totalSegmentsCount },
-                { label: t.systemStatus, value: null },
-              ].map((st) => (
-                <div key={st.label} className="bg-white border border-[#18123b]/[0.08] rounded-[22px] p-5 relative group hover:-translate-y-1 hover:shadow-md transition-all duration-300">
-                  <p className="text-[10px] font-bold text-[#4b4763] uppercase tracking-widest">{st.label}</p>
-                  <h3 className="text-2xl font-extrabold mt-1 text-[#18123b]">
-                    {st.value === null ? (
-                      <span className="text-emerald-600 flex items-center gap-2 text-[13px] font-bold">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        {t.active}
-                      </span>
-                    ) : (
-                      st.value
-                    )}
-                  </h3>
-                </div>
-              ))}
-
               {/* Folders tile */}
               <div className="bg-white border border-[#18123b]/[0.08] rounded-[26px] p-6 col-span-2 lg:col-span-4 space-y-4">
                 <div className="flex items-center justify-between">
