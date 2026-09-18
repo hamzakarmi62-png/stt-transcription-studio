@@ -898,13 +898,13 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                       }
                     }}
                   />
-                  <div className="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400 mb-4">
+                  <div className="w-16 h-16 mx-auto rounded-xl border-[1.5px] border-[#18123b]/25 flex items-center justify-center text-[#18123b] mb-4">
                     <Headphones className="w-7 h-7" />
                   </div>
                   <p className="font-bold text-sm">{t.uploadTitle}</p>
                   <p className={`text-xs ${textSub} mt-1.5`}>{t.uploadDesc}</p>
                   {file && (
-                    <div className="mt-5 inline-flex items-center gap-3 bg-indigo-500/10 text-indigo-400 border border-indigo-500/30 px-4 py-2.5 rounded-2xl text-sm font-bold">
+                    <div className="mt-5 inline-flex items-center gap-3 bg-white text-[#18123b] border border-[#18123b]/15 px-4 py-2.5 rounded-2xl text-sm font-bold">
                       <span className="flex items-center gap-1.5 min-w-0"><FileText className="w-3.5 h-3.5 shrink-0" /><span className="truncate max-w-[260px]">{file.name}</span></span>
                       <button
                         className="text-slate-400 hover:text-red-400 font-black"
@@ -1088,7 +1088,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <button
                   onClick={handleProcess}
                   disabled={!hasAudio || busy}
-                  className="w-full py-4 rounded-3xl bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white font-black text-sm hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-indigo-950/50 transition-all hover:-translate-y-0.5"
+                  className="w-full py-4 rounded-xl bg-[#6415f5] text-white font-bold text-sm hover:bg-[#5311cf] disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-[#6415f5]/30 transition-all hover:-translate-y-0.5"
                 >
                   <span className="inline-flex items-center justify-center gap-2">{busy ? <Loader className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}{busy ? t.processing : t.startTranscribe}</span>
                 </button>
@@ -1151,13 +1151,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         }`}
                       >
                         <div
-                          className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-                            isVideo(s)
-                              ? "bg-gradient-to-br from-fuchsia-500/20 to-pink-500/20 border border-fuchsia-500/20"
-                              : "bg-gradient-to-br from-indigo-500/20 to-violet-500/20 border border-indigo-500/20"
-                          }`}
+                          className={`w-12 h-12 rounded-xl border-[1.5px] border-[#18123b]/25 flex items-center justify-center shrink-0 text-[#18123b] bg-transparent`}
                         >
-                          {isVideo(s) ? <FileVideo className="w-5 h-5 text-fuchsia-400" /> : <FileAudio className="w-5 h-5 text-indigo-400" />}
+                          {isVideo(s) ? <FileVideo className="w-5 h-5" /> : <FileAudio className="w-5 h-5" />}
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -1218,7 +1214,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 </div>
                 <button
                   onClick={handleCreateFolder}
-                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold text-xs hover:brightness-110 shadow-lg shadow-indigo-950/40 transition-all flex items-center gap-1.5"
+                  className="px-4 py-2.5 rounded-xl bg-[#6415f5] text-white font-bold text-xs hover:bg-[#5311cf] shadow-md shadow-[#6415f5]/30 transition-all flex items-center gap-1.5"
                 >
                   {t.createNewFolder}
                 </button>
@@ -1266,7 +1262,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             : "bg-white/70 border-slate-200 hover:border-indigo-400 hover:shadow-md"
                         }`}
                       >
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/25 flex items-center justify-center shrink-0 text-amber-400">
+                        <div className="w-12 h-12 rounded-xl border-[1.5px] border-[#18123b]/25 bg-transparent flex items-center justify-center shrink-0 text-[#18123b]">
                           <Star className="w-5 h-5" filled />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1316,7 +1312,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
             <div className="space-y-5 max-w-2xl">
               <div className={`${glass} rounded-[30px] p-6 sm:p-8 border space-y-1`}>
                 <div className={`flex items-center gap-3 pb-5 border-b ${hairline}`}>
-                  <span className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-fuchsia-500/20 border border-indigo-500/20 flex items-center justify-center text-indigo-400"><Settings className="w-5 h-5" /></span>
+                  <span className="w-10 h-10 rounded-xl border-[1.5px] border-[#18123b]/25 bg-transparent flex items-center justify-center text-[#18123b]"><Settings className="w-5 h-5" /></span>
                   <div>
                     <h2 className="text-lg font-black">{t.settingsTitle}</h2>
                     <p className={`text-xs ${textSub}`}>Préférences de l'espace de travail</p>
