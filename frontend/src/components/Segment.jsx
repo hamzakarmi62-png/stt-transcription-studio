@@ -373,7 +373,7 @@ export default function Segment({
                       e.stopPropagation();
                       clickWord(w.start);
                     }}
-                    className={`cursor-pointer rounded px-0.5 transition-colors ${
+                    className={`rounded px-0.5 -mx-0.5 transition-colors ${
                       isHighlighted
                         ? "bg-amber-300 text-slate-900 font-semibold"
                         : "hover:bg-indigo-100"
