@@ -219,7 +219,7 @@ export default function Segment({
           onClick={() => onMoveUp(segment.id)}
           disabled={!canMoveUp}
           className={toolBtn}
-          title="Monter le paragraphe (il garde son temps)"
+          title="Envoyer (le texte sélectionné) à la fin du paragraphe précédent"
         >
           <ChevronUp className="w-4 h-4" />
         </button>
@@ -227,7 +227,7 @@ export default function Segment({
           onClick={() => onMoveDown(segment.id)}
           disabled={!canMoveDown}
           className={toolBtn}
-          title="Descendre le paragraphe (il garde son temps)"
+          title="Envoyer (le texte sélectionné) au début du paragraphe suivant"
         >
           <ChevronDown className="w-4 h-4" />
         </button>

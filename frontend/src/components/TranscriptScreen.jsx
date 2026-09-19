@@ -550,24 +550,149 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       segments: prev.segments.map((s) => (s.id === id ? { ...s, speaker: speakerId } : s)),
     }));
 
-  // Reorder paragraphs; each keeps its own timing and words.
-  const moveSegmentUp = (id) =>
+  // ── Word-like paragraph flow ─────────────────────────────────────────────
+  // DOWN: the paragraph — or just the selected words — is sent to the START
+  // of the next paragraph. UP: to the END of the previous one. The moved
+  // words carry their own timings, so playback follows the new text order.
+
+  // Character offsets {start, end} of the current selection inside a
+  // segment's paragraph, or null when nothing is selected there.
+  const selectionRangeIn = (id) => {
+    try {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+      const range = sel.getRangeAt(0);
+      const segEl = document.getElementById(`seg-${id}`);
+      if (!segEl || !segEl.contains(range.startContainer) || !segEl.contains(range.endContainer)) return null;
+      const p = segEl.querySelector("p[dir='auto']") || segEl.querySelector("p");
+      if (!p) return null;
+      const abs = (which) => {
+        const pre = range.cloneRange();
+        pre.selectNodeContents(p);
+        pre.setEnd(
+          which === "start" ? range.startContainer : range.endContainer,
+          which === "start" ? range.startOffset : range.endOffset
+        );
+        return pre.toString().length;
+      };
+      const start = abs("start");
+      const end = abs("end");
+      return start < end ? { start, end } : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const moveSegmentDown = (id) => {
+    const sel = selectionRangeIn(id);
+    window.getSelection()?.removeAllRanges();
+    mutate((prev) => {
+      const idx = prev.segments.findIndex((s) => s.id === id);
+      if (idx < 0 || idx >= prev.segments.length - 1) return prev;
+      const cur = prev.segments[idx];
+      const nxt = prev.segments[idx + 1];
+      const text = cur.text || "";
+      const s = sel ? Math.max(0, Math.min(sel.start, text.length)) : 0;
+      const e = sel ? Math.max(0, Math.min(sel.end, text.length)) : text.length;
+      const movedText = text.slice(s, e).trim();
+      const restText = (text.slice(0, s) + " " + text.slice(e)).replace(/\s+/g, " ").trim();
+      if (!movedText) return prev;
+      // Map the moved/rest words by their character spans.
+      const spans = [];
+      let acc = 0;
+      for (const w of cur.words || []) {
+        spans.push({ w, a: acc, b: acc + w.word.length + 1 });
+        acc += w.word.length + 1;
+      }
+      const movedWords = spans.filter((sp) => sp.a < e && sp.b > s).map((sp) => sp.w);
+      const restWords = spans.filter((sp) => !(sp.a < e && sp.b > s)).map((sp) => sp.w);
+      if (!restText) {
+        // The whole paragraph goes down: it simply merges into the next one.
+        const merged = {
+          ...cur,
+          text: `${cur.text} ${nxt.text}`.trim(),
+          end: nxt.end,
+          words: [...(cur.words || []), ...(nxt.words || [])],
+        };
+        const arr = [...prev.segments];
+        arr[idx] = merged;
+        arr.splice(idx + 1, 1);
+        return { ...prev, segments: arr };
+      }
+      const movedStart = Number(
+        (movedWords[0]?.start ?? cur.start + (cur.end - cur.start) * (s / Math.max(text.length, 1))).toFixed(3)
+      );
+      const arr = [...prev.segments];
+      arr[idx] = {
+        ...cur,
+        text: restText,
+        end: Number((restWords[restWords.length - 1]?.end ?? cur.end).toFixed(3)),
+        words: restWords,
+      };
+      // The moved words land at the START of the next paragraph.
+      arr[idx + 1] = {
+        ...nxt,
+        start: movedStart,
+        text: `${movedText} ${nxt.text}`.trim(),
+        words: [...movedWords, ...(nxt.words || [])],
+        speaker: cur.speaker,
+      };
+      return { ...prev, segments: arr };
+    });
+  };
+
+  const moveSegmentUp = (id) => {
+    const sel = selectionRangeIn(id);
+    window.getSelection()?.removeAllRanges();
     mutate((prev) => {
       const idx = prev.segments.findIndex((s) => s.id === id);
       if (idx <= 0) return prev;
-      const next = [...prev.segments];
-      [next[idx - 1], next[idx]] = [next[idx], next[idx - 1]];
-      return { ...prev, segments: next };
+      const cur = prev.segments[idx];
+      const prv = prev.segments[idx - 1];
+      const text = cur.text || "";
+      const s = sel ? Math.max(0, Math.min(sel.start, text.length)) : 0;
+      const e = sel ? Math.max(0, Math.min(sel.end, text.length)) : text.length;
+      const movedText = text.slice(s, e).trim();
+      const restText = (text.slice(0, s) + " " + text.slice(e)).replace(/\s+/g, " ").trim();
+      if (!movedText) return prev;
+      const spans = [];
+      let acc = 0;
+      for (const w of cur.words || []) {
+        spans.push({ w, a: acc, b: acc + w.word.length + 1 });
+        acc += w.word.length + 1;
+      }
+      const movedWords = spans.filter((sp) => sp.a < e && sp.b > s).map((sp) => sp.w);
+      const restWords = spans.filter((sp) => !(sp.a < e && sp.b > s)).map((sp) => sp.w);
+      if (!restText) {
+        // The whole paragraph goes up: it merges into the previous one.
+        const merged = {
+          ...prv,
+          text: `${prv.text} ${cur.text}`.trim(),
+          end: cur.end,
+          words: [...(prv.words || []), ...(cur.words || [])],
+        };
+        const arr = [...prev.segments];
+        arr[idx - 1] = merged;
+        arr.splice(idx, 1);
+        return { ...prev, segments: arr };
+      }
+      const arr = [...prev.segments];
+      // The moved words land at the END of the previous paragraph.
+      arr[idx - 1] = {
+        ...prv,
+        text: `${prv.text} ${movedText}`.trim(),
+        end: Number((movedWords[movedWords.length - 1]?.end ?? Math.max(prv.end, cur.start)).toFixed(3)),
+        words: [...(prv.words || []), ...movedWords],
+      };
+      arr[idx] = {
+        ...cur,
+        text: restText,
+        start: Number((restWords[0]?.start ?? cur.start).toFixed(3)),
+        words: restWords,
+      };
+      return { ...prev, segments: arr };
     });
-
-  const moveSegmentDown = (id) =>
-    mutate((prev) => {
-      const idx = prev.segments.findIndex((s) => s.id === id);
-      if (idx === -1 || idx >= prev.segments.length - 1) return prev;
-      const next = [...prev.segments];
-      [next[idx + 1], next[idx]] = [next[idx], next[idx + 1]];
-      return { ...prev, segments: next };
-    });
+  };
 
   const deleteSpeaker = (speakerId) =>
     mutate((prev) => {
@@ -1149,8 +1274,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Entrée = descendre le paragraphe (partout, même en correction) · Suppr = fusionner avec le haut ·
-                  Maj+Entrée = fusionner avec le bas · Alt+↑/↓ = monter / descendre · Ctrl+Z / Ctrl+Y = annuler / rétablir
+                  Entrée = envoyer le paragraphe au début du suivant · Suppr = envoyer à la fin du précédent ·
+                  Sélection + ↑/↓ ou Entrée = envoyer seulement les mots sélectionnés · Alt+↑/↓ = pareil ·
+                  Ctrl+Z / Ctrl+Y = annuler / rétablir
                 </p>
               </div>
             )}
