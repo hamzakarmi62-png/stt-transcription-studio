@@ -17,7 +17,6 @@ export default function Segment({
   onUpdateWord,
   editing,
   editingCaret = null,
-  onSplitEnter,
   canMerge,
   canMoveUp = true,
   canMoveDown = true,
@@ -88,11 +87,8 @@ export default function Segment({
     return pre.toString().length;
   };
 
-  // Direct typing like a word processor, Rev-style Enter:
-  // - caret at the very start → this paragraph gets its own NEW speaker
-  // - caret anywhere else → split: everything after the caret goes down with
-  //   its own word-accurate timestamp, and the caret is re-placed at the
-  //   start of the new paragraph (so Enter again = own speaker).
+  // Direct typing like a word processor. Enter NEVER moves the text: it just
+  // saves what was typed — everything stays exactly in place.
   const commitAndClose = () => {
     const text = textRef.current?.textContent || "";
     onCommitEdit(segment.id, text);
@@ -102,19 +98,11 @@ export default function Segment({
   const onEditKeyDown = (e) => {
     const el = textRef.current;
     if (!el) return;
-    const len = (el.textContent || "").length;
     if (e.key === "Enter") {
+      // Text stays exactly where it is — save and close, nothing moves.
       e.preventDefault();
       e.stopPropagation();
-      const caret = caretOffsetIn(el);
-      const text = el.textContent || "";
-      onCommitEdit(segment.id, text);
-      onStartEdit(null);
-      if (caret === 0) {
-        onAddSpeakerFor && onAddSpeakerFor(segment.id);
-      } else if (caret < len && onSplitEnter) {
-        onSplitEnter(segment.id, caret);
-      }
+      commitAndClose();
     } else if (e.key === "Backspace") {
       const sel = window.getSelection();
       if (caretOffsetIn(el) === 0 && sel && sel.isCollapsed) {
