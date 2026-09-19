@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils.js";
 import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Scissors, Trash } from "./Icons.jsx";
 
@@ -132,10 +132,34 @@ export default function Segment({
   };
 
   // Click a word: the player jumps to that exact moment AND keeps playing
-  // from there (the user asked for click = play from that word). Correcting
-  // text stays available through the toolbar pencil.
+  // from there. Click the SPACE BETWEEN words: the caret is placed right
+  // there and you type normally, like in Word.
   const clickWord = (wordStart) => {
     (onSeek || onPositionAt)?.(wordStart);
+  };
+
+  // Character offset inside the paragraph at the mouse position.
+  const caretOffsetAtEvent = (e) => {
+    try {
+      let range = null;
+      if (document.caretRangeFromPoint) {
+        range = document.caretRangeFromPoint(e.clientX, e.clientY);
+      } else if (document.caretPositionFromPoint) {
+        const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+        if (pos) {
+          range = document.createRange();
+          range.setStart(pos.offsetNode, pos.offset);
+        }
+      }
+      const p = paragraphRef.current;
+      if (!range || !p || !p.contains(range.startContainer)) return null;
+      const pre = range.cloneRange();
+      pre.selectNodeContents(p);
+      pre.setEnd(range.startContainer, range.startOffset);
+      return pre.toString().length;
+    } catch {
+      return null;
+    }
   };
 
   const copyText = async () => {
@@ -334,27 +358,43 @@ export default function Segment({
           {segment.text}
         </p>
       ) : (
-        <p ref={paragraphRef} dir="auto" className="text-[19px] leading-[2] text-slate-800 select-text">
+        <p
+          ref={paragraphRef}
+          dir="auto"
+          className="text-[19px] leading-[2] text-slate-800 select-text"
+          onClick={(e) => {
+            // Clicking a word plays from it (the span handles that). Clicking
+            // the space between words places the caret there for typing.
+            if (editing) return;
+            if (e.target.tagName === "SPAN") return;
+            const off = caretOffsetAtEvent(e);
+            if (off == null) return;
+            e.stopPropagation();
+            pendingCaretRef.current = off;
+            onStartEdit(segment.id);
+          }}
+        >
           {segment.words && segment.words.length > 0 ? (
             segment.words.map((w, i) => {
               const wKey = `${segment.id}-w${i}`;
               const isHighlighted = activeWordKey === wKey;
               return (
-                <span
-                  key={wKey}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    clickWord(w.start);
-                  }}
-                  className={`cursor-pointer rounded px-0.5 transition-colors ${
-                    isHighlighted
-                      ? "bg-amber-300 text-slate-900 font-semibold"
-                      : "hover:bg-indigo-100"
-                  }`}
-                  title="Cliquez : lecture à partir de ce mot"
-                >
-                  {w.word}{" "}
-                </span>
+                <Fragment key={wKey}>
+                  <span
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clickWord(w.start);
+                    }}
+                    className={`cursor-pointer rounded px-0.5 transition-colors ${
+                      isHighlighted
+                        ? "bg-amber-300 text-slate-900 font-semibold"
+                        : "hover:bg-indigo-100"
+                    }`}
+                    title="Cliquez : lecture à partir de ce mot"
+                  >
+                    {w.word}
+                  </span>{" "}
+                </Fragment>
               );
             })
           ) : (
