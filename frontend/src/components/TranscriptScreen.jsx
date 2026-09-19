@@ -1069,7 +1069,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               </div>
             ) : activeLang && translations[activeLang] ? (
               <div className="pb-10">
-                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-7">
+                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
                     <h3 className="font-black text-slate-800 text-sm flex items-center gap-2">
                       <Languages className="w-4 h-4 text-indigo-500" />
@@ -1086,27 +1086,20 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     const seg = segments[i] || {};
                     const spk = speakerById[seg.speaker];
                     const color = spk?.color || "#475569";
+                    const showMark = i === 0 || segments[i - 1]?.speaker !== seg.speaker;
                     return (
                       <div key={i}>
-                        <div className="flex items-center gap-3 mb-1 flex-wrap">
-                          <span
-                            className="font-bold text-[15px] border-b-2 border-dotted pb-0.5"
-                            style={{ color, borderColor: color }}
-                          >
-                            {spk?.name || "—"}
-                          </span>
-                          <span className="h-5 w-px bg-slate-200"></span>
-                          <button
-                            onClick={() => seekTo(seg.start || 0)}
-                            className="inline-flex items-center gap-2 text-slate-800 hover:text-indigo-600 transition"
-                            title="Lire depuis le début du paragraphe"
-                          >
-                            <Play className="w-[18px] h-[18px] text-slate-700" filled />
-                            <span className="font-bold tabular-nums text-[15px]">
+                        {showMark && (
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }}></span>
+                            <span className="font-bold text-[15px]" style={{ color }}>
+                              {spk?.name || "—"}
+                            </span>
+                            <span className="text-[12px] text-slate-400 tabular-nums opacity-70">
                               {formatTime(seg.start || 0)}
                             </span>
-                          </button>
-                        </div>
+                          </div>
+                        )}
                         <p dir="auto" className="text-[19px] leading-[2] text-slate-800 select-text">
                           {tr.text}
                         </p>
@@ -1118,12 +1111,13 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             ) : (
 
               <div className="pb-10">
-                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-7">
+                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-1">
                   {segments.map((seg, index) => (
                     <Segment
                       key={seg.id}
                       segment={seg}
                       speaker={speakerById[seg.speaker]}
+                      showMark={index === 0 || segments[index - 1]?.speaker !== seg.speaker}
                       isActive={activeSegment?.id === seg.id}
                       activeWordKey={activeWordKey}
                       editingWordKey={editingWordKey}

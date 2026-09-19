@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils.js";
 import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Scissors, Trash } from "./Icons.jsx";
 
-// Rev-style paragraph: every segment carries its own header — speaker name
-// (dotted underline, click to change) + play button + its own timestamp —
-// followed by the text, with a floating hover toolbar.
+// Word-like flowing transcript: a speaker mark (dot + name + start time)
+// appears only when the speaker changes; consecutive segments flow as plain
+// paragraphs with no boxes, no backgrounds, no hover rectangles. The floating
+// hover toolbar carries the segment's own timestamp + play button.
 export default function Segment({
   segment,
   speaker,
+  showMark = true,
   isActive,
   activeWordKey,
   editingWordKey,
@@ -194,17 +196,25 @@ export default function Segment({
           (onPositionAt || onSeek)?.(segment.start);
         }
       }}
-      className={`group relative rounded-2xl -mx-3 px-3 py-2 transition-all ${
-        isActive ? "bg-indigo-50" : "hover:bg-slate-50"
-      }`}
+      className="group relative py-2"
     >
-      {/* Floating toolbar — visible on hover, always on active/editing */}
+      {/* Floating toolbar — visible on hover, always on active/editing.
+          It floats; it never frames the paragraph itself. */}
       <div
         onClick={(e) => e.stopPropagation()}
         className={`absolute -top-3 end-2 flex items-center gap-0.5 bg-white border border-slate-200 rounded-xl shadow-lg shadow-slate-900/5 px-1 py-0.5 z-10 transition-opacity ${
           isActive || editing ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         }`}
       >
+        <button
+          onClick={() => onSeek(segment.start)}
+          className="inline-flex items-center gap-1.5 px-1.5 py-1 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition tabular-nums"
+          title="Lire depuis le début du paragraphe"
+        >
+          <Play className="w-3.5 h-3.5" filled />
+          <span className="text-[11px] font-bold">{formatTime(segment.start)}</span>
+        </button>
+        <span className="h-4 w-px bg-slate-200 mx-0.5"></span>
         <button
           onClick={() => onMoveUp(segment.id)}
           disabled={!canMoveUp}
@@ -249,65 +259,61 @@ export default function Segment({
         </button>
       </div>
 
-      {/* Per-paragraph header: speaker (click name or pencil) + play + own time */}
-      <div className="flex items-center gap-3 mb-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
-        {renaming ? (
-          <input
-            autoFocus
-            value={renameText}
-            onChange={(e) => setRenameText(e.target.value)}
-            onBlur={commitRename}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") e.currentTarget.blur();
-              if (e.key === "Escape") setRenaming(false);
-            }}
-            className="bg-transparent border-0 border-b-2 border-dotted font-bold text-[15px] outline-none max-w-[180px] px-0 py-0"
-            style={{ color: speakerColor, borderColor: speakerColor }}
-            dir="auto"
-          />
-        ) : (
-          <label
-            className="inline-flex items-center gap-1.5 cursor-pointer border-b-2 border-dotted pb-0.5"
-            style={{ borderColor: speakerColor }}
-            title="Cliquez sur le nom pour changer · le crayon pour renommer"
-          >
-            <select
-              value={segment.speaker || ""}
-              onChange={handleSpeakerChange}
-              className="appearance-none bg-transparent font-bold text-[15px] outline-none cursor-pointer max-w-[160px] truncate"
-              style={{ color: speakerColor }}
-            >
-              {speakers.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-              <option value="__new__">+ Nouveau locuteur</option>
-              {speakers.length > 1 && <option value="__delete__">× Supprimer ce locuteur</option>}
-            </select>
-            <button
-              onClick={() => {
-                setRenameText(currentSpeaker?.name || "");
-                setRenaming(true);
+      {/* Speaker mark — only when the speaker changes (Word-like flow) */}
+      {showMark && (
+        <div className="flex items-center gap-2 mb-0.5 flex-wrap" onClick={(e) => e.stopPropagation()}>
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: speakerColor }}></span>
+          {renaming ? (
+            <input
+              autoFocus
+              value={renameText}
+              onChange={(e) => setRenameText(e.target.value)}
+              onBlur={commitRename}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") e.currentTarget.blur();
+                if (e.key === "Escape") setRenaming(false);
               }}
-              className="opacity-70 hover:opacity-100 transition"
-              style={{ color: speakerColor }}
-              title="Renommer ce locuteur"
+              className="bg-transparent border-0 border-b-2 border-dotted font-bold text-[15px] outline-none max-w-[180px] px-0 py-0"
+              style={{ color: speakerColor, borderColor: speakerColor }}
+              dir="auto"
+            />
+          ) : (
+            <label
+              className="inline-flex items-center gap-1 cursor-pointer"
+              title="Cliquez sur le nom pour changer · le crayon pour renommer"
             >
-              <Pencil className="w-3.5 h-3.5" />
-            </button>
-          </label>
-        )}
-        <span className="h-5 w-px bg-slate-200"></span>
-        <button
-          onClick={() => onSeek(segment.start)}
-          className="inline-flex items-center gap-2 text-slate-800 hover:text-indigo-600 transition"
-          title="Lire depuis le début du paragraphe"
-        >
-          <Play className="w-[18px] h-[18px] text-slate-700" filled />
-          <span className="font-bold tabular-nums text-[15px]">{formatTime(segment.start)}</span>
-        </button>
-      </div>
+              <select
+                value={segment.speaker || ""}
+                onChange={handleSpeakerChange}
+                className="appearance-none bg-transparent font-bold text-[15px] outline-none cursor-pointer max-w-[160px] truncate"
+                style={{ color: speakerColor }}
+              >
+                {speakers.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+                <option value="__new__">+ Nouveau locuteur</option>
+                {speakers.length > 1 && <option value="__delete__">× Supprimer ce locuteur</option>}
+              </select>
+              <button
+                onClick={() => {
+                  setRenameText(currentSpeaker?.name || "");
+                  setRenaming(true);
+                }}
+                className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition"
+                style={{ color: speakerColor }}
+                title="Renommer ce locuteur"
+              >
+                <Pencil className="w-3 h-3" />
+              </button>
+            </label>
+          )}
+          <span className="text-[12px] text-slate-400 tabular-nums opacity-70">
+            {formatTime(segment.start)}
+          </span>
+        </div>
+      )}
 
       {editing ? (
         <p
@@ -318,7 +324,7 @@ export default function Segment({
           onKeyDown={onEditKeyDown}
           onBlur={commitAndClose}
           dir="auto"
-          className="text-[19px] leading-[2] text-slate-800 select-text focus:outline-none rounded-lg bg-indigo-50/70 -mx-2 px-2"
+          className="text-[19px] leading-[2] text-slate-800 select-text focus:outline-none"
         >
           {segment.text}
         </p>
