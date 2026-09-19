@@ -370,12 +370,15 @@ export default function Segment({
                 <Fragment key={wKey}>
                   <span
                     onClick={(e) => {
+                      if (editing) return; // native caret placement while typing
                       e.stopPropagation();
                       clickWord(w.start);
                     }}
                     className={`rounded px-0.5 -mx-0.5 transition-colors ${
                       isHighlighted
-                        ? "bg-amber-300 text-slate-900 font-semibold"
+                        ? "bg-amber-300 text-slate-900"
+                        : editing
+                        ? ""
                         : "hover:bg-indigo-100"
                     }`}
                     title="Cliquez : lecture à partir de ce mot"
