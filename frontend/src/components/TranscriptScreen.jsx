@@ -182,33 +182,44 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     }, 900);
   }, [payloadFor]);
 
+  // History lives in a ref (source of truth) so several mutates fired in the
+  // same event handler — commit + Rev-style split on one Enter — never slice
+  // the stack with a stale index. The states below mirror it for the UI.
+  const historyRef = useRef({ list: [initialSession || {}], idx: 0 });
+
   const mutate = useCallback((transform) => {
-    setSession((prev) => {
-      const next = transform(prev);
-      setHistory((h) => {
-        const sliced = h.slice(0, historyIndex + 1);
-        return [...sliced, next];
-      });
-      setHistoryIndex((idx) => idx + 1);
-      return next;
-    });
+    const prev = sessionRef.current;
+    const next = transform(prev);
+    sessionRef.current = next;
+    const h = historyRef.current;
+    const list = [...h.list.slice(0, h.idx + 1), next];
+    historyRef.current = { list, idx: list.length - 1 };
+    setSession(next);
+    setHistory(list);
+    setHistoryIndex(list.length - 1);
     scheduleSave();
-  }, [historyIndex, scheduleSave]);
+  }, [scheduleSave]);
 
   const undo = () => {
-    if (historyIndex > 0) {
-      const newIdx = historyIndex - 1;
-      setHistoryIndex(newIdx);
-      setSession(history[newIdx]);
+    const h = historyRef.current;
+    if (h.idx > 0) {
+      h.idx -= 1;
+      const s = h.list[h.idx];
+      sessionRef.current = s;
+      setSession(s);
+      setHistoryIndex(h.idx);
       scheduleSave();
     }
   };
 
   const redo = () => {
-    if (historyIndex < history.length - 1) {
-      const newIdx = historyIndex + 1;
-      setHistoryIndex(newIdx);
-      setSession(history[newIdx]);
+    const h = historyRef.current;
+    if (h.idx < h.list.length - 1) {
+      h.idx += 1;
+      const s = h.list[h.idx];
+      sessionRef.current = s;
+      setSession(s);
+      setHistoryIndex(h.idx);
       scheduleSave();
     }
   };
