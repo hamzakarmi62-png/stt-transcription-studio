@@ -14,6 +14,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  // Caret position to place when entering edit mode (0 = start of the new
+  // paragraph after a Rev-style split, so pressing Enter again gives the
+  // new paragraph its own speaker).
+  const [editingCaret, setEditingCaret] = useState(null);
   const [activeWordKey, setActiveWordKey] = useState(null);
   const [editingWordKey, setEditingWordKey] = useState(null);
 
@@ -238,6 +242,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const activeSegment = activeIdx >= 0 ? segments[activeIdx] : null;
   const activeSegRef = useRef(null);
   activeSegRef.current = activeSegment;
+  const segmentsRef = useRef(null);
+  segmentsRef.current = segments;
+  const activeWordKeyRef = useRef(null);
+  activeWordKeyRef.current = activeWordKey;
 
   // No auto-scroll while playing: the page stays exactly where the reader
   // put it (hovering a word, correcting…), even as playback advances.
@@ -446,7 +454,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const deleteSegment = (id) =>
     mutate((prev) => ({ ...prev, segments: prev.segments.filter((s) => s.id !== id) }));
 
-  const splitSegment = (id, caret) => {
+  const splitSegment = (id, caret, newId = uid()) => {
     mutate((prev) => {
       const seg = prev.segments.find((s) => s.id === id);
       if (!seg || seg.text.trim().length < 2) return prev;
@@ -455,13 +463,24 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       const before = seg.text.slice(0, c);
       const after = seg.text.slice(c);
       if (!before.trim() || !after.trim()) return prev;
-      const ratio = c / Math.max(seg.text.length, 1);
-      const mid = (seg.start + (seg.end - seg.start) * ratio).toFixed(3);
-      const leftWords = (seg.words || []).filter((w) => w.start < Number(mid));
-      const rightWords = (seg.words || []).filter((w) => w.start >= Number(mid));
+      // Word-accurate split time: the tail starts when its first spoken word
+      // starts (the word under the caret goes down with the tail, like Rev).
+      let acc = 0;
+      let rightStart = null;
+      const leftWords = [];
+      const rightWords = [];
+      for (const w of seg.words || []) {
+        const a = acc;
+        const b = acc + w.word.length + 1;
+        acc = b;
+        if (rightStart === null && b > c) rightStart = w.start;
+        (b <= c ? leftWords : rightWords).push(w);
+      }
       const right = {
-        id: uid(),
-        start: Number(mid),
+        id: newId,
+        start: Number(
+          (rightStart ?? seg.start + (seg.end - seg.start) * (c / Math.max(seg.text.length, 1))).toFixed(3)
+        ),
         end: seg.end,
         text: after.trim(),
         speaker: seg.speaker,
@@ -469,10 +488,25 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       };
       const idx = prev.segments.findIndex((s) => s.id === id);
       const next = [...prev.segments];
-      next[idx] = { ...seg, text: before.trim(), end: Number(mid), words: leftWords };
+      next[idx] = {
+        ...seg,
+        text: before.trim(),
+        end: Number((leftWords[leftWords.length - 1]?.end ?? right.start).toFixed(3)),
+        words: leftWords,
+      };
       next.splice(idx + 1, 0, right);
       return { ...prev, segments: next };
     });
+  };
+
+  // Rev-style Enter: split at the caret — the tail goes down with its own
+  // word-accurate timestamp — then place the caret at the START of the new
+  // paragraph, so pressing Enter again gives it its own speaker.
+  const enterSplit = (id, caret) => {
+    const newId = uid();
+    splitSegment(id, caret, newId);
+    setEditingCaret(0);
+    setEditingId(newId);
   };
 
   const splitSegmentAtWord = (segId, wordIdx) => {
@@ -724,18 +758,22 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       };
     });
 
-  // Full keyboard control (Word-like):
-  // - Entrée = ONE job only: send the selected words — or the whole
-  //   paragraph — to the START of the next paragraph.
+  // Full keyboard control (Rev-style):
+  // - Entrée #1 = split at the cursor/current word — the text after it goes
+  //   down WITH its own word-accurate timestamp; the caret is then placed at
+  //   the start of the new paragraph.
+  // - Entrée #2 (caret already at the start) = give that paragraph its own
+  //   brand-new speaker.
+  // - Sélection + Entrée = the selected words start the new paragraph.
   // - Suppr = merge the active paragraph with the one ABOVE
-  // - Alt+↑ / Alt+↓ = same as the up / down buttons (selection-aware)
+  // - Alt+↑ / Alt+↓ = send text to the end of the previous / start of the
+  //   next paragraph (selection-aware)
   // - Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) → undo / redo
   const keyHandlersRef = useRef({});
   keyHandlersRef.current = {
     up: moveSegmentUp,
     down: moveSegmentDown,
-    split: splitSegment,
-    mergeNext: mergeWithNext,
+    splitEnter: enterSplit,
     mergePrev: mergeWithPrev,
     undo,
     redo,
@@ -789,10 +827,35 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
       if (e.key === "Enter") {
         e.preventDefault();
-        // ONE job: the selected words — or the whole paragraph — go to the
-        // START of the next paragraph. moveSegmentDown reads the selection.
-        const id = segIdFromSelection() || activeSegRef.current?.id;
-        if (id) h.down?.(id);
+        // ONE job, Rev-style: split at the current position — the tail goes
+        // down with its own timestamp. Selection start wins; otherwise the
+        // highlighted playback word marks the split point.
+        const selSeg = segIdFromSelection();
+        if (selSeg) {
+          const sel = selectionRangeIn(selSeg);
+          if (sel && sel.start > 0) {
+            h.splitEnter?.(selSeg, sel.start);
+            window.getSelection()?.removeAllRanges();
+            return;
+          }
+        }
+        const key = activeWordKeyRef.current;
+        if (key) {
+          const cut = key.lastIndexOf("-w");
+          const segId = key.slice(0, cut);
+          const wi = Number(key.slice(cut + 2));
+          const seg = (segmentsRef.current || []).find((s) => s.id === segId);
+          if (seg && wi > 0) {
+            let acc = 0;
+            for (let k2 = 0; k2 < wi; k2++) {
+              acc += ((seg.words || [])[k2]?.word.length ?? 0) + 1;
+            }
+            if (acc > 0 && acc < (seg.text || "").length) {
+              h.splitEnter?.(segId, acc);
+              return;
+            }
+          }
+        }
       } else if (e.key === "Delete") {
         e.preventDefault();
         // Delete merges the active paragraph with the one ABOVE it.
@@ -1233,6 +1296,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onSetEditingWordKey={setEditingWordKey}
                       onUpdateWord={updateWordText}
                       editing={editingId === seg.id}
+                      editingCaret={editingId === seg.id ? editingCaret : null}
+                      onSplitEnter={enterSplit}
                       canMerge={index < segments.length - 1}
                       canMoveUp={index > 0}
                       canMoveDown={index < segments.length - 1}
@@ -1242,7 +1307,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onRenameSpeaker={renameSpeaker}
                       onDeleteSpeaker={deleteSpeaker}
                       speakers={speakers}
-                      onStartEdit={(id) => setEditingId(id)}
+                      onStartEdit={(id) => {
+                        setEditingCaret(null);
+                        setEditingId(id);
+                      }}
                       onCommitEdit={updateSegmentText}
                       onDelete={(id) => {
                         if (editingId === id) setEditingId(null);
@@ -1258,8 +1326,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Entrée = envoyer le paragraphe — ou les mots sélectionnés — au début du suivant ·
-                  Alt+↑/↓ = pareil · Suppr = fusionner avec le haut · Ctrl+Z / Ctrl+Y = annuler / rétablir
+                  Entrée = couper ici (le texte après le curseur descend avec son propre temps) ·
+                  Entrée au début du paragraphe = nouveau locuteur · Alt+↑/↓ = envoyer au paragraphe voisin ·
+                  Ctrl+Z / Ctrl+Y = annuler / rétablir
                 </p>
               </div>
             )}

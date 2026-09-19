@@ -16,6 +16,8 @@ export default function Segment({
   onSetEditingWordKey,
   onUpdateWord,
   editing,
+  editingCaret = null,
+  onSplitEnter,
   canMerge,
   canMoveUp = true,
   canMoveDown = true,
@@ -44,7 +46,8 @@ export default function Segment({
   const [renameText, setRenameText] = useState("");
 
   // Rev-style: entering edit mode focuses the paragraph and places the caret
-  // exactly where the user clicked (or at the end for the toolbar pencil).
+  // exactly where the user clicked (or at the end for the toolbar pencil,
+  // or at position 0 right after a split so Enter again = own speaker).
   // The page must NOT move: focus with preventScroll and restore the exact
   // scroll position afterwards, even for words at the very bottom.
   useEffect(() => {
@@ -54,7 +57,7 @@ export default function Segment({
     const sx = window.scrollX;
     const sy = window.scrollY;
     el.focus({ preventScroll: true });
-    const target = pendingCaretRef.current;
+    const target = pendingCaretRef.current != null ? pendingCaretRef.current : editingCaret;
     pendingCaretRef.current = null;
     const len = (el.textContent || "").length;
     const off = target == null ? len : Math.min(Math.max(target, 0), len);
@@ -85,8 +88,11 @@ export default function Segment({
     return pre.toString().length;
   };
 
-  // Direct typing like a word processor: save the typed text, then let
-  // Enter split at the caret / Backspace at position 0 merge with the previous.
+  // Direct typing like a word processor, Rev-style Enter:
+  // - caret at the very start → this paragraph gets its own NEW speaker
+  // - caret anywhere else → split: everything after the caret goes down with
+  //   its own word-accurate timestamp, and the caret is re-placed at the
+  //   start of the new paragraph (so Enter again = own speaker).
   const commitAndClose = () => {
     const text = textRef.current?.textContent || "";
     onCommitEdit(segment.id, text);
@@ -98,14 +104,17 @@ export default function Segment({
     if (!el) return;
     const len = (el.textContent || "").length;
     if (e.key === "Enter") {
-      // The user's rule: Enter ALWAYS moves the paragraph down — even while
-      // correcting text. Save what was typed, leave edit mode, move.
       e.preventDefault();
       e.stopPropagation();
-      const id = segment.id;
-      onCommitEdit(segment.id, el.textContent || "");
+      const caret = caretOffsetIn(el);
+      const text = el.textContent || "";
+      onCommitEdit(segment.id, text);
       onStartEdit(null);
-      onMoveDown && onMoveDown(id);
+      if (caret === 0) {
+        onAddSpeakerFor && onAddSpeakerFor(segment.id);
+      } else if (caret < len && onSplitEnter) {
+        onSplitEnter(segment.id, caret);
+      }
     } else if (e.key === "Backspace") {
       const sel = window.getSelection();
       if (caretOffsetIn(el) === 0 && sel && sel.isCollapsed) {
