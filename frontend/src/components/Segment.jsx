@@ -131,15 +131,11 @@ export default function Segment({
     }
   };
 
-  // Click a word: playhead moves to that exact moment WITHOUT playing
-  // (playback starts only from a play button), and the caret lands right
-  // after the word ready to type the correction.
-  const editAtWord = (i, wordStart) => {
-    (onPositionAt || onSeek)?.(wordStart);
-    pendingCaretRef.current = segment.words
-      .slice(0, i + 1)
-      .reduce((n, w) => n + w.word.length + 1, 0);
-    onStartEdit(segment.id);
+  // Click a word: the player jumps to that exact moment AND keeps playing
+  // from there (the user asked for click = play from that word). Correcting
+  // text stays available through the toolbar pencil.
+  const clickWord = (wordStart) => {
+    (onSeek || onPositionAt)?.(wordStart);
   };
 
   const copyText = async () => {
@@ -202,7 +198,7 @@ export default function Segment({
       id={`seg-${segment.id}`}
       onClick={(e) => {
         if (e.target.tagName !== "BUTTON" && e.target.tagName !== "SELECT" && !editing) {
-          (onPositionAt || onSeek)?.(segment.start);
+          (onSeek || onPositionAt)?.(segment.start);
         }
       }}
       className="group relative py-2"
@@ -348,14 +344,14 @@ export default function Segment({
                   key={wKey}
                   onClick={(e) => {
                     e.stopPropagation();
-                    editAtWord(i, w.start);
+                    clickWord(w.start);
                   }}
-                  className={`cursor-text rounded px-0.5 transition-colors ${
+                  className={`cursor-pointer rounded px-0.5 transition-colors ${
                     isHighlighted
                       ? "bg-amber-300 text-slate-900 font-semibold"
                       : "hover:bg-indigo-100"
                   }`}
-                  title="Cliquez : l'audio saute ici et vous corrigez directement"
+                  title="Cliquez : lecture à partir de ce mot"
                 >
                   {w.word}{" "}
                 </span>
