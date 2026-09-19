@@ -724,12 +724,11 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       };
     });
 
-  // Full keyboard control (Rev-style):
-  // - Select text + Entrée → split the paragraph at the selection (new one
-  //   gets its own computed time)
-  // - Entrée (no selection) → merge the active paragraph with the one BELOW
-  // - Suppr → merge the active paragraph with the one ABOVE
-  // - Alt+↑ / Alt+↓ → move the active paragraph (with its time)
+  // Full keyboard control (Word-like):
+  // - Entrée = ONE job only: send the selected words — or the whole
+  //   paragraph — to the START of the next paragraph.
+  // - Suppr = merge the active paragraph with the one ABOVE
+  // - Alt+↑ / Alt+↓ = same as the up / down buttons (selection-aware)
   // - Ctrl+Z / Ctrl+Y (or Ctrl+Shift+Z) → undo / redo
   const keyHandlersRef = useRef({});
   keyHandlersRef.current = {
@@ -743,24 +742,18 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   };
 
   useEffect(() => {
-    const findSelectionCaret = () => {
+    // Which paragraph owns the current selection (if any)?
+    const segIdFromSelection = () => {
       try {
         const sel = window.getSelection();
-        if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return null;
+        if (!sel || sel.rangeCount === 0) return null;
         const range = sel.getRangeAt(0);
         let el =
           range.endContainer.nodeType === 3
             ? range.endContainer.parentElement
             : range.endContainer;
         while (el && !(el.id && el.id.startsWith("seg-"))) el = el.parentElement;
-        if (!el) return null;
-        const p = el.querySelector("p[dir='auto']") || el.querySelector("p");
-        if (!p || !p.contains(range.endContainer)) return null;
-        const pre = range.cloneRange();
-        pre.selectNodeContents(p);
-        pre.setEnd(range.endContainer, range.endOffset);
-        const caret = pre.toString().length;
-        return caret > 0 ? { segId: el.id.slice(4), caret } : null;
+        return el ? el.id.slice(4) : null;
       } catch {
         return null;
       }
@@ -796,19 +789,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
       if (e.key === "Enter") {
         e.preventDefault();
-        const selHit = findSelectionCaret();
-        if (selHit) {
-          h.split?.(selHit.segId, selHit.caret);
-          window.getSelection()?.removeAllRanges();
-        } else if (e.shiftKey) {
-          // Shift+Enter merges the active paragraph with the one BELOW it.
-          const seg = activeSegRef.current;
-          if (seg) h.mergeNext?.(seg.id);
-        } else {
-          // Enter moves the active paragraph down (with its time).
-          const seg = activeSegRef.current;
-          if (seg) h.down?.(seg.id);
-        }
+        // ONE job: the selected words — or the whole paragraph — go to the
+        // START of the next paragraph. moveSegmentDown reads the selection.
+        const id = segIdFromSelection() || activeSegRef.current?.id;
+        if (id) h.down?.(id);
       } else if (e.key === "Delete") {
         e.preventDefault();
         // Delete merges the active paragraph with the one ABOVE it.
@@ -1274,9 +1258,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                 </div>
                 <p className="text-[11px] text-slate-400 text-center mt-4">
-                  Entrée = envoyer le paragraphe au début du suivant · Suppr = envoyer à la fin du précédent ·
-                  Sélection + ↑/↓ ou Entrée = envoyer seulement les mots sélectionnés · Alt+↑/↓ = pareil ·
-                  Ctrl+Z / Ctrl+Y = annuler / rétablir
+                  Entrée = envoyer le paragraphe — ou les mots sélectionnés — au début du suivant ·
+                  Alt+↑/↓ = pareil · Suppr = fusionner avec le haut · Ctrl+Z / Ctrl+Y = annuler / rétablir
                 </p>
               </div>
             )}
