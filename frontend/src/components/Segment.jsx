@@ -200,17 +200,6 @@ export default function Segment({
   const toolBtn =
     "p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500";
 
-  // Time of the spoken word at a character offset — used to move the
-  // playhead (timestamp display) to where the caret lands, without playing.
-  const timeAtOffset = (off) => {
-    let acc = 0;
-    for (const w of segment.words || []) {
-      if (off > acc && off <= acc + w.word.length + 1) return w.start;
-      acc += w.word.length + 1;
-    }
-    return null;
-  };
-
   return (
     <div
       id={`seg-${segment.id}`}
@@ -352,15 +341,15 @@ export default function Segment({
           dir="auto"
           className="cursor-text text-[19px] leading-[2] text-slate-800 select-text"
           onClick={(e) => {
-            // Clicking anywhere — a word or the space between words — places
-            // the caret there for typing, and the playhead (timestamp) moves
-            // to that moment without playing. Playback is button-only.
+            // Clicking the SPACE BETWEEN words places the caret there for
+            // typing only. Clicking a WORD is handled by the span itself:
+            // the player jumps to that word's timestamp (without playing) —
+            // playback then starts from there via the play buttons.
             if (editing) return;
+            if (e.target.tagName === "SPAN") return;
             const off = caretOffsetAtEvent(e);
             if (off == null) return;
             e.stopPropagation();
-            const t = timeAtOffset(off);
-            if (t != null) onPositionAt?.(t);
             pendingCaretRef.current = off;
             onStartEdit(segment.id);
           }}
@@ -372,13 +361,21 @@ export default function Segment({
               return (
                 <Fragment key={wKey}>
                   <span
-                    className={`rounded px-0.5 -mx-0.5 transition-colors ${
+                    onClick={(e) => {
+                      // The player jumps to this word's timestamp without
+                      // playing; the play buttons then start from there.
+                      if (editing) return;
+                      e.stopPropagation();
+                      onPositionAt?.(w.start);
+                    }}
+                    className={`cursor-pointer rounded px-0.5 -mx-0.5 transition-colors ${
                       isHighlighted
                         ? "bg-amber-300 text-slate-900"
                         : editing
                         ? ""
                         : "hover:bg-indigo-100"
                     }`}
+                    title="Cliquez : le lecteur se place sur ce mot · ▶ pour lire depuis ici"
                   >
                     {w.word}
                   </span>{" "}
