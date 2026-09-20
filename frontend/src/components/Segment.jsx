@@ -64,10 +64,25 @@ function Segment({
     const len = (el.textContent || "").length;
     const off = target == null ? len : Math.min(Math.max(target, 0), len);
     try {
+      // Walk the text nodes so the caret lands at the exact character
+      // offset — the paragraph renders words as spans, so el.firstChild is
+      // an element, not a text node.
       const sel = window.getSelection();
       const range = document.createRange();
-      range.selectNodeContents(el);
-      range.setStart(el.firstChild || el, off);
+      const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+      let node = null;
+      let remaining = off;
+      let placed = false;
+      while ((node = walker.nextNode())) {
+        const tlen = node.textContent.length;
+        if (remaining <= tlen) {
+          range.setStart(node, Math.min(remaining, tlen));
+          placed = true;
+          break;
+        }
+        remaining -= tlen;
+      }
+      if (!placed) range.selectNodeContents(el);
       range.collapse(true);
       sel.removeAllRanges();
       sel.addRange(range);
