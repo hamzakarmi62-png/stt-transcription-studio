@@ -119,14 +119,9 @@ export default function Segment({
     }
   };
 
-  // Click a word: the player jumps to that exact moment AND keeps playing
-  // from there. Click the SPACE BETWEEN words: the caret is placed right
-  // there and you type normally, like in Word.
-  const clickWord = (wordStart) => {
-    (onSeek || onPositionAt)?.(wordStart);
-  };
-
-  // Character offset inside the paragraph at the mouse position.
+  // Clicking anywhere in the paragraph (a word or the space between words)
+  // places the caret there for typing. Playback happens ONLY from the play
+  // buttons — never from clicking the text.
   const caretOffsetAtEvent = (e) => {
     try {
       let range = null;
@@ -208,11 +203,6 @@ export default function Segment({
   return (
     <div
       id={`seg-${segment.id}`}
-      onClick={(e) => {
-        if (e.target.tagName !== "BUTTON" && e.target.tagName !== "SELECT" && !editing) {
-          (onSeek || onPositionAt)?.(segment.start);
-        }
-      }}
       className="group relative py-2"
     >
       {/* Floating toolbar — visible on hover, always on active/editing.
@@ -349,12 +339,11 @@ export default function Segment({
         <p
           ref={paragraphRef}
           dir="auto"
-          className="text-[19px] leading-[2] text-slate-800 select-text"
+          className="cursor-text text-[19px] leading-[2] text-slate-800 select-text"
           onClick={(e) => {
-            // Clicking a word plays from it (the span handles that). Clicking
-            // the space between words places the caret there for typing.
+            // Clicking anywhere — a word or the space between words — places
+            // the caret there for typing. It never starts playback.
             if (editing) return;
-            if (e.target.tagName === "SPAN") return;
             const off = caretOffsetAtEvent(e);
             if (off == null) return;
             e.stopPropagation();
@@ -369,11 +358,6 @@ export default function Segment({
               return (
                 <Fragment key={wKey}>
                   <span
-                    onClick={(e) => {
-                      if (editing) return; // native caret placement while typing
-                      e.stopPropagation();
-                      clickWord(w.start);
-                    }}
                     className={`rounded px-0.5 -mx-0.5 transition-colors ${
                       isHighlighted
                         ? "bg-amber-300 text-slate-900"
@@ -381,7 +365,6 @@ export default function Segment({
                         ? ""
                         : "hover:bg-indigo-100"
                     }`}
-                    title="Cliquez : lecture à partir de ce mot"
                   >
                     {w.word}
                   </span>{" "}
