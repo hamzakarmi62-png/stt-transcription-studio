@@ -373,7 +373,7 @@ def get_audio(session_id: str, request: Request):
         path,
         media_type=media_type,
         filename=session["filename"],
-        headers={"Accept-Ranges": "bytes"},
+        headers={"Accept-Ranges": "bytes", "Cache-Control": "private, max-age=3600"},
     )
 
 

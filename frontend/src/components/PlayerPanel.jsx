@@ -105,10 +105,11 @@ export default function PlayerPanel({
       src={src}
       controls
       playsInline
+      preload="auto"
       className="w-full aspect-video bg-black rounded-b-2xl"
     />
   ) : (
-    <audio ref={mediaRef} src={src} controls className="w-full rounded-b-2xl" />
+    <audio ref={mediaRef} src={src} controls preload="auto" className="w-full rounded-b-2xl" />
   );
 
   if (floating) {
