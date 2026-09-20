@@ -352,20 +352,20 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     setActiveWordKey(foundKey);
   }, [currentTime, segments, highlightOffset]);
 
-  const seekTo = (t) => {
+  const seekTo = useCallback((t) => {
     const audio = audioRef.current;
     if (audio) {
       audio.currentTime = t;
       audio.play().catch(() => {});
     }
-  };
+  }, []);
 
   // Position the playhead WITHOUT starting playback — clicking a word or a
   // paragraph must never auto-play; only the play buttons do.
-  const positionAt = (t) => {
+  const positionAt = useCallback((t) => {
     const audio = audioRef.current;
     if (audio) audio.currentTime = t;
-  };
+  }, []);
 
   const generateWordsForText = (text, start, end) => {
     const parts = text.trim().split(/\s+/).filter(Boolean);
@@ -486,7 +486,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     return result;
   };
 
-  const updateSegmentText = (id, text) =>
+  const updateSegmentText = useCallback((id, text) =>
     mutate((prev) => ({
       ...prev,
       segments: prev.segments.map((s) => {
@@ -509,12 +509,12 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           words,
         };
       }),
-    }));
+    })), [mutate]);
 
-  const deleteSegment = (id) =>
-    mutate((prev) => ({ ...prev, segments: prev.segments.filter((s) => s.id !== id) }));
+  const deleteSegment = useCallback((id) =>
+    mutate((prev) => ({ ...prev, segments: prev.segments.filter((s) => s.id !== id) })), [mutate]);
 
-  const splitSegment = (id, caret, newId = uid()) => {
+  const splitSegment = useCallback((id, caret, newId = uid()) => {
     mutate((prev) => {
       const seg = prev.segments.find((s) => s.id === id);
       if (!seg || seg.text.trim().length < 2) return prev;
@@ -556,10 +556,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       };
       next.splice(idx + 1, 0, right);
       return { ...prev, segments: next };
-    });
-  };
+  });
+}, [mutate]);
 
-  const splitSegmentAtWord = (segId, wordIdx) => {
+  const splitSegmentAtWord = useCallback((segId, wordIdx) => {
     if (wordIdx <= 0) return;
     mutate((prev) => {
       const seg = prev.segments.find((s) => s.id === segId);
@@ -588,10 +588,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       next[idx] = { ...seg, text: leftText, end: splitTime, words: leftWords };
       next.splice(idx + 1, 0, right);
       return { ...prev, segments: next };
-    });
-  };
+  });
+}, [mutate]);
 
-  const mergeWithNext = (id) =>
+  const mergeWithNext = useCallback((id) =>
     mutate((prev) => {
       const idx = prev.segments.findIndex((s) => s.id === id);
       if (idx < 0 || idx >= prev.segments.length - 1) return prev;
@@ -607,10 +607,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       next[idx] = merged;
       next.splice(idx + 1, 1);
       return { ...prev, segments: next };
-    });
+    }), [mutate]);
 
   // Backspace at the start of a paragraph (Rev-style) merges it into the previous one.
-  const mergeWithPrev = (id) =>
+  const mergeWithPrev = useCallback((id) =>
     mutate((prev) => {
       const idx = prev.segments.findIndex((s) => s.id === id);
       if (idx <= 0) return prev;
@@ -626,13 +626,13 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       next[idx - 1] = merged;
       next.splice(idx, 1);
       return { ...prev, segments: next };
-    });
+    }), [mutate]);
 
-  const reassign = (id, speakerId) =>
+  const reassign = useCallback((id, speakerId) =>
     mutate((prev) => ({
       ...prev,
       segments: prev.segments.map((s) => (s.id === id ? { ...s, speaker: speakerId } : s)),
-    }));
+    })), [mutate]);
 
   // ── Word-like paragraph flow ─────────────────────────────────────────────
   // DOWN: the paragraph — or just the selected words — is sent to the START
@@ -667,7 +667,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     }
   };
 
-  const moveSegmentDown = (id) => {
+  const moveSegmentDown = useCallback((id) => {
     const sel = selectionRangeIn(id);
     window.getSelection()?.removeAllRanges();
     mutate((prev) => {
@@ -722,10 +722,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         speaker: cur.speaker,
       };
       return { ...prev, segments: arr };
-    });
-  };
+  });
+}, [mutate]);
 
-  const moveSegmentUp = (id) => {
+  const moveSegmentUp = useCallback((id) => {
     const sel = selectionRangeIn(id);
     window.getSelection()?.removeAllRanges();
     mutate((prev) => {
@@ -775,10 +775,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         words: restWords,
       };
       return { ...prev, segments: arr };
-    });
-  };
+  });
+}, [mutate]);
 
-  const deleteSpeaker = (speakerId) =>
+  const deleteSpeaker = useCallback((speakerId) =>
     mutate((prev) => {
       if (prev.speakers.length <= 1) return prev;
       const remaining = prev.speakers.filter((s) => s.id !== speakerId);
@@ -791,10 +791,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           s.speaker === speakerId ? { ...s, speaker: fallback } : s
         ),
       };
-    });
+  }), [mutate]);
 
   // Create a brand-new speaker and assign exactly one paragraph to it.
-  const addSpeakerForSegment = (segId) =>
+  const addSpeakerForSegment = useCallback((segId) =>
     mutate((prev) => {
       const spk = {
         id: uid(),
@@ -806,7 +806,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         speakers: [...prev.speakers, spk],
         segments: prev.segments.map((s) => (s.id === segId ? { ...s, speaker: spk.id } : s)),
       };
-    });
+  }), [mutate]);
 
   // Full keyboard control (Word-like):
   // - Entrée = NEVER moves text: it only validates what was typed —
@@ -870,20 +870,20 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const renameSpeaker = (id, name) =>
+  const renameSpeaker = useCallback((id, name) =>
     mutate((prev) => ({
       ...prev,
       speakers: prev.speakers.map((s) => (s.id === id ? { ...s, name } : s)),
-    }));
+    })), [mutate]);
 
-  const addSpeaker = () =>
+  const addSpeaker = useCallback(() =>
     mutate((prev) => ({
       ...prev,
       speakers: [
         ...prev.speakers,
         { id: uid(), name: `Speaker ${prev.speakers.length + 1}`, color: nextColor(prev.speakers.length) },
       ],
-    }));
+    })), [mutate]);
 
   // ── Insights helpers (translation / summary / stats) ──
   const openInsights = (tab) => {

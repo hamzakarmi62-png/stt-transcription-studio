@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, memo, useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils.js";
 import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Scissors, Trash } from "./Icons.jsx";
 
@@ -6,7 +6,9 @@ import { Check, ChevronDown, ChevronUp, Copy, CornerDownRight, Pencil, Play, Sci
 // appears only when the speaker changes; consecutive segments flow as plain
 // paragraphs with no boxes, no backgrounds, no hover rectangles. The floating
 // hover toolbar carries the segment's own timestamp + play button.
-export default function Segment({
+// memo(): placing the caret re-renders ONLY the touched paragraph, never the
+// whole transcript — this is what keeps rapid clicking smooth on long files.
+function Segment({
   segment,
   speaker,
   showMark = true,
@@ -100,10 +102,20 @@ export default function Segment({
     const el = paragraphRef.current;
     if (!el) return;
     if (e.key === "Enter") {
-      // Text stays exactly where it is — save and close, nothing moves.
+      // Rev-style: the text after the caret goes DOWN as its own paragraph
+      // with its own word-accurate timestamp. Caret at the very start gives
+      // the paragraph its own brand-new speaker instead.
       e.preventDefault();
       e.stopPropagation();
-      commitAndClose();
+      const caret = caretOffsetIn(el);
+      const text = el.textContent || "";
+      onCommitEdit(segment.id, text);
+      onStartEdit(null);
+      if (caret === 0) {
+        onAddSpeakerFor && onAddSpeakerFor(segment.id);
+      } else if (caret < text.length && onSplit) {
+        onSplit(segment.id, caret);
+      }
     } else if (e.key === "Backspace") {
       const sel = window.getSelection();
       if (caretOffsetIn(el) === 0 && sel && sel.isCollapsed) {
@@ -384,3 +396,6 @@ export default function Segment({
     </div>
   );
 }
+
+// memo: a caret placement re-renders only the touched paragraph.
+export default memo(Segment);
