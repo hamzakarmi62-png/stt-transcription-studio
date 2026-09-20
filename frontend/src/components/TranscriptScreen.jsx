@@ -14,6 +14,59 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  // ── Instant seeking: download the WHOLE media file once in the background
+  // and serve the player from a local blob URL. Seeks to any timestamp then
+  // start instantly instead of waiting on network range requests. Skipped
+  // for very large files (long videos) to protect memory.
+  const [mediaSrc, setMediaSrc] = useState(api.audioUrl(session.id));
+  const blobUrlRef = useRef(null);
+  useEffect(() => {
+    const sid = session.id;
+    let alive = true;
+    setMediaSrc(api.audioUrl(sid));
+    (async () => {
+      try {
+        const res = await fetch(api.audioUrl(sid));
+        if (!res.ok || !alive) return;
+        const len = Number(res.headers.get("content-length") || 0);
+        if (len > 300 * 1024 * 1024) return; // too big (long videos) — stay progressive
+        const blob = await res.blob();
+        if (!alive) return;
+        const url = URL.createObjectURL(blob);
+        blobUrlRef.current = url;
+        const a = audioRef.current;
+        const t = a ? a.currentTime : 0;
+        const wasPlaying = a ? !a.paused && !a.ended : false;
+        setMediaSrc(url);
+        // keep the playhead and playback state across the src swap
+        requestAnimationFrame(() => {
+          const el = audioRef.current;
+          if (!el) return;
+          const apply = () => {
+            try {
+              el.currentTime = t;
+            } catch {
+              /* best effort */
+            }
+            if (wasPlaying) el.play().catch(() => {});
+          };
+          if (el.readyState >= 1) apply();
+          else el.addEventListener("loadedmetadata", apply, { once: true });
+        });
+      } catch {
+        /* keep the progressive URL */
+      }
+    })();
+    return () => {
+      alive = false;
+      if (blobUrlRef.current) {
+        URL.revokeObjectURL(blobUrlRef.current);
+        blobUrlRef.current = null;
+      }
+    };
+  }, [session.id]);
+
   // Caret position to place when entering edit mode (0 = start of the new
   // paragraph after a Rev-style split, so pressing Enter again gives the
   // new paragraph its own speaker).
@@ -1171,7 +1224,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         >
           <aside className="h-fit space-y-4 lg:sticky lg:top-[86px] lg:z-20">
             <PlayerPanel
-              src={api.audioUrl(session.id)}
+              src={mediaSrc}
               kind={mediaKind}
               filename={session.filename}
               mode={playerMode}
