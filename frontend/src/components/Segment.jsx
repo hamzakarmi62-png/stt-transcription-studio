@@ -37,7 +37,9 @@ export default function Segment({
   speakers,
   currentTime,
 }) {
-  const textRef = useRef(null);
+  // ONE paragraph node serves both modes: toggling contentEditable never
+  // swaps the DOM, so the text cannot shift a single pixel when the caret
+  // is placed for typing.
   const paragraphRef = useRef(null);
   const pendingCaretRef = useRef(null);
   const [copied, setCopied] = useState(false);
@@ -45,13 +47,12 @@ export default function Segment({
   const [renameText, setRenameText] = useState("");
 
   // Rev-style: entering edit mode focuses the paragraph and places the caret
-  // exactly where the user clicked (or at the end for the toolbar pencil,
-  // or at position 0 right after a split so Enter again = own speaker).
+  // exactly where the user clicked (or at the end for the toolbar pencil).
   // The page must NOT move: focus with preventScroll and restore the exact
   // scroll position afterwards, even for words at the very bottom.
   useEffect(() => {
     if (!editing) return;
-    const el = textRef.current;
+    const el = paragraphRef.current;
     if (!el) return;
     const sx = window.scrollX;
     const sy = window.scrollY;
@@ -90,13 +91,13 @@ export default function Segment({
   // Direct typing like a word processor. Enter NEVER moves the text: it just
   // saves what was typed — everything stays exactly in place.
   const commitAndClose = () => {
-    const text = textRef.current?.textContent || "";
+    const text = (paragraphRef.current?.textContent || "").replace(/\s+$/, "");
     onCommitEdit(segment.id, text);
     onStartEdit(null);
   };
 
   const onEditKeyDown = (e) => {
-    const el = textRef.current;
+    const el = paragraphRef.current;
     if (!el) return;
     if (e.key === "Enter") {
       // Text stays exactly where it is — save and close, nothing moves.
@@ -333,59 +334,53 @@ export default function Segment({
         </div>
       )}
 
-      {editing ? (
-        <p
-          ref={textRef}
-          contentEditable
-          suppressContentEditableWarning
-          onClick={(e) => e.stopPropagation()}
-          onKeyDown={onEditKeyDown}
-          onBlur={commitAndClose}
-          dir="auto"
-          className="text-[19px] leading-[2] text-slate-800 select-text focus:outline-none"
-        >
-          {segment.text}
-        </p>
-      ) : (
-        <p
-          ref={paragraphRef}
-          dir="auto"
-          className="cursor-text text-[19px] leading-[2] text-slate-800 select-text"
-          onClick={(e) => {
-            // Placing the caret ANYWHERE (on a word or beside it) enters
-            // typing mode AND moves the playhead to that word's timestamp —
-            // without playing. Playback is button-only.
-            if (editing) return;
-            const off = caretOffsetAtEvent(e);
-            if (off == null) return;
-            e.stopPropagation();
-            const t = timeAtOffset(off);
-            if (t != null) onPositionAt?.(t);
-            pendingCaretRef.current = off;
-            onStartEdit(segment.id);
-          }}
-        >
-          {segment.words && segment.words.length > 0 ? (
-            segment.words.map((w, i) => {
-              const wKey = `${segment.id}-w${i}`;
-              const isHighlighted = activeWordKey === wKey;
-              return (
-                <Fragment key={wKey}>
-                  <span
-                    className={`rounded px-0.5 -mx-0.5 ${
-                      isHighlighted ? "bg-amber-300 text-slate-900" : ""
-                    }`}
-                  >
-                    {w.word}
-                  </span>{" "}
-                </Fragment>
-              );
-            })
-          ) : (
-            segment.text
-          )}
-        </p>
-      )}
+      {/* ONE node for both modes: contentEditable toggles, the DOM (and the
+          layout) never changes — the text cannot shift when typing starts. */}
+      <p
+        key={`${segment.id}-${editing ? "e" : "v"}`}
+        ref={paragraphRef}
+        dir="auto"
+        contentEditable={editing}
+        suppressContentEditableWarning
+        spellCheck={false}
+        onKeyDown={(e) => {
+          if (editing) onEditKeyDown(e);
+        }}
+        onBlur={() => {
+          if (editing) commitAndClose();
+        }}
+        onClick={(e) => {
+          const off = caretOffsetAtEvent(e);
+          if (off == null) return;
+          e.stopPropagation();
+          const t = timeAtOffset(off);
+          if (t != null) onPositionAt?.(t);
+          if (editing) return; // typing: the native caret is already there
+          pendingCaretRef.current = off;
+          onStartEdit(segment.id);
+        }}
+        className="cursor-text text-[19px] leading-[2] text-slate-800 select-text focus:outline-none"
+      >
+        {segment.words && segment.words.length > 0 ? (
+          segment.words.map((w, i) => {
+            const wKey = `${segment.id}-w${i}`;
+            const isHighlighted = activeWordKey === wKey;
+            return (
+              <Fragment key={wKey}>
+                <span
+                  className={`rounded px-0.5 -mx-0.5 ${
+                    isHighlighted ? "bg-amber-300 text-slate-900" : ""
+                  }`}
+                >
+                  {w.word}
+                </span>{" "}
+              </Fragment>
+            );
+          })
+        ) : (
+          segment.text
+        )}
+      </p>
     </div>
   );
 }
