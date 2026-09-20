@@ -200,6 +200,17 @@ export default function Segment({
   const toolBtn =
     "p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-slate-500";
 
+  // Time of the spoken word at a character offset — used to move the
+  // playhead (timestamp display) to where the caret lands, without playing.
+  const timeAtOffset = (off) => {
+    let acc = 0;
+    for (const w of segment.words || []) {
+      if (off > acc && off <= acc + w.word.length + 1) return w.start;
+      acc += w.word.length + 1;
+    }
+    return null;
+  };
+
   return (
     <div
       id={`seg-${segment.id}`}
@@ -342,11 +353,14 @@ export default function Segment({
           className="cursor-text text-[19px] leading-[2] text-slate-800 select-text"
           onClick={(e) => {
             // Clicking anywhere — a word or the space between words — places
-            // the caret there for typing. It never starts playback.
+            // the caret there for typing, and the playhead (timestamp) moves
+            // to that moment without playing. Playback is button-only.
             if (editing) return;
             const off = caretOffsetAtEvent(e);
             if (off == null) return;
             e.stopPropagation();
+            const t = timeAtOffset(off);
+            if (t != null) onPositionAt?.(t);
             pendingCaretRef.current = off;
             onStartEdit(segment.id);
           }}
