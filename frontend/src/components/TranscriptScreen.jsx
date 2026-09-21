@@ -74,7 +74,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [activeWordKey, setActiveWordKey] = useState(null);
   const [editingWordKey, setEditingWordKey] = useState(null);
 
-  const updateWordText = (segId, wordIdx, newWordText) => {
+  // useCallback with a ref-based mutate: the identity is stable across
+  // renders, so memo(Segment) can actually skip untouched paragraphs.
+  const updateWordText = useCallback((segId, wordIdx, newWordText) => {
     mutate((prev) => ({
       ...prev,
       segments: prev.segments.map((s) => {
@@ -87,7 +89,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         return { ...s, text: newText, words: newWords };
       }),
     }));
-  };
+  }, []);
   const [saveState, setSaveState] = useState("saved");
   const [playerMode, setPlayerMode] = useState("docked");
   const [highlightOffset, setHighlightOffset] = useState(() => {
@@ -513,6 +515,17 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
   const deleteSegment = useCallback((id) =>
     mutate((prev) => ({ ...prev, segments: prev.segments.filter((s) => s.id !== id) })), [mutate]);
+
+  // Stable identities for memo(Segment): these never change across renders.
+  const startEditing = useCallback((id) => {
+    setEditingCaret(null);
+    setEditingId(id);
+  }, []);
+
+  const removeSegment = useCallback((id) => {
+    setEditingId((cur) => (cur === id ? null : cur));
+    deleteSegment(id);
+  }, [deleteSegment]);
 
   const splitSegment = useCallback((id, caret, newId = uid()) => {
     mutate((prev) => {
@@ -1304,15 +1317,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onRenameSpeaker={renameSpeaker}
                       onDeleteSpeaker={deleteSpeaker}
                       speakers={speakers}
-                      onStartEdit={(id) => {
-                        setEditingCaret(null);
-                        setEditingId(id);
-                      }}
+                      onStartEdit={startEditing}
                       onCommitEdit={updateSegmentText}
-                      onDelete={(id) => {
-                        if (editingId === id) setEditingId(null);
-                        deleteSegment(id);
-                      }}
+                      onDelete={removeSegment}
                       onSplit={splitSegment}
                       onMerge={mergeWithNext}
                       onMergePrev={mergeWithPrev}
