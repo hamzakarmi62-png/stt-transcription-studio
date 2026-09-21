@@ -988,6 +988,30 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [insightsOpen, insightsTab, session.id]);
 
+  // While the drawer is open, keep the insights state in sync with the
+  // server — finished jobs appear within seconds, whatever the timing.
+  useEffect(() => {
+    if (!insightsOpen) return;
+    const sync = () => {
+      api.translateStatus(session.id)
+        .then((s) => {
+          setTranslateJob(s.job);
+          setTranslations(s.translations || {});
+        })
+        .catch(() => {});
+      api.summaryStatus(session.id)
+        .then((s) => {
+          setSummaryJob(s.job);
+          if (s.summary) setSummary(s.summary);
+        })
+        .catch(() => {});
+    };
+    sync();
+    const t = setInterval(sync, 3000);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [insightsOpen, session.id]);
+
   const saveLabel =
     saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-saved";
 
