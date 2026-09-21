@@ -244,7 +244,7 @@ def _run_summary(session_id: str) -> None:
             pass
 
 
-
+@router.post("/translate")
 def start_translation(session_id: str, req: TranslateRequest, request: Request = None):
     if req.language not in LANGS:
         raise HTTPException(400, "Langue non supportée")
