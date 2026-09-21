@@ -43,16 +43,16 @@ export default function ExportMenu({ sessionId, filename }) {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-sm font-bold hover:bg-emerald-500 hover:text-white transition"
+        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6415f5] text-white border border-[#6415f5] text-sm font-bold hover:bg-[#5311cf] transition"
       >
         <Download className="w-4 h-4" /> Export
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-64 bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/50 border border-white/10 p-3 z-50">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+        <div className="absolute right-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-2xl rounded-2xl shadow-xl shadow-[#18123b]/20 border border-[#18123b]/15 p-3 z-50">
+          <div className="text-xs font-semibold text-[#4b4763] uppercase tracking-wide mb-2">
             Options
           </div>
-          <label className="flex items-center gap-2 text-sm py-1 text-slate-200">
+          <label className="flex items-center gap-2 text-sm py-1 text-[#18123b]">
             <input
               type="checkbox"
               checked={includeSpeakers}
@@ -61,7 +61,7 @@ export default function ExportMenu({ sessionId, filename }) {
             />
             Include speaker names
           </label>
-          <label className="flex items-center gap-2 text-sm py-1 text-slate-200">
+          <label className="flex items-center gap-2 text-sm py-1 text-[#18123b]">
             <input
               type="checkbox"
               checked={includeTimestamps}
@@ -79,7 +79,7 @@ export default function ExportMenu({ sessionId, filename }) {
                 key={f.key}
                 disabled={busy}
                 onClick={() => doExport(f.key)}
-                className="w-full text-left px-3 py-2 rounded-xl text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition"
+                className="w-full text-left px-3 py-2 rounded-xl text-sm text-[#18123b] hover:bg-white/10 disabled:opacity-50 transition"
               >
                 {f.label}
               </button>

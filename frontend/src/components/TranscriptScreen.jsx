@@ -992,24 +992,24 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     saveState === "saving" ? "Saving…" : saveState === "error" ? "Save failed" : "Auto-saved";
 
   return (
-    <div className="min-h-screen bg-black text-slate-100 relative">
+    <div className="min-h-screen bg-[#f6f3ed] text-[#18123b] relative">
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-indigo-600/[0.13] blur-[130px]"></div>
-        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full bg-fuchsia-600/[0.09] blur-[130px]"></div>
-        <div className="absolute -bottom-32 left-1/4 w-[420px] h-[420px] rounded-full bg-violet-600/[0.08] blur-[130px]"></div>
+        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-[#6415f5]/[0.07] blur-[130px]"></div>
+        <div className="absolute top-1/3 -right-40 w-[500px] h-[500px] rounded-full bg-[#6415f5]/[0.04] blur-[130px]"></div>
+        <div className="absolute -bottom-32 left-1/4 w-[420px] h-[420px] rounded-full bg-[#6415f5]/[0.03] blur-[130px]"></div>
       </div>
       <div className="relative">
-      <header className="bg-slate-950/80 backdrop-blur-2xl border-b border-white/[0.06]">
+      <header className="bg-white/85 backdrop-blur-2xl border-b border-[#18123b]/[0.08]">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
           <button
             onClick={onBack}
-            className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition inline-flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded-xl border border-[#18123b]/15 text-[#4b4763] text-sm hover:bg-[#18123b]/[0.06] transition inline-flex items-center gap-1.5"
           >
             <ArrowLeft className="w-4 h-4" /> New
           </button>
           <div className="min-w-0">
             <h1 className="font-semibold truncate text-sm sm:text-base">{session.filename}</h1>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-[#4b4763]">
               {session.language || "auto"} · {segments.length} segments
             </p>
           </div>
@@ -1017,18 +1017,18 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             {playerMode === "hidden" && (
               <button
                 onClick={() => setPlayerMode("docked")}
-                className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition inline-flex items-center gap-1.5"
+                className="px-3 py-1.5 rounded-xl border border-[#18123b]/15 text-[#4b4763] text-sm hover:bg-[#18123b]/[0.06] transition inline-flex items-center gap-1.5"
                 title="Show player"
               >
                 <Play className="w-3.5 h-3.5" filled /> Show player
               </button>
             )}
-            <span className={`text-xs ${saveState === "error" ? "text-red-500" : "text-slate-400"}`}>
+            <span className={`text-xs ${saveState === "error" ? "text-red-500" : "text-[#4b4763]"}`}>
               {saveLabel}
             </span>
             <button
               onClick={manualSave}
-              className="px-3 py-1.5 rounded-xl border border-white/10 text-slate-300 text-sm hover:bg-white/10 transition"
+              className="px-3 py-1.5 rounded-xl border border-[#18123b]/15 text-[#4b4763] text-sm hover:bg-[#18123b]/[0.06] transition"
             >
               Save
             </button>
@@ -1039,14 +1039,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       </header>
 
       {/* Rich Toolbar matching user's reference image */}
-      <div className="sticky top-0 z-30 bg-slate-950/80 backdrop-blur-xl pt-2 pb-2 border-b border-white/[0.06]">
+      <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl pt-2 pb-2 border-b border-[#18123b]/[0.08]">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl rounded-3xl px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap">
+          <div className="bg-white/85 border border-[#18123b]/[0.1] backdrop-blur-xl rounded-3xl px-4 py-2.5 flex items-center justify-between gap-2 flex-wrap">
             <div className="flex items-center gap-1.5 sm:gap-3">
               {/* 1. Replay 15s */}
               <button
                 onClick={() => skipTime(-15)}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] flex items-center gap-0.5 text-xs font-medium transition-colors"
                 title="Reculer de 15 s"
               >
                 <RotateCcw className="w-4 h-4" /><span className="text-[10px]">15</span>
@@ -1055,7 +1055,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {/* 2. Play / Pause */}
               <button
                 onClick={togglePlay}
-                className="p-2 rounded-xl hover:bg-white/10 text-white text-lg transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#18123b] text-lg transition-colors"
                 title={playing ? "Pause" : "Lecture"}
               >
                 {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" filled />}
@@ -1064,19 +1064,19 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {/* 3. Forward 30s */}
               <button
                 onClick={() => skipTime(30)}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 flex items-center gap-0.5 text-xs font-medium transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] flex items-center gap-0.5 text-xs font-medium transition-colors"
                 title="Avancer de 30 s"
               >
                 <span className="text-[10px]">30</span><RotateCw className="w-4 h-4" />
               </button>
 
-              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
+              <div className="h-5 w-[1px] bg-[#18123b]/[0.06] mx-1"></div>
 
               {/* 4. Speed 1X */}
               <select
                 value={playbackSpeed}
                 onChange={(e) => setSpeed(Number(e.target.value))}
-                className="bg-white/5 border border-white/10 rounded-xl px-2 py-1.5 text-xs font-semibold text-slate-200 focus:outline-none cursor-pointer"
+                className="bg-white border border-[#18123b]/15 rounded-xl px-2 py-1.5 text-xs font-semibold text-[#18123b] focus:outline-none cursor-pointer"
                 title="Vitesse de lecture"
               >
                 <option value="0.5">0.5x</option>
@@ -1087,7 +1087,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <option value="2">2X</option>
               </select>
 
-              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
+              <div className="h-5 w-[1px] bg-[#18123b]/[0.06] mx-1"></div>
 
               {/* 5. Add segment */}
               <button
@@ -1108,7 +1108,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     ].sort((a, b) => a.start - b.start),
                   }));
                 }}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] transition-colors"
                 title="Ajouter un segment"
               >
                 <MessageSquarePlus className="w-4 h-4" />
@@ -1122,7 +1122,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   }
                 }}
                 disabled={!activeSegment}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] disabled:opacity-40 transition-colors"
                 title="Couper / diviser le segment"
               >
                 <Scissors className="w-4 h-4" />
@@ -1133,7 +1133,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 onClick={() => {
                   if (activeSegment) setEditingId(activeSegment.id);
                 }}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 border-b-2 border-fuchsia-400 transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] border-b-2 border-fuchsia-400 transition-colors"
                 title="Outil de sélection, d'édition et de surlignage"
               >
                 <Highlighter className="w-4 h-4" />
@@ -1142,33 +1142,33 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {/* 7b. Insights — translation / summary / stats */}
               <button
                 onClick={() => openInsights("translate")}
-                className={`p-2 rounded-xl hover:bg-white/10 transition-colors ${insightsOpen && insightsTab === "translate" ? "text-indigo-400" : "text-slate-300"}`}
+                className={`p-2 rounded-xl hover:bg-[#18123b]/[0.06] transition-colors ${insightsOpen && insightsTab === "translate" ? "text-[#6415f5]" : "text-[#4b4763]"}`}
                 title="Traduction du transcript"
               >
                 <Languages className="w-4 h-4" />
               </button>
               <button
                 onClick={() => openInsights("summary")}
-                className={`p-2 rounded-xl hover:bg-white/10 transition-colors ${insightsOpen && insightsTab === "summary" ? "text-amber-400" : "text-slate-300"}`}
+                className={`p-2 rounded-xl hover:bg-[#18123b]/[0.06] transition-colors ${insightsOpen && insightsTab === "summary" ? "text-amber-600" : "text-[#4b4763]"}`}
                 title="Résumé IA"
               >
                 <Sparkles className="w-4 h-4" />
               </button>
               <button
                 onClick={() => openInsights("stats")}
-                className={`p-2 rounded-xl hover:bg-white/10 transition-colors ${insightsOpen && insightsTab === "stats" ? "text-sky-400" : "text-slate-300"}`}
+                className={`p-2 rounded-xl hover:bg-[#18123b]/[0.06] transition-colors ${insightsOpen && insightsTab === "stats" ? "text-sky-400" : "text-[#4b4763]"}`}
                 title="Statistiques du dialogue"
               >
                 <Chart className="w-4 h-4" />
               </button>
 
-              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
+              <div className="h-5 w-[1px] bg-[#18123b]/[0.06] mx-1"></div>
 
               {/* 8. Undo */}
               <button
                 onClick={undo}
                 disabled={historyIndex <= 0}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] disabled:opacity-40 transition-colors"
                 title="Annuler (Undo)"
               >
                 <CornerUpLeft className="w-4 h-4" />
@@ -1178,7 +1178,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={redo}
                 disabled={historyIndex >= history.length - 1}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 disabled:opacity-40 transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] disabled:opacity-40 transition-colors"
                 title="Rétablir (Redo)"
               >
                 <CornerUpRight className="w-4 h-4" />
@@ -1186,22 +1186,22 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
+              <div className="h-5 w-[1px] bg-[#18123b]/[0.06] mx-1"></div>
 
               {/* 10. Download / Export */}
               <ExportMenu sessionId={session.id} filename={session.filename} />
 
               {/* 11. Saved status */}
-              <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${saveState === "error" ? "bg-red-500/10 text-red-400 border-red-500/30" : saveState === "saving" ? "bg-amber-500/10 text-amber-400 border-amber-500/30" : "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"}`}>
+              <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${saveState === "error" ? "bg-red-500/10 text-red-600 border-red-500/30" : saveState === "saving" ? "bg-amber-500/10 text-amber-600 border-amber-500/30" : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"}`}>
                 {saveState === "saving" ? "Saving…" : saveState === "error" ? "Error" : "Saved"}
               </span>
 
-              <div className="h-5 w-[1px] bg-white/10 mx-1"></div>
+              <div className="h-5 w-[1px] bg-[#18123b]/[0.06] mx-1"></div>
 
               {/* 12. Search */}
               <button
                 onClick={() => setShowSearch(!showSearch)}
-                className="p-2 rounded-xl hover:bg-white/10 text-slate-300 transition-colors"
+                className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] transition-colors"
                 title="Rechercher dans le texte"
               >
                 <Search className="w-4 h-4" />
@@ -1211,18 +1211,18 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
           {/* Search bar expandable */}
           {showSearch && (
-            <div className="mt-2 bg-white/[0.04] border border-white/[0.08] rounded-2xl p-3 flex items-center gap-2">
-              <Search className="w-4 h-4 text-slate-400" />
+            <div className="mt-2 bg-white/75 border border-[#18123b]/[0.1] rounded-2xl p-3 flex items-center gap-2">
+              <Search className="w-4 h-4 text-[#4b4763]" />
               <input
                 type="text"
                 placeholder="Rechercher dans le texte..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full text-sm outline-none bg-transparent text-slate-100"
+                className="w-full text-sm outline-none bg-transparent text-[#18123b]"
                 autoFocus
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="text-xs text-slate-400 hover:text-slate-600">
+                <button onClick={() => setSearchQuery("")} className="text-xs text-[#4b4763] hover:text-slate-600">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}
@@ -1248,20 +1248,20 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
           <section>
             {segments.length === 0 ? (
-              <div className="bg-white/[0.03] border border-white/[0.08] rounded-3xl p-10 text-center text-slate-400">
+              <div className="bg-white/65 border border-[#18123b]/[0.1] rounded-3xl p-10 text-center text-[#4b4763]">
                 No transcript available for this session yet.
               </div>
             ) : activeLang && translations[activeLang] ? (
               <div className="pb-10">
-                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-2">
+                <div className="bg-white rounded-[28px] border border-slate-200 shadow-xl shadow-[#18123b]/10 p-6 sm:p-10 space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100">
-                    <h3 className="font-black text-slate-800 text-sm flex items-center gap-2">
-                      <Languages className="w-4 h-4 text-indigo-500" />
+                    <h3 className="font-black text-[#18123b] text-sm flex items-center gap-2">
+                      <Languages className="w-4 h-4 text-[#6415f5]" />
                       Traduction — {LANG_NAMES[activeLang] || activeLang}
                     </h3>
                     <button
                       onClick={() => setActiveLang(null)}
-                      className="text-[11px] font-bold text-indigo-500 hover:underline"
+                      className="text-[11px] font-bold text-[#6415f5] hover:underline"
                     >
                       Revenir à l'original
                     </button>
@@ -1279,12 +1279,12 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                             <span className="font-bold text-[15px]" style={{ color }}>
                               {spk?.name || "—"}
                             </span>
-                            <span className="text-[12px] text-slate-400 tabular-nums opacity-70">
+                            <span className="text-[12px] text-[#4b4763] tabular-nums opacity-70">
                               {formatTime(seg.start || 0)}
                             </span>
                           </div>
                         )}
-                        <p dir="auto" className="text-[19px] leading-[2] text-slate-800 select-text">
+                        <p dir="auto" className="text-[19px] leading-[2] text-[#18123b] select-text">
                           {tr.text}
                         </p>
                       </div>
@@ -1295,7 +1295,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             ) : (
 
               <div className="pb-10">
-                <div className="bg-white rounded-[28px] border border-slate-200 shadow-2xl shadow-black/50 p-6 sm:p-10 space-y-1">
+                <div className="bg-white rounded-[28px] border border-slate-200 shadow-xl shadow-[#18123b]/10 p-6 sm:p-10 space-y-1">
                   {segments.map((seg, index) => (
                     <Segment
                       key={seg.id}
@@ -1329,7 +1329,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     />
                   ))}
                 </div>
-                <p className="text-[11px] text-slate-400 text-center mt-4">
+                <p className="text-[11px] text-[#4b4763] text-center mt-4">
                   Entrée = valider le texte (rien ne bouge) · ✂ = couper à la sélection
                   (le texte après descend avec son propre temps) · Alt+↑/↓ = envoyer au paragraphe voisin ·
                   Ctrl+Z / Ctrl+Y = annuler / rétablir
@@ -1346,39 +1346,39 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           insightsOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="h-full bg-slate-950/95 backdrop-blur-2xl border-s border-white/10 p-5 overflow-y-auto flex flex-col">
+        <div className="h-full bg-white/95 backdrop-blur-2xl border-s border-[#18123b]/15 p-5 overflow-y-auto flex flex-col">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-black text-sm uppercase tracking-widest text-slate-300">
+            <h3 className="font-black text-sm uppercase tracking-widest text-[#4b4763]">
               {insightsTab === "translate" ? "Traduction IA" : insightsTab === "summary" ? "Résumé IA" : "Statistiques"}
             </h3>
             <button
               onClick={() => setInsightsOpen(false)}
-              className="p-2 rounded-xl hover:bg-white/10 text-slate-400 transition"
+              className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] transition"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
           {insightsError && (
-            <div className="mb-3 text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+            <div className="mb-3 text-xs text-red-600 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
               {insightsError}
             </div>
           )}
 
           {insightsTab === "translate" && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-[#4b4763] leading-relaxed">
                 Traduisez tout le dialogue vers une autre langue avec l'IA (Llama 3.3 · Groq).
                 Le texte original reste intact — vous basculez à tout moment.
               </p>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1.5">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[#4b4763] mb-1.5">
                   Langue cible
                 </label>
                 <select
                   value={translateTarget}
                   onChange={(e) => setTranslateTarget(e.target.value)}
-                  className="w-full rounded-2xl border border-white/10 bg-white/5 px-3.5 py-3 text-sm font-bold text-slate-200 focus:outline-none cursor-pointer"
+                  className="w-full rounded-2xl border border-[#18123b]/15 bg-white/5 px-3.5 py-3 text-sm font-bold text-[#18123b] focus:outline-none cursor-pointer"
                 >
                   {Object.entries(LANG_NAMES).map(([k, v]) => (
                     <option key={k} value={k}>{v}</option>
@@ -1388,22 +1388,22 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={() => startTranslation(translateTarget)}
                 disabled={translateJob?.status === "running"}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-black text-sm hover:brightness-110 disabled:opacity-40 transition shadow-lg shadow-indigo-950/50"
+                className="w-full py-3.5 rounded-2xl bg-[#6415f5] text-white font-bold text-sm hover:bg-[#5311cf] disabled:opacity-40 transition shadow-lg shadow-indigo-950/50"
               >
                 {translateJob?.status === "running" ? "Traduction en cours…" : "Traduire maintenant"}
               </button>
 
               {translateJob?.status === "running" && (
                 <div>
-                  <div className="flex justify-between text-xs text-slate-400 mb-1.5">
+                  <div className="flex justify-between text-xs text-[#4b4763] mb-1.5">
                     <span>Traduction…</span>
-                    <span className="text-indigo-400 font-bold">
+                    <span className="text-[#6415f5] font-bold">
                       {Math.round(((translateJob.progress || 0) / (segments.length || 1)) * 100)}%
                     </span>
                   </div>
-                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                  <div className="h-2 rounded-full bg-[#18123b]/10 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-blue-500 to-violet-500 transition-all duration-300"
+                      className="h-full bg-[#6415f5] transition-all duration-300"
                       style={{ width: `${Math.round(((translateJob.progress || 0) / (segments.length || 1)) * 100)}%` }}
                     />
                   </div>
@@ -1411,14 +1411,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               )}
 
               {translateJob?.status === "error" && (
-                <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                <div className="text-xs text-red-600 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
                   {translateJob.error}
                 </div>
               )}
 
               {Object.keys(translations).length > 0 && (
                 <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#4b4763]">
                     Traductions prêtes — cliquez pour afficher
                   </p>
                   {Object.entries(translations).map(([lang, arr]) => (
@@ -1427,11 +1427,11 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onClick={() => setActiveLang(activeLang === lang ? null : lang)}
                       className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
                         activeLang === lang
-                          ? "border-indigo-500/50 bg-indigo-500/10"
-                          : "border-white/10 bg-white/[0.03] hover:border-indigo-500/40"
+                          ? "border-[#6415f5]/40 bg-[#6415f5]/10"
+                          : "border-[#18123b]/15 bg-white/65 hover:border-[#6415f5]/40"
                       }`}
                     >
-                      <span className="text-sm font-bold text-slate-200">
+                      <span className="text-sm font-bold text-[#18123b]">
                         {LANG_NAMES[lang] || lang} · {arr.length} segments
                       </span>
                       <button
@@ -1442,14 +1442,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                             arr.map((t) => t.text).join("\n")
                           );
                         }}
-                        className="text-[10px] font-black text-indigo-400 hover:underline"
+                        className="text-[10px] font-black text-[#6415f5] hover:underline"
                       >
                         .txt
                       </button>
                     </div>
                   ))}
                   {activeLang && (
-                    <p className="text-[11px] text-emerald-400">
+                    <p className="text-[11px] text-emerald-600">
                       Affichage actuel : {LANG_NAMES[activeLang] || activeLang} — « Revenir à l'original » en haut du document.
                     </p>
                   )}
@@ -1460,13 +1460,13 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
           {insightsTab === "summary" && (
             <div className="space-y-4">
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-[#4b4763] leading-relaxed">
                 L'IA lit tout le dialogue et produit un résumé structuré : points clés puis actions.
               </p>
               <button
                 onClick={startSummary}
                 disabled={summaryJob?.status === "running"}
-                className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-black text-sm hover:brightness-110 disabled:opacity-40 transition shadow-lg"
+                className="w-full py-3.5 rounded-2xl bg-[#6415f5] text-white font-bold text-sm hover:bg-[#5311cf] disabled:opacity-40 transition shadow-lg"
               >
                 {summaryJob?.status === "running"
                   ? "Analyse du dialogue…"
@@ -1480,14 +1480,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               )}
 
               {summaryJob?.status === "error" && (
-                <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
+                <div className="text-xs text-red-600 bg-red-500/10 border border-red-500/30 rounded-xl p-3">
                   {summaryJob.error}
                 </div>
               )}
 
               {summary?.text && (
                 <>
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
+                  <div className="rounded-2xl border border-[#18123b]/15 bg-white/65 p-4 text-sm text-[#18123b] whitespace-pre-wrap leading-relaxed">
                     {summary.text}
                   </div>
                   <button
@@ -1497,7 +1497,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                         summary.text
                       )
                     }
-                    className="text-[11px] font-black text-indigo-400 hover:underline"
+                    className="text-[11px] font-black text-[#6415f5] hover:underline"
                   >
                     Télécharger le résumé (.txt)
                   </button>
@@ -1509,9 +1509,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           {insightsTab === "stats" && (
             <div className="space-y-4">
               {!stats ? (
-                <p className="text-xs text-slate-500">Chargement…</p>
+                <p className="text-xs text-[#4b4763]">Chargement…</p>
               ) : stats.error ? (
-                <p className="text-xs text-red-400">Impossible de charger les statistiques.</p>
+                <p className="text-xs text-red-600">Impossible de charger les statistiques.</p>
               ) : (
                 <>
                   <div className="grid grid-cols-3 gap-2">
@@ -1520,27 +1520,27 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       { label: "Mots", value: String(stats.words ?? 0) },
                       { label: "Segments", value: String(stats.segments ?? 0) },
                     ].map((c) => (
-                      <div key={c.label} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-center">
+                      <div key={c.label} className="rounded-2xl border border-[#18123b]/15 bg-white/65 p-3 text-center">
                         <p className="text-lg font-black text-white">{c.value}</p>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500 mt-0.5">{c.label}</p>
+                        <p className="text-[9px] font-bold uppercase tracking-widest text-[#4b4763] mt-0.5">{c.label}</p>
                       </div>
                     ))}
                   </div>
                   <div className="space-y-2.5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Temps de parole</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#4b4763]">Temps de parole</p>
                     {(stats.speakers || []).map((s) => {
                       const maxS = Math.max(...(stats.speakers || []).map((x) => x.seconds || 1), 1);
                       return (
-                        <div key={s.name} className="rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                        <div key={s.name} className="rounded-2xl border border-[#18123b]/15 bg-white/65 p-3">
                           <div className="flex items-center justify-between mb-1.5">
-                            <span className="text-sm font-bold text-slate-200">{s.name}</span>
-                            <span className="text-xs font-bold text-indigo-400 tabular-nums">
+                            <span className="text-sm font-bold text-[#18123b]">{s.name}</span>
+                            <span className="text-xs font-bold text-[#6415f5] tabular-nums">
                               {formatTime(s.seconds)} · {s.words} mots
                             </span>
                           </div>
-                          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                          <div className="h-1.5 rounded-full bg-[#18123b]/10 overflow-hidden">
                             <div
-                              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
+                              className="h-full rounded-full bg-[#6415f5]"
                               style={{ width: `${Math.round(((s.seconds || 0) / maxS) * 100)}%` }}
                             />
                           </div>

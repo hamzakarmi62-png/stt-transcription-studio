@@ -59,7 +59,7 @@ export default function PlayerPanel({
       {floating ? (
         <button
           onClick={() => onMode("docked")}
-          className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10"
+          className="text-xs px-2 py-1 rounded-lg border border-[#18123b]/20 text-[#4b4763] hover:bg-[#18123b]/[0.06]"
           title="Dock player"
         >
           Dock
@@ -67,7 +67,7 @@ export default function PlayerPanel({
       ) : (
         <button
           onClick={() => onMode("floating")}
-          className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10"
+          className="text-xs px-2 py-1 rounded-lg border border-[#18123b]/20 text-[#4b4763] hover:bg-[#18123b]/[0.06]"
           title="Undock as floating player"
         >
           Float
@@ -75,7 +75,7 @@ export default function PlayerPanel({
       )}
       <button
         onClick={() => onMode("hidden")}
-        className="text-xs px-2 py-1 rounded-lg border border-white/10 text-slate-300 hover:bg-white/10"
+        className="text-xs px-2 py-1 rounded-lg border border-[#18123b]/20 text-[#4b4763] hover:bg-[#18123b]/[0.06]"
         title="Hide player"
       >
         Hide
@@ -91,8 +91,8 @@ export default function PlayerPanel({
       }`}
       title={floating ? "Drag to move player" : filename}
     >
-      <span className="text-xs font-medium text-slate-400 truncate min-w-0">{filename}</span>
-      <span className="text-[10px] uppercase tracking-wide text-slate-400">
+      <span className="text-xs font-medium text-[#4b4763] truncate min-w-0">{filename}</span>
+      <span className="text-[10px] uppercase tracking-wide text-[#4b4763]">
         {isVideo ? "video" : "audio"}
       </span>
       <div className="ml-auto">{toolbar}</div>
@@ -116,7 +116,7 @@ export default function PlayerPanel({
     return (
       <div
         ref={panelRef}
-        className="fixed z-50 w-[400px] max-w-[calc(100vw-16px)] bg-slate-900/95 backdrop-blur-2xl rounded-2xl shadow-2xl shadow-black/60 border border-white/10"
+        className="fixed z-50 w-[400px] max-w-[calc(100vw-16px)] bg-white/95 backdrop-blur-2xl rounded-2xl shadow-xl shadow-[#18123b]/20 border border-[#18123b]/15"
         style={{ left: pos.x, top: pos.y }}
       >
         {header}
@@ -126,7 +126,7 @@ export default function PlayerPanel({
   }
 
   return (
-    <div className="bg-slate-900/80 backdrop-blur-2xl rounded-2xl border border-white/10 shadow-xl shadow-black/30">
+    <div className="bg-white/95 backdrop-blur-2xl rounded-2xl border border-[#18123b]/15 shadow-lg shadow-[#18123b]/15">
       {header}
       {media}
     </div>
