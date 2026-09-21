@@ -1,77 +1,15 @@
-"""Post-transcription insights: translation, AI summary, speaking stats.
+"""Rewrite _run_translate/_run_summary with char-capped batching + map-reduce.
+The helpers (_fmt/_get/_save_settings/_parse_numbered) already exist above
+the replaced region and are left untouched."""
+p = "backend/app/routers/insights.py"
+src = open(p, encoding="utf-8").read()
 
-Strictly additive layer on top of finished sessions — segments produced by
-the transcription pipeline are only READ here, never rewritten.
-"""
+start_marker = "def _run_translate(session_id: str, language: str) -> None:"
+end_marker = "def start_translation(session_id: str, req: TranslateRequest, request: Request = None):"
+i1 = src.index(start_marker)
+i2 = src.index(end_marker)
 
-import re
-import threading
-
-from fastapi import APIRouter, HTTPException, Request
-from pydantic import BaseModel
-
-from .. import db
-from ..services import groq_llm
-from .auth import ensure_session_owner, user_id_from_request
-
-router = APIRouter(prefix="/api/sessions/{session_id}")
-
-LANGS = {
-    "fr": "Français",
-    "en": "English",
-    "ar": "العربية",
-    "es": "Español",
-    "de": "Deutsch",
-    "tr": "Türkçe",
-}
-
-BATCH = 25
-
-
-class TranslateRequest(BaseModel):
-    language: str
-
-
-def _fmt(t) -> str:
-    try:
-        t = float(t)
-        m, s = divmod(int(t), 60)
-        h, m = divmod(m, 60)
-        return f"{h:02d}:{m:02d}:{s:02d}" if h else f"{m:02d}:{s:02d}"
-    except Exception:
-        return "00:00"
-
-
-def _get(session_id: str, request: Request = None):
-    session = db.get_session(session_id)
-    if not session:
-        raise HTTPException(404, "Session not found")
-    # request is None only for internal background threads, which run on
-    # behalf of the owner who already passed the HTTP check.
-    if request is not None:
-        ensure_session_owner(session, user_id_from_request(request))
-    return session
-
-
-def _save_settings(session_id: str, settings_map: dict) -> None:
-    db.update_session(session_id, settings=settings_map)
-
-
-def _parse_numbered(content: str, count: int) -> dict:
-    out = {}
-    for line in content.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        m = re.match(r"^(\d{1,4})[\).\-\s:]+(.*)$", line)
-        if m:
-            n = int(m.group(1))
-            if 1 <= n <= count:
-                out[n] = m.group(2).strip()
-    return out
-
-
-# Groq rejects oversized request bodies (413): cap every request's text and
+new_block = '''# Groq rejects oversized request bodies (413): cap every request's text and
 # split oversized batches so long transcripts translate/summarize reliably.
 MAX_CHUNK_CHARS = 8000
 SUMMARY_CHUNK_CHARS = 12000
@@ -99,7 +37,7 @@ def _run_translate(session_id: str, language: str) -> None:
         out = []
         done = 0
         for chunk in _chunk_texts(texts):
-            numbered = "\n".join(f"{j + 1}. {t}" for j, t in enumerate(chunk) if t)
+            numbered = "\\n".join(f"{j + 1}. {t}" for j, t in enumerate(chunk) if t)
             content = groq_llm.chat(
                 [
                     {
@@ -113,7 +51,7 @@ def _run_translate(session_id: str, language: str) -> None:
                     },
                     {
                         "role": "user",
-                        "content": f"Target language: {LANGS.get(language, language)}\n\n{numbered}",
+                        "content": f"Target language: {LANGS.get(language, language)}\\n\\n{numbered}",
                     },
                 ],
                 temperature=0.15,
@@ -197,18 +135,18 @@ def _run_summary(session_id: str) -> None:
             cur.append(line)
             cur_len += len(line) + 1
             if cur_len >= SUMMARY_CHUNK_CHARS:
-                chunks.append("\n".join(cur))
+                chunks.append("\\n".join(cur))
                 cur, cur_len = [], 0
         if cur:
-            chunks.append("\n".join(cur))
+            chunks.append("\\n".join(cur))
 
         if len(chunks) <= 1:
-            content = _summarize_body("\n".join(lines), partial=False).strip()
+            content = _summarize_body("\\n".join(lines), partial=False).strip()
         else:
             partials = []
             for idx, ch in enumerate(chunks):
                 partials.append(
-                    "\u2014 Partie " + str(idx + 1) + "/" + str(len(chunks)) + " \u2014\n"
+                    "\\u2014 Partie " + str(idx + 1) + "/" + str(len(chunks)) + " \\u2014\\n"
                     + _summarize_body(ch, partial=True).strip()
                 )
                 sm = dict(_get(session_id).get("settings") or {})
@@ -216,12 +154,12 @@ def _run_summary(session_id: str) -> None:
                 job["progress"] = str(idx + 1) + "/" + str(len(chunks))
                 sm["summary_job"] = job
                 _save_settings(session_id, sm)
-            combined = "\n\n".join(partials)
+            combined = "\\n\\n".join(partials)
             try:
                 content = _summarize_body(
                     "Voici les résumés partiels d'une longue transcription. "
                     "Fusionne-les en UN résumé global cohérent (points clés puis "
-                    "Actions), sans répéter les parties.\n\n" + combined,
+                    "Actions), sans répéter les parties.\\n\\n" + combined,
                     partial=False,
                 ).strip()
             except Exception:
@@ -244,95 +182,8 @@ def _run_summary(session_id: str) -> None:
             pass
 
 
+'''
 
-def start_translation(session_id: str, req: TranslateRequest, request: Request = None):
-    if req.language not in LANGS:
-        raise HTTPException(400, "Langue non supportée")
-    session = _get(session_id, request)
-    if not (session.get("segments") or []):
-        raise HTTPException(400, "Aucun texte à traduire — transcrivez d'abord")
-    if not groq_llm.available():
-        raise HTTPException(503, "Clé GROQ absente côté serveur")
-
-    sm = dict(session.get("settings") or {})
-    job = dict(sm.get("translate_job") or {})
-    if job.get("status") == "running":
-        return {"ok": True, "job": job}
-
-    tr = dict(sm.get("translations") or {})
-    tr.pop(req.language, None)
-    sm["translations"] = tr
-    job = {"language": req.language, "status": "running", "progress": 0}
-    sm["translate_job"] = job
-    _save_settings(session_id, sm)
-    threading.Thread(target=_run_translate, args=(session_id, req.language), daemon=True).start()
-    return {"ok": True, "job": job}
-
-
-@router.get("/translate/status")
-def translation_status(session_id: str, request: Request = None):
-    session = _get(session_id, request)
-    sm = dict(session.get("settings") or {})
-    return {
-        "job": sm.get("translate_job") or {"status": "idle"},
-        "translations": sm.get("translations") or {},
-    }
-
-
-@router.post("/summary")
-def start_summary(session_id: str, request: Request = None):
-    session = _get(session_id, request)
-    if not (session.get("segments") or []):
-        raise HTTPException(400, "Aucun texte à résumer — transcrivez d'abord")
-    if not groq_llm.available():
-        raise HTTPException(503, "Clé GROQ absente côté serveur")
-
-    sm = dict(session.get("settings") or {})
-    job = dict(sm.get("summary_job") or {})
-    if job.get("status") == "running":
-        return {"ok": True, "job": job}
-    sm["summary_job"] = {"status": "running"}
-    _save_settings(session_id, sm)
-    threading.Thread(target=_run_summary, args=(session_id,), daemon=True).start()
-    return {"ok": True, "job": sm["summary_job"]}
-
-
-@router.get("/summary/status")
-def summary_status(session_id: str, request: Request = None):
-    session = _get(session_id, request)
-    sm = dict(session.get("settings") or {})
-    return {
-        "job": sm.get("summary_job") or {"status": "idle"},
-        "summary": sm.get("summary"),
-    }
-
-
-@router.get("/stats")
-def speaking_stats(session_id: str, request: Request = None):
-    session = _get(session_id, request)
-    segments = session.get("segments") or []
-    speakers = {s.get("id"): s.get("name", "?") for s in (session.get("speakers") or [])}
-    per = {}
-    words = 0
-    duration = 0.0
-    for s in segments:
-        try:
-            dur = max(0.0, float(s.get("end", 0)) - float(s.get("start", 0)))
-        except Exception:
-            dur = 0.0
-        who = speakers.get(s.get("speaker"), "—")
-        slot = per.setdefault(who, {"seconds": 0.0, "words": 0, "segments": 0})
-        slot["seconds"] += dur
-        slot["words"] += len(str(s.get("text") or "").split())
-        slot["segments"] += 1
-        words += len(str(s.get("text") or "").split())
-        duration = max(duration, float(s.get("end", 0) or 0))
-    return {
-        "duration": duration,
-        "segments": len(segments),
-        "words": words,
-        "speakers": [
-            {"name": name, "seconds": round(v["seconds"], 1), "words": v["words"], "segments": v["segments"]}
-            for name, v in sorted(per.items(), key=lambda kv: -kv[1]["seconds"])
-        ],
-    }
+src = src[:i1] + new_block + "\n" + src[i2:]
+open(p, "w", encoding="utf-8", newline="").write(src)
+print("rewritten OK")
