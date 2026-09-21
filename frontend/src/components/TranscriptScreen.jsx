@@ -1131,7 +1131,11 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {/* 7. Highlight tool */}
               <button
                 onClick={() => {
-                  if (activeSegment) setEditingId(activeSegment.id);
+                  const target = activeSegment || filteredSegments[0];
+                  if (target) {
+                    setEditingId(target.id);
+                    setEditingCaret(null);
+                  }
                 }}
                 className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] border-b-2 border-fuchsia-400 transition-colors"
                 title="Outil de sélection, d'édition et de surlignage"
@@ -1296,12 +1300,12 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
               <div className="pb-10">
                 <div className="bg-white rounded-[28px] border border-slate-200 shadow-xl shadow-[#18123b]/10 p-6 sm:p-10 space-y-1">
-                  {segments.map((seg, index) => (
+                  {filteredSegments.map((seg, index) => (
                     <Segment
                       key={seg.id}
                       segment={seg}
                       speaker={speakerById[seg.speaker]}
-                      showMark={index === 0 || segments[index - 1]?.speaker !== seg.speaker}
+                      showMark={index === 0 || filteredSegments[index - 1]?.speaker !== seg.speaker}
                       isActive={activeSegment?.id === seg.id}
                       activeWordKey={activeWordKey}
                       editingWordKey={editingWordKey}
@@ -1521,7 +1525,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       { label: "Segments", value: String(stats.segments ?? 0) },
                     ].map((c) => (
                       <div key={c.label} className="rounded-2xl border border-[#18123b]/15 bg-white/65 p-3 text-center">
-                        <p className="text-lg font-black text-white">{c.value}</p>
+                        <p className="text-lg font-black text-[#18123b]">{c.value}</p>
                         <p className="text-[9px] font-bold uppercase tracking-widest text-[#4b4763] mt-0.5">{c.label}</p>
                       </div>
                     ))}
