@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
 import { formatTime, nextColor, uid } from "../utils.js";
 import Segment from "./Segment.jsx";
+import ExportMenu from "./ExportMenu.jsx";
 import ShareDialog, { ShareIcon } from "./ShareDialog.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
@@ -1226,6 +1227,11 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
+              <div className="h-5 w-[1px] bg-[#18123b]/[0.06] mx-1"></div>
+
+              {/* 10. Download / Export — next to the playback controls */}
+              <ExportMenu sessionId={session.id} filename={session.filename} />
+
               {/* 11. Saved status */}
               <span className={`text-xs px-2.5 py-1 rounded-full font-medium border ${saveState === "error" ? "bg-red-500/10 text-red-600 border-red-500/30" : saveState === "saving" ? "bg-amber-500/10 text-amber-600 border-amber-500/30" : "bg-emerald-500/10 text-emerald-600 border-emerald-500/30"}`}>
                 {saveState === "saving" ? "Saving…" : saveState === "error" ? "Error" : "Saved"}
