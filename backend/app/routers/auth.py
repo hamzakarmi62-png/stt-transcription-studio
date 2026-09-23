@@ -64,6 +64,43 @@ def verify_token(token: str) -> str | None:
         return None
 
 
+# ── Share tokens ──────────────────────────────────────────────────────────────
+# A share link must never grant account-wide access (the login token does), so
+# sharing uses its own scope: an HMAC bound to exactly one session id, with no
+# expiry — the recipient keeps access as long as the owner keeps the session.
+
+
+def make_share_token(session_id: str) -> str:
+    payload = f"share.{session_id}"
+    return f"{payload}.{_sign(payload)}"
+
+
+def verify_share_token(token: str, session_id: str) -> bool:
+    """True only when `token` is the share capability for this exact session."""
+    try:
+        scope, sid, sig = token.strip().split(".")
+        if scope != "share" or sid != session_id:
+            return False
+        return hmac.compare_digest(sig, _sign(f"share.{sid}"))
+    except Exception:
+        return False
+
+
+def share_token_from_request(request) -> str | None:
+    """Share capability from ?t= / ?token= (links) or a bearer header."""
+    auth = request.headers.get("authorization") or request.headers.get("Authorization") or ""
+    if auth.lower().startswith("bearer "):
+        return auth[7:].strip() or None
+    for param in ("t", "token"):
+        try:
+            value = request.query_params.get(param)
+        except Exception:
+            value = None
+        if value:
+            return value.strip()
+    return None
+
+
 def user_id_from_request(request) -> str | None:
     """Read the bearer token from a request; None when absent/invalid.
 

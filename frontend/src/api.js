@@ -230,6 +230,9 @@ export const api = {
     return `${BASE}/sessions/${id}/export?${params.toString()}`;
   },
 
+  // Owner action: mint the stable share link for one transcript.
+  createShareLink: (id) => request(`${BASE}/sessions/${id}/share`, { method: "POST" }),
+
   // <audio> tags cannot send headers, so the token rides in the query string.
   audioUrl: (id) => {
     const token = getAuthToken();

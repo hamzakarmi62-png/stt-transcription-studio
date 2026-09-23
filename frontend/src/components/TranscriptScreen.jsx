@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import { formatTime, nextColor, uid } from "../utils.js";
 import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
+import ShareDialog, { ShareIcon } from "./ShareDialog.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
 import { ArrowLeft, Play, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause, Languages, Sparkles, Chart } from "./Icons.jsx";
@@ -92,6 +93,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   }, []);
   const [saveState, setSaveState] = useState("saved");
   const [playerMode, setPlayerMode] = useState("docked");
+  const [shareOpen, setShareOpen] = useState(false);
   const [highlightOffset, setHighlightOffset] = useState(() => {
     try {
       const v = parseFloat(localStorage.getItem("zendocs:syncOffset"));
@@ -1056,11 +1058,24 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             >
               Save
             </button>
+            <button
+              onClick={() => setShareOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6415f5]/[0.06] border border-[#6415f5]/25 text-[#6415f5] text-sm font-bold hover:bg-[#6415f5]/[0.12] transition"
+              title="Partager ce transcript avec un lien"
+            >
+              <ShareIcon className="w-4 h-4" /> Share transcript
+            </button>
             <ExportMenu sessionId={session.id} filename={session.filename} />
             <UserMenu user={user} onLogout={onLogout} />
           </div>
         </div>
       </header>
+      <ShareDialog
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        sessionId={session.id}
+        filename={session.filename}
+      />
 
       {/* Rich Toolbar matching user's reference image */}
       <div className="sticky top-0 z-30 bg-white/85 backdrop-blur-xl pt-2 pb-2 border-b border-[#18123b]/[0.08]">

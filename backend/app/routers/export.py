@@ -66,6 +66,7 @@ def _export_json(session, speakers, include_speakers, include_timestamps):
     segment with word-level timings — everything a person or another app
     needs to consume the transcript without this software."""
     speaker_names = {s.get("id"): s.get("name") for s in speakers}
+    speaker_colors = {s.get("id"): s.get("color") for s in speakers}
 
     segs_out = []
     speaker_stats: dict[str, dict] = {}
@@ -88,6 +89,7 @@ def _export_json(session, speakers, include_speakers, include_timestamps):
         if include_speakers and s.get("speaker"):
             item["speaker_id"] = s.get("speaker")
             item["speaker"] = speaker_names.get(s.get("speaker"), s.get("speaker"))
+            item["speaker_color"] = speaker_colors.get(s.get("speaker"), "#6415f5")
             st = speaker_stats.setdefault(
                 s.get("speaker"), {"segments": 0, "words": 0, "speaking_time": 0.0}
             )
@@ -212,10 +214,14 @@ def export_session(
         body = content.encode("utf-8")
     elif format == "docx":
         body = export_service.export_docx(segments, speakers, include_speakers, include_timestamps)
-    elif format == "json":
-        body = _export_json(session, speakers, include_speakers, include_timestamps)
-    elif format == "xml":
-        body = _export_xml(session, speakers, include_speakers, include_timestamps)
+    elif format in ("json", "xml"):
+        # Data formats are share-grade: ALWAYS full precision — every timestamp
+        # and every speaker field ride along regardless of the document options,
+        # so a recipient never receives an incomplete structure.
+        if format == "json":
+            body = _export_json(session, speakers, True, True)
+        else:
+            body = _export_xml(session, speakers, True, True)
     else:
         body = export_service.export_pdf(segments, speakers, include_speakers, include_timestamps)
 

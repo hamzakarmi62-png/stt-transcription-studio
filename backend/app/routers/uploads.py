@@ -13,7 +13,7 @@ from .. import db
 from ..config import settings
 from ..services import storage
 from ..services.audio import extract_audio_track
-from .auth import ensure_session_owner, user_id_from_request
+from .auth import ensure_session_owner, share_token_from_request, user_id_from_request, verify_share_token
 
 router = APIRouter(prefix="/api")
 
@@ -312,7 +312,11 @@ def get_audio(session_id: str, request: Request):
     session = db.get_session(session_id)
     if not session:
         raise HTTPException(404, "Session not found")
-    ensure_session_owner(session, user_id_from_request(request))
+    # Owner token OR a valid share link capability: shared transcripts play
+    # their media without exposing the account.
+    share_t = share_token_from_request(request)
+    if not (share_t and verify_share_token(share_t, session_id)):
+        ensure_session_owner(session, user_id_from_request(request))
 
     # Redirect to the cloud copy only once it actually exists, otherwise large
     # files would 404 and break playback. Signed, so the bucket can stay private.

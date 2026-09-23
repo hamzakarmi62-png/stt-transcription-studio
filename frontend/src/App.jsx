@@ -74,8 +74,12 @@ class ErrorBoundary extends React.Component {
 }
 
 import { setAuthToken } from "./api.js";
+import ShareView from "./components/ShareView.jsx";
 
 export default function App() {
+  // Share links (/share/:id?t=...) render a standalone read-only page:
+  // no splash, no login gate, no app state — recipients need no account.
+  const shareMatch = window.location.pathname.match(/^\/share\/([A-Za-z0-9_-]+)/);
   const [user, setUser] = useState(() => {
     try {
       const token = localStorage.getItem("auth_token");
@@ -132,31 +136,39 @@ export default function App() {
 
   return (
     <>
-      {!splashGone && <Splash done={splashFading} />}
-      {(!user) ? (
-        showLogin ? (
-          <ErrorBoundary>
-            <LoginScreen onLogin={handleLogin} onBack={() => setShowLogin(false)} />
-          </ErrorBoundary>
-        ) : (
-          <ErrorBoundary>
-            <LandingScreen onStart={() => setShowLogin(true)} />
-          </ErrorBoundary>
-        )
-      ) : (
+      {shareMatch ? (
         <ErrorBoundary>
-          {session ? (
-            <TranscriptScreen
-              key={session.id}
-              initialSession={session}
-              onBack={() => setSession(null)}
-              user={user}
-              onLogout={handleLogout}
-            />
-          ) : (
-            <UploadScreen onComplete={setSession} user={user} onLogout={handleLogout} />
-          )}
+          <ShareView sessionId={shareMatch[1]} />
         </ErrorBoundary>
+      ) : (
+        <>
+          {!splashGone && <Splash done={splashFading} />}
+          {(!user) ? (
+            showLogin ? (
+              <ErrorBoundary>
+                <LoginScreen onLogin={handleLogin} onBack={() => setShowLogin(false)} />
+              </ErrorBoundary>
+            ) : (
+              <ErrorBoundary>
+                <LandingScreen onStart={() => setShowLogin(true)} />
+              </ErrorBoundary>
+            )
+          ) : (
+            <ErrorBoundary>
+              {session ? (
+                <TranscriptScreen
+                  key={session.id}
+                  initialSession={session}
+                  onBack={() => setSession(null)}
+                  user={user}
+                  onLogout={handleLogout}
+                />
+              ) : (
+                <UploadScreen onComplete={setSession} user={user} onLogout={handleLogout} />
+              )}
+            </ErrorBoundary>
+          )}
+        </>
       )}
     </>
   );

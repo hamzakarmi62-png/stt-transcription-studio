@@ -101,6 +101,9 @@ export default function ExportMenu({ sessionId, filename }) {
           <div className="text-[10px] font-bold text-[#4b4763] uppercase tracking-widest mb-1">
             Données structurées (apps)
           </div>
+          <div className="text-[10px] text-[#4b4763] mb-1">
+            Précision maximale : horodatages & locuteurs toujours inclus (à la ms).
+          </div>
           <div className="space-y-1">
             {DATA_FORMATS.map((f) => (
               <button
