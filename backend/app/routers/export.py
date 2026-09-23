@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, timezone
+from urllib.parse import quote
 from xml.sax.saxutils import escape
 
 from fastapi import APIRouter, HTTPException, Request
@@ -27,6 +28,26 @@ def _seconds(t):
         return round(float(t), 3)
     except (TypeError, ValueError):
         return 0.0
+
+
+def _content_disposition(filename: str, ext: str) -> str:
+    """Download header safe for any filename.
+
+    HTTP header values must be latin-1 encodable, so an Arabic (or emoji)
+    media name sent raw would raise UnicodeEncodeError inside Starlette and
+    turn every export of that session into a 500. Send an ASCII fallback
+    plus the RFC 5987 UTF-8 form, which browsers decode back to the real
+    name when saving the file.
+    """
+    base = (filename or "transcript").rsplit(".", 1)[0].strip() or "transcript"
+    base = "".join(ch for ch in base if ch.isprintable()).strip()
+    ascii_name = base.encode("ascii", "ignore").decode()
+    ascii_name = "".join(ch for ch in ascii_name if ch.isalnum() or ch in " -_.").strip(" -_.")
+    if not any(ch.isalnum() for ch in ascii_name):
+        ascii_name = "transcript"
+    ascii_name = ascii_name.replace('"', "").replace("\\", "")[:80].strip() or "transcript"
+    utf8_name = quote(base[:150], safe="")
+    return f"attachment; filename=\"{ascii_name}.{ext}\"; filename*=UTF-8''{utf8_name}.{ext}"
 
 
 def _export_json(session, speakers, include_speakers, include_timestamps):
@@ -142,9 +163,8 @@ def export_session(
     else:
         body = export_service.export_pdf(segments, speakers, include_speakers, include_timestamps)
 
-    filename = f"{session['filename'].rsplit('.', 1)[0] or 'transcript'}.{format}"
     return Response(
         content=body,
         media_type=CONTENT_TYPES[format],
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": _content_disposition(session["filename"], format)},
     )
