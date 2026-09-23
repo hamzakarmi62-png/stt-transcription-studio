@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import LoginScreen from "./components/LoginScreen.jsx";
 import LandingScreen from "./components/LandingScreen.jsx";
 import UploadScreen from "./components/UploadScreen.jsx";
@@ -69,7 +69,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-import { setAuthToken } from "./api.js";
+import { setAuthToken, api } from "./api.js";
 import ShareView from "./components/ShareView.jsx";
 
 export default function App() {
@@ -111,6 +111,20 @@ export default function App() {
   useEffect(() => {
     const onPopState = (event) => {
       setShowLogin(event.state?.aud === "login");
+      const st = event.state;
+      if (st?.aud === "session" && st.id) {
+        // Forward (or re-entry) onto a transcript step: restore it.
+        if (lastSessionRef.current?.id === st.id) {
+          setSession(lastSessionRef.current);
+        } else {
+          api
+            .getSession(st.id)
+            .then((s) => setSession(s))
+            .catch(() => setSession(null));
+        }
+      } else {
+        setSession(null);
+      }
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -128,6 +142,25 @@ export default function App() {
       window.history.back(); // popstate clears the flag
     } else {
       setShowLogin(false);
+    }
+  };
+
+  const lastSessionRef = useRef(null);
+
+  const openSession = (s) => {
+    lastSessionRef.current = s;
+    const st = window.history.state;
+    if (st?.aud !== "session" || st?.id !== s.id) {
+      window.history.pushState({ aud: "session", id: s.id }, "");
+    }
+    setSession(s);
+  };
+
+  const closeSession = () => {
+    if (window.history.state?.aud === "session") {
+      window.history.back(); // popstate clears the session
+    } else {
+      setSession(null);
     }
   };
 
@@ -184,12 +217,12 @@ export default function App() {
                 <TranscriptScreen
                   key={session.id}
                   initialSession={session}
-                  onBack={() => setSession(null)}
+                  onBack={closeSession}
                   user={user}
                   onLogout={handleLogout}
                 />
               ) : (
-                <UploadScreen onComplete={setSession} user={user} onLogout={handleLogout} />
+                <UploadScreen onComplete={openSession} user={user} onLogout={handleLogout} />
               )}
             </ErrorBoundary>
           )}

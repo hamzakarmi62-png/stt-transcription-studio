@@ -243,7 +243,30 @@ const LANGUAGES = [
 ];
 
 export default function UploadScreen({ onComplete, user, onLogout }) {
-  const [activeTab, setActiveTab] = useState("home"); // home | transcribe | myFiles | archive | settings
+  const [activeTab, setActiveTab] = useState(() => {
+    // Returning here via browser-back restores the tab recorded in the
+    // history entry (the component remounts fresh after a session closes).
+    const st = window.history.state;
+    return st?.aud === "app" && st?.view ? st.view : "home";
+  });
+
+  // In-app views ride the browser history: every tab change pushes an entry
+  // so the browser back button steps through the app instead of leaving it.
+  const go = (tab) => {
+    setActiveTab(tab);
+    const st = window.history.state;
+    if (st?.aud !== "app" || st?.view !== tab) {
+      window.history.pushState({ aud: "app", view: tab }, "");
+    }
+  };
+
+  useEffect(() => {
+    const onPopState = (event) => {
+      setActiveTab(event.state?.view || "home");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
   const [uiLang, setUiLang] = useState("fr"); // ar | en | fr (Default to French)
   const [theme, setTheme] = useState("light"); // dark | light (light = Rev cream by default)
 
@@ -687,7 +710,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id)}
+                    onClick={() => go(item.id)}
                     className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-2.5 rounded-2xl text-[11px] xl:text-xs font-bold transition-all ${navPill(active)}`}
                   >
                     <span className="hidden xl:block whitespace-nowrap">{item.label}</span>
@@ -729,7 +752,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => go(item.id)}
                   className={`shrink-0 px-4 py-2 rounded-full text-[11px] font-bold transition ${filePill(active)}`}
                 >
                   {item.label}
@@ -764,13 +787,13 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     <p className="text-[#4b4763] text-[14px] leading-relaxed max-w-xl mx-auto lg:mx-0">{t.welcomeDesc}</p>
                     <div className="relative flex gap-3 flex-wrap justify-center lg:justify-start pt-1">
                       <button
-                        onClick={() => setActiveTab("transcribe")}
+                        onClick={() => go("transcribe")}
                         className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[#6415f5] text-white font-bold text-sm hover:bg-[#5311cf] shadow-lg shadow-[#6415f5]/25 transition-all hover:-translate-y-0.5"
                       >
                         {t.startNewTranscribe}
                       </button>
                       <button
-                        onClick={() => setActiveTab("myFiles")}
+                        onClick={() => go("myFiles")}
                         className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white border-[1.5px] border-[#6415f5] text-[#6415f5] font-bold text-sm hover:bg-[#6415f5]/[0.05] transition-all"
                       >
                         <Folder className="w-4 h-4" /> {t.browseMyFiles}
@@ -814,7 +837,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         key={f.id}
                         onClick={() => {
                           setSelectedFolderFilter(f.id);
-                          setActiveTab("myFiles");
+                          go("myFiles");
                         }}
                         className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${isDark ? "bg-white/[0.03] border-white/[0.06] hover:border-indigo-500/50" : "bg-white border-[#18123b]/[0.1] hover:border-[#6415f5]/50"}`}
                       >
