@@ -30,10 +30,6 @@ function Splash({ done }) {
         />
       </div>
 
-      <p className="aud-splash-tag mt-7 text-[10px] sm:text-xs font-bold uppercase text-slate-400">
-        Transcription Services · Intelligence Artificielle
-      </p>
-
       <div className="mt-8 h-[3px] w-44 rounded-full bg-white/[0.08] overflow-hidden">
         <div className="aud-splash-bar h-full w-full bg-gradient-to-r from-blue-500 via-violet-500 to-fuchsia-500" />
       </div>
