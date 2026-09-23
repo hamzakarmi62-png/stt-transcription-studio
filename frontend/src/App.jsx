@@ -92,7 +92,10 @@ export default function App() {
     }
   });
   const [session, setSession] = useState(null);
-  const [showLogin, setShowLogin] = useState(false);
+  // The app switches screens in state, not URLs — so opening the login screen
+  // pushes a history entry: the browser back button then returns to the
+  // landing page instead of leaving the site entirely.
+  const [showLogin, setShowLogin] = useState(() => window.history.state?.aud === "login");
   const [splashGone, setSplashGone] = useState(false);
   const [splashFading, setSplashFading] = useState(false);
 
@@ -105,7 +108,33 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    const onPopState = (event) => {
+      setShowLogin(event.state?.aud === "login");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  const openLogin = () => {
+    if (window.history.state?.aud !== "login") {
+      window.history.pushState({ aud: "login" }, "");
+    }
+    setShowLogin(true);
+  };
+
+  const closeLogin = () => {
+    if (window.history.state?.aud === "login") {
+      window.history.back(); // popstate clears the flag
+    } else {
+      setShowLogin(false);
+    }
+  };
+
   const handleLogin = (u, token) => {
+    // Consumed the login entry — clear the flag so browser-back from the app
+    // doesn't re-open the login screen.
+    if (window.history.state?.aud === "login") window.history.replaceState({}, "");
     setUser(u);
     if (token) {
       setAuthToken(token);
@@ -142,11 +171,11 @@ export default function App() {
           {(!user) ? (
             showLogin ? (
               <ErrorBoundary>
-                <LoginScreen onLogin={handleLogin} onBack={() => setShowLogin(false)} />
+                <LoginScreen onLogin={handleLogin} onBack={closeLogin} />
               </ErrorBoundary>
             ) : (
               <ErrorBoundary>
-                <LandingScreen onStart={() => setShowLogin(true)} />
+                <LandingScreen onStart={openLogin} />
               </ErrorBoundary>
             )
           ) : (
