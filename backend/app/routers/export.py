@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
 
 from .. import db
+from ..config import settings
 from ..services import export as export_service
 from .auth import ensure_session_owner, user_id_from_request
 
@@ -50,36 +51,91 @@ def _content_disposition(filename: str, ext: str) -> str:
     return f"attachment; filename=\"{ascii_name}.{ext}\"; filename*=UTF-8''{utf8_name}.{ext}"
 
 
+def _hms(t) -> str:
+    """Human-readable HH:MM:SS.mmm, so timestamps survive outside the app."""
+    ms = int(round(max(0.0, float(t)) * 1000))
+    h, rem = divmod(ms, 3_600_000)
+    m, rem = divmod(rem, 60_000)
+    s, ms = divmod(rem, 1000)
+    return f"{h:02d}:{m:02d}:{s:02d}.{ms:03d}"
+
+
 def _export_json(session, speakers, include_speakers, include_timestamps):
-    """Structured JSON for apps and integrations: metadata, speakers, and
-    every segment with word-level timings when available."""
+    """Share-grade structured JSON: a self-describing package with metadata,
+    per-speaker statistics, a plain-text copy for quick reading, and every
+    segment with word-level timings — everything a person or another app
+    needs to consume the transcript without this software."""
     speaker_names = {s.get("id"): s.get("name") for s in speakers}
-    segs = []
-    for s in session["segments"]:
-        item = {}
+
+    segs_out = []
+    speaker_stats: dict[str, dict] = {}
+    total_words = 0
+    text_parts = []
+    for i, s in enumerate(session["segments"], 1):
+        text = s.get("text") or ""
+        text_parts.append(text)
+        words = [w for w in (s.get("words") or []) if isinstance(w, dict)]
+        n_words = len(words) if words else len(text.split())
+        total_words += n_words
+        start, end = _seconds(s.get("start")), _seconds(s.get("end"))
+
+        item = {"index": i}
         if include_timestamps:
-            item["start"] = _seconds(s.get("start"))
-            item["end"] = _seconds(s.get("end"))
+            item["start"] = start
+            item["end"] = end
+            item["start_hms"] = _hms(start)
+            item["end_hms"] = _hms(end)
         if include_speakers and s.get("speaker"):
             item["speaker_id"] = s.get("speaker")
             item["speaker"] = speaker_names.get(s.get("speaker"), s.get("speaker"))
-        item["text"] = s.get("text", "")
-        if s.get("words"):
+            st = speaker_stats.setdefault(
+                s.get("speaker"), {"segments": 0, "words": 0, "speaking_time": 0.0}
+            )
+            st["segments"] += 1
+            st["words"] += n_words
+            st["speaking_time"] += max(0.0, end - start)
+        item["text"] = text
+        if words:
             item["words"] = [
                 {"word": w.get("word", ""), "start": _seconds(w.get("start")), "end": _seconds(w.get("end"))}
-                for w in s["words"]
+                for w in words
             ]
-        segs.append(item)
+        segs_out.append(item)
+
+    duration = _seconds(session.get("duration"))
+    speakers_out = []
+    if include_speakers:
+        for s in speakers:
+            st = speaker_stats.get(s.get("id"), {"segments": 0, "words": 0, "speaking_time": 0.0})
+            speakers_out.append({
+                "id": s.get("id"),
+                "name": s.get("name"),
+                "color": s.get("color"),
+                "segments": st["segments"],
+                "words": st["words"],
+                "speaking_time": round(st["speaking_time"], 2),
+            })
+
     payload = {
-        "file": session.get("filename", "transcript"),
-        "language": session.get("language"),
-        "duration": _seconds(session.get("duration")),
+        "format": "aud-transcript",
+        "version": "1.0",
+        "generator": {"app": "Aud Studio", "url": settings.public_url},
         "exported_at": datetime.now(timezone.utc).isoformat(),
-        "speakers": [
-            {"id": s.get("id"), "name": s.get("name"), "color": s.get("color")}
-            for s in speakers
-        ] if include_speakers else [],
-        "segments": segs,
+        "media": {
+            "file": session.get("filename", "transcript"),
+            "type": session.get("kind") or "audio",
+            "language": session.get("language"),
+            "duration": duration,
+            "duration_hms": _hms(duration),
+        },
+        "stats": {
+            "segments": len(segs_out),
+            "words": total_words,
+            "speakers": len(speakers_out),
+        },
+        "speakers": speakers_out,
+        "text": "\n\n".join(p for p in text_parts if p),
+        "segments": segs_out,
     }
     return json.dumps(payload, ensure_ascii=False, indent=2).encode("utf-8")
 
