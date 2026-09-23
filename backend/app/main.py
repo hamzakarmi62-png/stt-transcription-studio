@@ -105,6 +105,23 @@ if os.path.exists(assets_path):
     app.mount("/assets", StaticFiles(directory=assets_path), name="assets")
 
 
+@app.middleware("http")
+async def cache_headers(request, call_next):
+    """index.html must always be revalidated: it names the hashed bundle, and
+    a stale cached copy points at a file the next deploy removes — a blank
+    page for every returning visitor. Hashed /assets files are immutable, so
+    they get the opposite: cache forever."""
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/api/") or path.startswith("/uploads/"):
+        return response
+    if path.startswith("/assets/"):
+        response.headers.setdefault("Cache-Control", "public, max-age=31536000, immutable")
+    else:
+        response.headers.setdefault("Cache-Control", "no-cache")
+    return response
+
+
 @app.get("/{full_path:path}")
 async def serve_spa(full_path: str):
     if full_path.startswith("api/") or full_path.startswith("uploads/"):
