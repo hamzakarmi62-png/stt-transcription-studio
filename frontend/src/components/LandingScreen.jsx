@@ -1,3 +1,4 @@
+import { useState } from "react";
 import audLogo from "../assets/aud-logo.png";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
@@ -9,12 +10,42 @@ import {
 // dark product-demo card on the right cycling through animated scenes.
 const PURPLE = "#6415f5";
 
+const CONTACT_EMAIL = "hamzakarmi62@gmail.com";
+
 const NAV = [
-  { label: "Produit", active: false },
-  { label: "Fonctionnalités", active: false },
-  { label: "Ressources", active: false },
-  { label: "À propos", active: false },
-  { label: "Tarifs", active: true },
+  { label: "Produit", id: "produit" },
+  { label: "Fonctionnalités", id: "fonctionnalites" },
+  { label: "Ressources", id: "ressources" },
+  { label: "À propos", id: "apropos" },
+  { label: "Tarifs", id: "tarifs" },
+];
+
+const FAQ = [
+  {
+    q: "Quels formats de fichiers sont pris en charge ?",
+    a: "Tous les formats courants : MP3, WAV, M4A, FLAC, OGG pour l'audio, et MP4, WEBM, MOV, MKV pour la vidéo. Le son est extrait automatiquement des vidéos.",
+  },
+  {
+    q: "Quelles langues Aud transcrit-il ?",
+    a: "L'arabe, le français, l'anglais et des dizaines d'autres langues, détectées automatiquement. Vous pouvez ensuite traduire la transcription en un clic.",
+  },
+  {
+    q: "Comment partager une transcription ?",
+    a: "Chaque transcription possède un lien de partage en lecture seule : la personne qui l'ouvre voit le texte, les locuteurs et peut écouter — sans jamais accéder à votre compte.",
+  },
+  {
+    q: "Puis-je corriger le texte après la transcription ?",
+    a: "Oui. L'éditeur fonctionne comme un traitement de texte : cliquez entre les mots pour taper, Entrée sépare les paragraphes avec leur propre horodatage, et tout est sauvegardé automatiquement.",
+  },
+];
+
+const PLAN_FEATURES = [
+  "Transcription IA illimitée (audio & vidéo)",
+  "Détection automatique des locuteurs",
+  "Traduction et résumés intelligents",
+  "Export TXT, SRT, Word, PDF, JSON, XML",
+  "Liens de partage en lecture seule",
+  "Éditeur complet avec historique de versions",
 ];
 
 const FEATURES = [
@@ -41,6 +72,13 @@ function CursorIcon({ className }) {
 }
 
 export default function LandingScreen({ onStart }) {
+  const [activeNav, setActiveNav] = useState(null);
+
+  const goToSection = (id) => {
+    setActiveNav(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   return (
     <div
       className="min-h-screen bg-[#f6f3ed] text-[#18123b] antialiased"
@@ -79,10 +117,10 @@ export default function LandingScreen({ onStart }) {
           <nav className="hidden lg:flex items-center gap-7">
             {NAV.map((item) => (
               <button
-                key={item.label}
-                onClick={onStart}
+                key={item.id}
+                onClick={() => goToSection(item.id)}
                 className={`text-[15px] font-medium transition-colors ${
-                  item.active ? "text-[#6415f5]" : "text-[#18123b]/75 hover:text-[#18123b]"
+                  activeNav === item.id ? "text-[#6415f5]" : "text-[#18123b]/75 hover:text-[#18123b]"
                 }`}
               >
                 {item.label}
@@ -94,12 +132,12 @@ export default function LandingScreen({ onStart }) {
             <button onClick={onStart} className="hidden sm:block text-[15px] font-medium text-[#18123b]/85 hover:text-[#18123b] transition-colors px-2">
               Connexion
             </button>
-            <button
-              onClick={onStart}
+            <a
+              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Demande de contact")}`}
               className="hidden md:inline-flex items-center px-5 py-2.5 rounded-[10px] border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white/50 text-[15px] font-semibold hover:bg-white transition"
             >
               Parler à un spécialiste
-            </button>
+            </a>
             <button
               onClick={onStart}
               className="inline-flex items-center px-5 py-2.5 rounded-[10px] bg-[#6415f5] text-white text-[15px] font-semibold hover:bg-[#5311cf] transition shadow-sm"
@@ -111,7 +149,7 @@ export default function LandingScreen({ onStart }) {
       </header>
 
       {/* ── Hero ────────────────────────────────────────────────────────── */}
-      <section className="relative">
+      <section id="produit" className="relative scroll-mt-4">
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 lg:pt-14 pb-14 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 items-center">
           {/* Left */}
           <div>
@@ -287,7 +325,7 @@ export default function LandingScreen({ onStart }) {
       </section>
 
       {/* ── Features ────────────────────────────────────────────────────── */}
-      <section className="border-t border-[#18123b]/[0.07] bg-white/60">
+      <section id="fonctionnalites" className="scroll-mt-4 border-t border-[#18123b]/[0.07] bg-white/60">
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
             Tout ce qu'il faut pour vos <span className="text-[#6415f5]">comptes rendus</span>
@@ -320,6 +358,93 @@ export default function LandingScreen({ onStart }) {
                 <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{s.text}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Ressources (FAQ) ────────────────────────────────────────────── */}
+      <section id="ressources" className="scroll-mt-4 border-t border-[#18123b]/[0.07] bg-white/60">
+        <div className="max-w-[900px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
+            Questions fréquentes
+          </h2>
+          <p className="mt-3 text-center text-[#4b4763]">
+            Tout ce qu'il faut savoir avant de commencer.
+          </p>
+          <div className="mt-10 space-y-3">
+            {FAQ.map((item) => (
+              <details
+                key={item.q}
+                className="group rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm open:shadow-md open:border-[#6415f5]/30 transition"
+              >
+                <summary className="flex items-center justify-between gap-4 cursor-pointer list-none px-6 py-4.5 py-4 font-semibold text-[#18123b]">
+                  {item.q}
+                  <span className="shrink-0 w-7 h-7 rounded-full border border-[#18123b]/15 flex items-center justify-center text-[#18123b]/60 group-open:rotate-45 group-open:border-[#6415f5] group-open:text-[#6415f5] transition-transform">
+                    +
+                  </span>
+                </summary>
+                <p className="px-6 pb-5 text-sm text-[#4b4763] leading-relaxed">{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Tarifs ──────────────────────────────────────────────────────── */}
+      <section id="tarifs" className="scroll-mt-4 border-t border-[#18123b]/[0.07]">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
+            Un prix simple : <span className="text-[#6415f5]">gratuit</span>
+          </h2>
+          <p className="mt-3 text-center text-[#4b4763] max-w-xl mx-auto">
+            Toutes les fonctionnalités, sans carte bancaire. Transcrivez dès votre premier essai.
+          </p>
+          <div className="mt-10 flex justify-center">
+            <div className="w-full max-w-md rounded-[26px] bg-white border-[1.5px] border-[#6415f5]/40 shadow-xl shadow-[#6415f5]/10 p-8">
+              <div className="flex items-baseline justify-between">
+                <h3 className="font-semibold text-[#18123b]">Compte gratuit</h3>
+                <div className="text-right">
+                  <span className="text-4xl font-extrabold tracking-tight text-[#18123b]">0€</span>
+                  <span className="block text-[11px] font-semibold text-[#4b4763]">pour toujours</span>
+                </div>
+              </div>
+              <ul className="mt-6 space-y-3">
+                {PLAN_FEATURES.map((f) => (
+                  <li key={f} className="flex items-start gap-3 text-sm text-[#18123b]/85">
+                    <span className="mt-0.5 w-5 h-5 rounded-full bg-[#6415f5]/[0.08] border border-[#6415f5]/25 text-[#6415f5] flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <button
+                onClick={onStart}
+                className="mt-8 w-full py-3.5 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
+              >
+                Essayer Aud gratuitement
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── À propos ────────────────────────────────────────────────────── */}
+      <section id="apropos" className="scroll-mt-4 border-t border-[#18123b]/[0.07] bg-white/60">
+        <div className="max-w-[900px] mx-auto px-5 sm:px-8 py-16 lg:py-20 text-center">
+          <img src={audLogo} alt="Aud" className="h-14 w-auto mx-auto" draggable={false} />
+          <h2 className="mt-6 text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b]">À propos d'Aud</h2>
+          <p className="mt-5 text-[16px] leading-[1.75] text-[#4b4763] max-w-2xl mx-auto">
+            Aud est un studio de transcription propulsé par l'intelligence artificielle.
+            Il transforme vos réunions, interviews et enregistrements en textes vérifiables :
+            chaque mot horodaté, chaque locuteur identifié, chaque export prêt à partager.
+            Vos fichiers restent privés — jamais revendus, jamais utilisés pour entraîner des modèles.
+          </p>
+          <div className="mt-8 inline-flex flex-col sm:flex-row items-center gap-3">
+            <a
+              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Demande de contact")}`}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold hover:bg-[#6415f5]/[0.06] transition"
+            >
+              ✉ {CONTACT_EMAIL}
+            </a>
           </div>
         </div>
       </section>
