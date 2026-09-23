@@ -143,6 +143,15 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
     return VIDEO_EXTS.some((e) => p.endsWith(e)) ? "video" : "audio";
   }, [session?.kind, session?.audio_path]);
 
+  // A video session archived on the small bucket as an mp3 track: the picture
+  // is gone server-side, so the player shows an audio card, not a black box.
+  const audioOnlyVideo = useMemo(
+    () =>
+      mediaKind === "video" &&
+      String(session?.settings?.cloud_key || "").toLowerCase().endsWith(".mp3"),
+    [mediaKind, session?.settings?.cloud_key]
+  );
+
   const speakerById = useMemo(() => {
     const m = {};
     speakers.forEach((s) => {
@@ -1284,6 +1293,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               mode={playerMode}
               onMode={setPlayerMode}
               mediaRef={audioRef}
+              audioOnly={audioOnlyVideo}
             />
           </aside>
 

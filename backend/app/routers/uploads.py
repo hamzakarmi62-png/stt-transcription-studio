@@ -175,11 +175,20 @@ def _validate_and_save(file: UploadFile) -> tuple[str, str, Path, str, int]:
 def _cloud_payload(session_id: str, dest: Path, mime_type: str, size: int):
     """What to archive: (path, object key, mime, is_temporary), or None to skip.
 
-    A 1 GB bucket cannot hold a 558 MB video, but its mono 16 kHz mp3 track is
-    about 15 MB and is all transcription needs — so on the small-bucket driver the
-    audio is extracted and archived instead. A dedicated S3 bucket keeps originals.
+    Supabase's 1 GB bucket cannot hold every original, so media that exceeds
+    the keep-limits falls back to a mono 16 kHz mp3 track. Anything that fits
+    is archived as-is: original videos keep their picture (a <video> element
+    fed an mp3 plays a black screen with sound), and audio uploads keep full
+    quality instead of being re-encoded to telephone-grade mono.
     """
     if not storage.audio_only():
+        return dest, dest.name, mime_type, False
+
+    if db.media_kind(dest.name) == "video":
+        keep_limit = settings.cloud_video_max_mb * 1024 * 1024
+    else:
+        keep_limit = settings.cloud_upload_max_mb * 1024 * 1024
+    if size <= keep_limit:
         return dest, dest.name, mime_type, False
 
     tmp = Path(tempfile.gettempdir()) / f"{session_id}.cloud.mp3"
@@ -192,14 +201,11 @@ def _cloud_payload(session_id: str, dest: Path, mime_type: str, size: int):
         print(f"Audio extraction failed for {dest.name}: {exc}")
     tmp.unlink(missing_ok=True)
 
-    limit = settings.cloud_upload_max_mb * 1024 * 1024
-    if size > limit:
-        print(
-            f"Cloud archival skipped for {dest.name}: "
-            f"{size / (1024 * 1024):.0f} MB exceeds the {settings.cloud_upload_max_mb} MB limit"
-        )
-        return None
-    return dest, dest.name, mime_type, False
+    print(
+        f"Cloud archival skipped for {dest.name}: "
+        f"{size / (1024 * 1024):.0f} MB exceeds the {keep_limit / (1024 * 1024):.0f} MB limit"
+    )
+    return None
 
 
 def _publish_to_cloud(session_id: str, dest: Path, mime_type: str, size: int) -> None:

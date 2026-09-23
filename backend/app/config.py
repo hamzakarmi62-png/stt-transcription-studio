@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     db_path: str = "data/app.db"
     max_upload_mb: int = 2000
     cloud_upload_max_mb: int = 50
+    # Original video files up to this size are archived as-is on the small
+    # (1 GB) Supabase bucket, so playback keeps the picture; bigger ones fall
+    # back to their mono mp3 track. Raise the env var if the bucket grows.
+    cloud_video_max_mb: int = 120
     cors_origins: str = "http://localhost:5173"
 
     # Where uploaded media is kept. "auto" prefers a dedicated S3 bucket and

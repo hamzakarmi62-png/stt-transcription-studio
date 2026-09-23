@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import audLogo from "../assets/aud-logo.png";
 
 function clamp(v, min, max) {
   return Math.min(Math.max(v, min), max);
@@ -11,6 +12,7 @@ export default function PlayerPanel({
   mode,
   onMode,
   mediaRef,
+  audioOnly = false,
 }) {
   const panelRef = useRef(null);
   const dragRef = useRef(null);
@@ -52,6 +54,9 @@ export default function PlayerPanel({
   if (mode === "hidden") return null;
 
   const isVideo = kind === "video";
+  // A video session whose archived copy is audio-only would render a black
+  // <video> rectangle with sound — show a proper audio card instead.
+  const audioFallback = isVideo && audioOnly;
   const floating = mode === "floating";
 
   const toolbar = (
@@ -93,13 +98,26 @@ export default function PlayerPanel({
     >
       <span className="text-xs font-medium text-[#4b4763] truncate min-w-0">{filename}</span>
       <span className="text-[10px] uppercase tracking-wide text-[#4b4763]">
-        {isVideo ? "video" : "audio"}
+        {isVideo && !audioFallback ? "video" : "audio"}
       </span>
       <div className="ml-auto">{toolbar}</div>
     </div>
   );
 
-  const media = isVideo ? (
+  const media = audioFallback ? (
+    <div className="rounded-b-2xl bg-[#12101f] px-5 py-6 text-center">
+      <div className="relative inline-block">
+        <div className="absolute -inset-4 rounded-full bg-[#6415f5]/25 blur-2xl" />
+        <img src={audLogo} alt="" className="relative w-16 h-16 object-contain" draggable={false} />
+      </div>
+      <p className="mt-3 text-[11px] font-semibold text-white/75 leading-relaxed">
+        Vidéo volumineuse : seule la piste audio est archivée.
+        <br />
+        L'écoute fonctionne normalement.
+      </p>
+      <audio ref={mediaRef} src={src} controls preload="auto" className="w-full mt-4" />
+    </div>
+  ) : isVideo ? (
     <video
       ref={mediaRef}
       src={src}
