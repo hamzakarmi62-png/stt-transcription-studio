@@ -25,7 +25,9 @@ const QUICK_FILES = [
   { key: "pdf", label: "PDF" },
   { key: "docx", label: "Word" },
   { key: "txt", label: "Text" },
+  { key: "srt", label: "SRT" },
   { key: "json", label: "JSON" },
+  { key: "xml", label: "XML" },
 ];
 
 export default function ShareDialog({ open, onClose, sessionId, filename }) {
