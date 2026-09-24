@@ -1349,7 +1349,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             <AiChatPanel sessionId={session.id} onSeek={seekTo} />
           </aside>
 
-          <section>
+          <section className="min-w-0">
             {segments.length === 0 ? (
               <div className="bg-white/65 border border-[#18123b]/[0.1] rounded-3xl p-10 text-center text-[#4b4763]">
                 No transcript available for this session yet.
