@@ -242,6 +242,11 @@ const LANGUAGES = [
   { value: "tr", label: "Turkish (Türkçe)" },
 ];
 
+// Last fetched sessions list, kept at module scope: returning from a
+// transcript re-mounts this screen, and the cache renders the archive
+// instantly while the fresh list loads in the background.
+let _sessionsCache = null;
+
 export default function UploadScreen({ onComplete, user, onLogout }) {
   const [activeTab, setActiveTab] = useState(() => {
     // Returning here via browser-back restores the tab recorded in the
@@ -278,7 +283,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [sessions, setSessions] = useState([]);
+  const [sessions, setSessions] = useState(() => (_sessionsCache && _sessionsCache.uid === (user?.id || null)) ? _sessionsCache.list : []);
+  const [sessionsLoading, setSessionsLoading] = useState(_sessionsCache === null);
   
   const userKey = useCallback((key) => (user?.id ? `${key}_${user.id}` : key), [user?.id]);
 
@@ -350,13 +356,17 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const t = TRANSLATIONS[uiLang] || TRANSLATIONS.fr;
 
   const loadSessions = useCallback(async () => {
+    setSessionsLoading(_sessionsCache === null);
     try {
       const list = await api.listSessions();
+      _sessionsCache = { uid: user?.id || null, list };
       setSessions(list);
     } catch {
-      /* ignore */
+      /* keep showing the cached list */
+    } finally {
+      setSessionsLoading(false);
     }
-  }, []);
+  }, [user?.id]);
 
   const checkHealth = useCallback(async () => {
     try {
@@ -1131,10 +1141,17 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               </div>
 
               {filteredSessions.length === 0 ? (
+                sessionsLoading ? (
+                  <div className={`text-center py-20 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"} ${textSub}`}>
+                    <Loader className="w-8 h-8 mx-auto mb-3 animate-spin text-indigo-500" />
+                    <p className="font-bold text-sm">Chargement des sessions…</p>
+                  </div>
+                ) : (
                 <div className={`text-center py-20 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"} ${textSub}`}>
                   <Inbox className="w-9 h-9 mx-auto mb-3 opacity-40" />
                   <p className="font-bold text-sm">Aucune session trouvée</p>
                 </div>
+                )
               ) : (
                 <div className="space-y-2.5">
                   {filteredSessions.map((s) => {
