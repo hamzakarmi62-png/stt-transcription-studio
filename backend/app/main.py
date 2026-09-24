@@ -82,6 +82,13 @@ def _load_bucket_secrets() -> None:
         if not storage.enabled():
             return
         raw = storage.get_bytes("secrets/groq_api_key.txt")
+        # The active bucket can momentarily refuse reads (B2 daily download
+        # cap) — the secret also lives on the Supabase copy, outside that cap,
+        # so transcription must never be left without its key.
+        if not raw and storage.driver() != "supabase":
+            raw = storage._sb_get_bytes("secrets/groq_api_key.txt")
+            if raw:
+                print("GROQ_API_KEY loaded from the Supabase fallback copy")
         value = (raw or b"").decode("utf-8", "ignore").strip()
         if value:
             settings.groq_api_key = value
