@@ -107,8 +107,12 @@ def _get_client():
                 config=Config(
                     signature_version="s3v4",
                     s3={"addressing_style": "path"},
-                    retries={"max_attempts": 5, "mode": "standard"},
+                    retries={"max_attempts": 3, "mode": "standard"},
                     max_pool_connections=4,
+                    # Bounded failures: an unreachable bucket must never hang
+                    # the app's startup (Render kills deploys that never bind).
+                    connect_timeout=10,
+                    read_timeout=45,
                 ),
             )
     return _client

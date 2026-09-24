@@ -30,6 +30,6 @@ services:
       - key: S3_BUCKET
         value: aud-studio-hamza-01
       - key: S3_ACCESS_KEY
-        value: 8fc90bf9d6d4
+        value: 0058fc90bf9d6d40000000001
       - key: S3_SECRET_KEY
-        value: 0059f505eda889b86a869e669e57585441af358e2a
+        value: K005VVwPBZE+VUc+0ly/kuuIrJDAQNI
