@@ -79,13 +79,13 @@ def _catalog_read(name: str) -> bytes | None:
         _catalog_memory[name] = raw
         return raw
     # Active bucket read failed (cap/outage): serve the last good copy, then
-    # the Supabase copy that predates the B2 migration — auth must never
-    # hard-fail on a bucket hiccup.
+    # the Supabase copy that predates the B2 migration — auth and the
+    # session lists must never hard-fail on a bucket hiccup.
     cached = _catalog_memory.get(name)
     if cached is not None:
         print(f"Catalog {name}: active bucket read failed, serving last-good copy")
         return cached
-    if name == "users_catalog.json" and storage.driver() != "supabase":
+    if storage.driver() != "supabase":
         try:
             legacy = storage._sb_get_bytes(name)
             if legacy is not None:
