@@ -153,7 +153,7 @@ def _b2_url(key: str, token: str | None = None) -> str:
     b = _b2_authorize()
     url = f"{b['dl']}/file/{quote(settings.s3_bucket)}/{quote(key)}"
     if token:
-        url += f"?AuthorizationToken={quote(token)}"
+        url += f"?Authorization={quote(token)}"
     return url
 
 
@@ -242,7 +242,7 @@ def _s3_put_file(local_path: Path, key: str, mime_type: str) -> None:
 def _s3_presign_get(key: str, expires: int) -> str:
     try:
         auth = _b2_call("/b2api/v3/b2_get_download_authorization", {
-            "bucketId": _b2_bucket_id(), "fileName": key,
+            "bucketId": _b2_bucket_id(), "fileNamePrefix": key,
             "validDurationInSeconds": max(60, min(expires, 604800)),
         })
         return _b2_url(key, auth["authorizationToken"])

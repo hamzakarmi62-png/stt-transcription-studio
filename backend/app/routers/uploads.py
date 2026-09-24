@@ -351,9 +351,13 @@ def get_audio(session_id: str, request: Request):
             if now < getattr(_audio_health, "until", 0):
                 healthy = getattr(_audio_health, "state")
             else:
-                probe = requests.get(storage.presign_get(key), timeout=15,
-                                     headers={"Range": "bytes=0-0"})
-                healthy = "ok" if probe.status_code in (200, 206) else "blocked"
+                try:
+                    probe_url = storage.presign_get(key)
+                    probe = requests.get(probe_url, timeout=15, headers={"Range": "bytes=0-0"})
+                    healthy = "ok" if probe.status_code in (200, 206) else "blocked"
+                except Exception:
+                    # the bucket cannot even hand out a download URL right now
+                    healthy = "blocked"
                 _audio_health.state = healthy
                 _audio_health.until = now + (300 if healthy == "ok" else 120)
         except Exception:
