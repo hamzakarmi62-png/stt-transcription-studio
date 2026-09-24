@@ -248,6 +248,16 @@ def _publish_to_cloud(session_id: str, dest: Path, mime_type: str, size: int) ->
     merged["cloud_key"] = key
     db.update_session(session_id, settings=merged)
 
+    # The bucket is now the source of truth. Free the ephemeral-disk copy once
+    # transcription has finished, so a heavy upload day can't fill the small
+    # free-instance disk — ensure_local_audio re-fetches on demand.
+    if not temporary and (session or {}).get("status") == "done":
+        try:
+            dest.unlink(missing_ok=True)
+            print(f"Freed local disk copy of {session_id} after cloud archival")
+        except OSError:
+            pass
+
 
 def _cloud_backend(session: dict) -> str:
     flag = (session.get("settings") or {}).get("cloud")
