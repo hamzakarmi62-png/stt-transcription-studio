@@ -372,7 +372,7 @@ def get_audio(session_id: str, request: Request):
             print("Active bucket downloads are blocked — trying the Supabase copy")
             try:
                 if storage._sb_exists(key):
-                    return RedirectResponse(url=storage._sb_presign_get(key), status_code=302)
+                    return RedirectResponse(url=storage._sb_presign_get(key, 3600), status_code=302)
             except Exception as exc:
                 print("Supabase fallback failed:", exc)
 
