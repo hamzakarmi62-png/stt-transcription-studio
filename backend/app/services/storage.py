@@ -2,12 +2,11 @@
 
 Two drivers sit behind one API:
 
-  * "s3"       — any S3-compatible host (Cloudflare R2, Backblaze B2, Oracle
-                 Object Storage, Wasabi, Storj, Supabase's own S3 endpoint) via
-                 boto3. Path-style addressing and SigV4 are forced because R2 and
-                 most non-AWS hosts require them, and uploads go through boto3's
-                 managed transfer so a multi-GB object is split into parts that
-                 retry independently.
+  * "b2"       — Backblaze B2 via its NATIVE API (plain HTTPS, short timeouts).
+                 The S3-compatible gateway proved intermittently unreachable from
+                 server hosts and stalled login; the native API has been stable.
+                 Multi-GB objects upload through the part-based API so nothing
+                 large ever sits in RAM.
   * "supabase" — the project's Supabase Storage REST API. Needs no second
                  account and no card, which is what makes the free plan usable.
 
@@ -15,6 +14,7 @@ Whichever is active, the bucket is the source of truth and local disk is only a
 cache, so an upload survives the machine being switched off or redeployed.
 """
 
+import hashlib
 import os
 import threading
 import time
@@ -22,9 +22,6 @@ from pathlib import Path
 from urllib.parse import quote
 
 import requests
-from boto3.s3.transfer import TransferConfig
-from botocore.client import Config
-from botocore.exceptions import BotoCoreError, ClientError
 
 from ..config import settings
 
@@ -89,144 +86,217 @@ def audio_only() -> bool:
     return driver() == "supabase"
 
 
-# ── S3 driver ────────────────────────────────────────────────────────────────
+# ── B2 driver (native API) ───────────────────────────────────────────────────
+# The S3-compatible gateway (s3.<region>.backblazeb2.com) proved intermittently
+# unreachable from server hosts, stalling login for minutes. The native B2 API
+# (api.backblazeb2.com + the per-pod upload/download hosts) has been reliable,
+# so the "s3" driver now speaks B2-native over plain HTTPS with short timeouts.
 
-def _get_client():
-    """One client per process; rebuilding it per request wastes connections."""
-    global _client
-    with _client_lock:
-        if _client is None:
-            import boto3
+_b2_lock = threading.Lock()
+_b2 = {"token": None, "accountId": None, "api": None, "dl": None, "bucketId": None, "expires": 0.0}
 
-            _client = boto3.client(
-                "s3",
-                endpoint_url=settings.s3_endpoint,
-                aws_access_key_id=settings.s3_access_key,
-                aws_secret_access_key=settings.s3_secret_key,
-                region_name=settings.s3_region or "auto",
-                config=Config(
-                    signature_version="s3v4",
-                    s3={"addressing_style": "path"},
-                    retries={"max_attempts": 3, "mode": "standard"},
-                    max_pool_connections=4,
-                    # Bounded failures: an unreachable bucket must never hang
-                    # the app's startup (Render kills deploys that never bind).
-                    connect_timeout=10,
-                    read_timeout=45,
-                ),
-            )
-    return _client
+B2_AUTH_URL = "https://api.backblazeb2.com/b2api/v3/b2_authorize_account"
+LARGE_FILE_THRESHOLD = 200 * 1024 * 1024  # above this, use the part-based upload
+PART_SIZE = 100 * 1024 * 1024
 
 
-def _transfer_config() -> TransferConfig:
-    return TransferConfig(
-        multipart_threshold=CHUNK_SIZE,
-        multipart_chunksize=CHUNK_SIZE,
-        max_concurrency=2,
-        use_threads=True,
-    )
+def _b2_authorize(force: bool = False) -> dict:
+    with _b2_lock:
+        now = time.time()
+        if not force and _b2["token"] and now < _b2["expires"] - 120:
+            return _b2
+        r = requests.get(B2_AUTH_URL, auth=(settings.s3_access_key, settings.s3_secret_key), timeout=15)
+        r.raise_for_status()
+        data = r.json()
+        sa = data["apiInfo"]["storageApi"]
+        _b2.update({
+            "token": data["authorizationToken"],
+            "accountId": data["accountId"],
+            "api": sa["apiUrl"],
+            "dl": sa["downloadUrl"],
+            # A bucket-scoped application key embeds its bucket right here —
+            # b2_list_buckets without that filter would 401 for such keys.
+            "bucketId": sa.get("bucketId"),
+            "expires": now + 20 * 3600,
+        })
+        return _b2
+
+
+def _b2_call(path: str, payload: dict | None = None):
+    """One authenticated B2 API call; re-authorizes once on token expiry."""
+    b = _b2_authorize()
+    r = requests.post(f"{b['api']}{path}", headers={"Authorization": b["token"]}, json=payload or {}, timeout=30)
+    if r.status_code == 401:
+        b = _b2_authorize(force=True)
+        r = requests.post(f"{b['api']}{path}", headers={"Authorization": b["token"]}, json=payload or {}, timeout=30)
+    r.raise_for_status()
+    return r.json()
+
+
+def _b2_bucket_id() -> str:
+    b = _b2_authorize()
+    if b["bucketId"]:
+        return b["bucketId"]
+    data = _b2_call("/b2api/v3/b2_list_buckets", {"accountId": b["accountId"]})
+    for bucket in data.get("buckets", []):
+        if bucket["bucketName"] == settings.s3_bucket:
+            b["bucketId"] = bucket["bucketId"]
+            return b["bucketId"]
+    created = _b2_call("/b2api/v3/b2_create_bucket", {
+        "accountId": b["accountId"], "bucketName": settings.s3_bucket, "bucketType": "allPrivate",
+    })
+    b["bucketId"] = created["bucketId"]
+    return b["bucket_id"]
+
+
+def _b2_url(key: str, token: str | None = None) -> str:
+    b = _b2_authorize()
+    url = f"{b['dl']}/file/{quote(settings.s3_bucket)}/{quote(key)}"
+    if token:
+        url += f"?AuthorizationToken={quote(token)}"
+    return url
+
+
+def _b2_download(key: str, stream: bool = False):
+    b = _b2_authorize()
+    r = requests.get(_b2_url(key), headers={"Authorization": b["token"]}, timeout=60, stream=stream)
+    if r.status_code == 401:
+        b = _b2_authorize(force=True)
+        r = requests.get(_b2_url(key), headers={"Authorization": b["token"]}, timeout=60, stream=stream)
+    return r
+
+
+def _b2_upload_simple(key: str, data: bytes, mime_type: str) -> bool:
+    b = _b2_authorize()
+    for _ in range(2):
+        try:
+            up = _b2_call("/b2api/v3/b2_get_upload_url", {"bucketId": _b2_bucket_id()})
+        except Exception as exc:
+            print(f"Object storage upload url failed for {key}:", exc)
+            return False
+        r = requests.post(up["uploadUrl"], data=data, timeout=300, headers={
+            "Authorization": up["authorizationToken"],
+            "X-Bz-File-Name": key,
+            "Content-Type": mime_type or "application/octet-stream",
+            "X-Bz-Content-Sha1": hashlib.sha1(data).hexdigest(),
+        })
+        if r.status_code == 401:
+            _b2_authorize(force=True)
+            continue
+        if r.status_code >= 400:
+            print(f"Object storage write failed for {key}: HTTP {r.status_code} {r.text[:120]}")
+            return False
+        return True
+    return False
+
+
+def _b2_upload_large(local_path: Path, key: str, mime_type: str) -> bool:
+    """Part-based upload so a multi-GB video never sits in RAM."""
+    b = _b2_authorize()
+    size = local_path.stat().st_size
+    started = _b2_call("/b2api/v3/b2_start_large_file", {
+        "bucketId": _b2_bucket_id(), "fileName": key,
+        "contentType": mime_type or "application/octet-stream",
+    })
+    file_id, part_no, sha_list, offset = started["fileId"], 1, [], 0
+    try:
+        while offset < size:
+            with local_path.open("rb") as fh:
+                fh.seek(offset)
+                chunk = fh.read(PART_SIZE)
+            up = _b2_call("/b2api/v3/b2_get_upload_part_url", {"fileId": file_id})
+            r = requests.post(up["uploadUrl"], data=chunk, timeout=600, headers={
+                "Authorization": up["authorizationToken"],
+                "X-Bz-Part-Number": str(part_no),
+                "X-Bz-Content-Sha1": hashlib.sha1(chunk).hexdigest(),
+            })
+            r.raise_for_status()
+            sha_list.append(r.json()["contentSha1"])
+            offset += len(chunk)
+            part_no += 1
+        _b2_call("/b2api/v3/b2_finish_large_file", {"fileId": file_id, "partSha1Array": sha_list})
+        return True
+    except Exception as exc:
+        print(f"Large upload failed for {key}: {exc}")
+        try:
+            _b2_call("/b2api/v3/b2_cancel_large_file", {"fileId": file_id})
+        except Exception:
+            pass
+        return False
 
 
 def _s3_put_file(local_path: Path, key: str, mime_type: str) -> None:
-    client = _get_client()
     try:
-        with local_path.open("rb") as fh:
-            client.upload_fileobj(
-                fh,
-                settings.s3_bucket,
-                key,
-                Config=_transfer_config(),
-                ExtraArgs={"ContentType": mime_type},
-            )
-    except (ClientError, BotoCoreError) as exc:
+        if local_path.stat().st_size > LARGE_FILE_THRESHOLD:
+            ok = _b2_upload_large(local_path, key, mime_type)
+        else:
+            ok = _b2_upload_simple(key, local_path.read_bytes(), mime_type)
+        if not ok:
+            raise RuntimeError(UPLOAD_ERROR)
+    except RuntimeError:
+        raise
+    except Exception as exc:
         raise RuntimeError(f"{UPLOAD_ERROR}: {exc}") from exc
 
 
 def _s3_presign_get(key: str, expires: int) -> str:
-    client = _get_client()
     try:
-        return client.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": settings.s3_bucket, "Key": key},
-            ExpiresIn=expires,
-        )
-    except (ClientError, BotoCoreError) as exc:
+        auth = _b2_call("/b2api/v3/b2_get_download_authorization", {
+            "bucketId": _b2_bucket_id(), "fileName": key,
+            "validDurationInSeconds": max(60, min(expires, 604800)),
+        })
+        return _b2_url(key, auth["authorizationToken"])
+    except Exception as exc:
         raise RuntimeError(f"{PRESIGN_ERROR}: {exc}") from exc
 
 
 def _s3_get_to_file(key: str, path: Path, tmp: Path) -> bool:
-    client = _get_client()
     try:
+        r = _b2_download(key, stream=True)
+        if r.status_code == 404:
+            return False
+        r.raise_for_status()
         with tmp.open("wb") as fh:
-            client.download_fileobj(settings.s3_bucket, key, fh, Config=_transfer_config())
-    except ClientError as exc:
-        code = str(exc.response.get("Error", {}).get("Code", ""))
-        if code not in ("404", "NoSuchKey", "NotFound"):
-            print("Object storage download failed:", exc)
-        return False
-    except (BotoCoreError, OSError) as exc:
+            for chunk in r.iter_content(1024 * 1024):
+                fh.write(chunk)
+        return True
+    except Exception as exc:
         print("Object storage download failed:", exc)
         return False
-    return True
 
 
 def _s3_put_bytes(key: str, data: bytes, mime_type: str) -> bool:
-    try:
-        _get_client().put_object(
-            Bucket=settings.s3_bucket, Key=key, Body=data, ContentType=mime_type
-        )
-        return True
-    except (ClientError, BotoCoreError) as exc:
-        print(f"Object storage write failed for {key}:", exc)
-        return False
+    return _b2_upload_simple(key, data, mime_type or "application/json")
 
 
 def _s3_get_bytes(key: str) -> bytes | None:
-    client = _get_client()
     try:
-        res = client.get_object(Bucket=settings.s3_bucket, Key=key)
-    except ClientError as exc:
-        code = str(exc.response.get("Error", {}).get("Code", ""))
-        if code not in ("404", "NoSuchKey", "NotFound"):
-            print(f"Object storage read failed for {key}:", exc)
-        return None
-    except BotoCoreError as exc:
-        print(f"Object storage read failed for {key}:", exc)
-        return None
-
-    try:
-        with res["Body"] as stream:
-            return stream.read()
-    except (OSError, BotoCoreError) as exc:
+        r = _b2_download(key)
+        if r.status_code == 404:
+            return None
+        r.raise_for_status()
+        return r.content or None
+    except Exception as exc:
         print(f"Object storage read failed for {key}:", exc)
         return None
 
 
 def _s3_exists(key: str) -> bool:
     try:
-        _get_client().head_object(Bucket=settings.s3_bucket, Key=key)
-        return True
-    except (ClientError, BotoCoreError):
+        r = _b2_download(key)
+        if r.status_code == 200:
+            r.close()
+            return True
+        return False
+    except Exception:
         return False
 
 
 def _s3_ensure_bucket() -> str:
-    client = _get_client()
     try:
-        client.head_bucket(Bucket=settings.s3_bucket)
+        _b2_bucket_id()
         return ""
-    except (ClientError, BotoCoreError):
-        pass
-
-    try:
-        region = settings.s3_region or "auto"
-        kwargs = {"Bucket": settings.s3_bucket}
-        # AWS rejects a LocationConstraint for us-east-1; R2 wants none at all.
-        if region and region != "us-east-1":
-            kwargs["CreateBucketConfiguration"] = {"LocationConstraint": region}
-        client.create_bucket(**kwargs)
-        return ""
-    except (ClientError, BotoCoreError) as exc:
+    except Exception as exc:
         return str(exc)
 
 
@@ -417,8 +487,16 @@ def get_to_file(key: str, local_path: str | Path) -> bool:
 def delete(key: str) -> None:
     if driver() == "s3":
         try:
-            _get_client().delete_object(Bucket=settings.s3_bucket, Key=key)
-        except (ClientError, BotoCoreError) as exc:
+            data = _b2_call("/b2api/v3/b2_list_file_names", {
+                "bucketId": _b2_bucket_id(), "prefix": key, "maxFileCount": 50,
+            })
+            for f in data.get("files", []):
+                if f["fileName"] == key:
+                    _b2_call("/b2api/v3/b2_delete_file_version", {
+                        "fileId": f["fileId"], "fileName": key,
+                    })
+                    break
+        except Exception as exc:
             print("Object storage delete failed:", exc)
         return
     try:

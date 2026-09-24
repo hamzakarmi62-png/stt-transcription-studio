@@ -9,6 +9,8 @@ from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
 from pydantic import BaseModel
 
+import requests
+
 from .. import db
 from ..config import settings
 from ..services import storage
@@ -31,6 +33,16 @@ MIME_BY_EXT = {
 }
 
 MAX_BYTES = settings.max_upload_mb * 1024 * 1024
+
+class _AudioHealth:
+    """Is the active bucket serving downloads right now? Cached briefly so a
+    blocked window (B2 daily cap) doesn't add a probe to every request."""
+
+    state = "unknown"
+    until = 0.0
+
+
+_audio_health = _AudioHealth()
 
 CHUNK_SIZE = 1024 * 1024
 
@@ -328,17 +340,42 @@ def get_audio(session_id: str, request: Request):
     # files would 404 and break playback. Signed, so the bucket can stay private.
     key = _cloud_key(session)
     if _cloud_backend(session) and key:
+        # When the active bucket temporarily refuses downloads (B2 daily cap,
+        # outage) pre-migration media still plays from its Supabase copy.
+        _b2_health = {"state": "unknown", "until": 0.0}
         try:
-            return RedirectResponse(url=storage.presign_get(key), status_code=302)
-        except Exception as exc:
-            print("Signed URL failed, falling back to local file:", exc)
+            import time as _time
+
+            now = _time.time()
+            healthy = getattr(_audio_health, "state", "unknown")
+            if now < getattr(_audio_health, "until", 0):
+                healthy = getattr(_audio_health, "state")
+            else:
+                probe = requests.get(storage.presign_get(key), timeout=15,
+                                     headers={"Range": "bytes=0-0"})
+                healthy = "ok" if probe.status_code in (200, 206) else "blocked"
+                _audio_health.state = healthy
+                _audio_health.until = now + (300 if healthy == "ok" else 120)
+        except Exception:
+            healthy = "unknown"
+
+        if healthy != "blocked":
+            try:
+                return RedirectResponse(url=storage.presign_get(key), status_code=302)
+            except Exception as exc:
+                print("Signed URL failed, falling back to local file:", exc)
+        else:
+            print("Active bucket downloads are blocked — trying the Supabase copy")
+            try:
+                if storage._sb_exists(key):
+                    return RedirectResponse(url=storage._sb_presign_get(key), status_code=302)
+            except Exception as exc:
+                print("Supabase fallback failed:", exc)
 
     # Fallback: serve from local disk with Range support
     path = ensure_local_audio(session)
     if not path.exists() or path.stat().st_size == 0:
-        raise HTTPException(404, "Audio file not found on disk or cloud")
-
-    # Taken from the file actually served: an audio-only archive is an mp3 even
+        raise HTTPException(404, "Audio file not found on disk or cloud")    # Taken from the file actually served: an audio-only archive is an mp3 even
     # though audio_path still names the original video.
     ext = path.suffix.lstrip(".").lower()
     media_type = MIME_BY_EXT.get(ext, "application/octet-stream")

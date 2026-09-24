@@ -67,8 +67,34 @@ def _catalog_enabled() -> bool:
     return storage.enabled()
 
 
+# Last-good copies of the auth-critical catalogs. When the active bucket
+# momentarily refuses reads (daily download cap, transient outage), login and
+# listing keep working from memory instead of failing.
+_catalog_memory: dict[str, bytes] = {}
+
+
 def _catalog_read(name: str) -> bytes | None:
-    return storage.get_bytes(name) if storage.enabled() else None
+    raw = storage.get_bytes(name) if storage.enabled() else None
+    if raw is not None:
+        _catalog_memory[name] = raw
+        return raw
+    # Active bucket read failed (cap/outage): serve the last good copy, then
+    # the Supabase copy that predates the B2 migration — auth must never
+    # hard-fail on a bucket hiccup.
+    cached = _catalog_memory.get(name)
+    if cached is not None:
+        print(f"Catalog {name}: active bucket read failed, serving last-good copy")
+        return cached
+    if name == "users_catalog.json" and storage.driver() != "supabase":
+        try:
+            legacy = storage._sb_get_bytes(name)
+            if legacy is not None:
+                print(f"Catalog {name}: serving the Supabase fallback copy")
+                _catalog_memory[name] = legacy
+                return legacy
+        except Exception as exc:
+            print(f"Catalog {name}: Supabase fallback failed:", exc)
+    return None
 
 
 def _catalog_write(name: str, data: bytes) -> bool:
