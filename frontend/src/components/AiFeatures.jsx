@@ -15,7 +15,9 @@ function fmtClock(sec) {
 
 function fmtDuration(sec) {
   const total = Math.max(0, Math.round(Number(sec) || 0));
-  return `0:${String(Math.min(99, total)).padStart(2, "0")}`;
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 // Best-effort real frame from the video at time `at`; falls back to a styled
@@ -81,6 +83,7 @@ function VideoThumb({ src, at }) {
       <video
         ref={vidRef}
         src={src}
+        crossOrigin="anonymous"
         muted
         playsInline
         preload="metadata"
