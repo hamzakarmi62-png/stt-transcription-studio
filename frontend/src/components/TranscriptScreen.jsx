@@ -4,6 +4,7 @@ import { formatTime, nextColor, uid } from "../utils.js";
 import Segment from "./Segment.jsx";
 import ExportMenu from "./ExportMenu.jsx";
 import ShareDialog, { ShareIcon } from "./ShareDialog.jsx";
+import { HighlightCards, AiChatPanel } from "./AiFeatures.jsx";
 import PlayerPanel from "./PlayerPanel.jsx";
 import UserMenu from "./UserMenu.jsx";
 import { ArrowLeft, Play, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft, CornerUpRight, Search, X, RotateCcw, RotateCw, Pause, Languages, Sparkles, Chart } from "./Icons.jsx";
@@ -94,6 +95,13 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   const [saveState, setSaveState] = useState("saved");
   const [playerMode, setPlayerMode] = useState("docked");
   const [shareOpen, setShareOpen] = useState(false);
+  // AI highlights + chat (Rev-style moments cards & grounded Q&A)
+  const [highlights, setHighlights] = useState(() => {
+    const hl = initialSession?.settings?.highlights;
+    return hl && hl.status === "done" ? hl.items || [] : [];
+  });
+  const [hlBusy, setHlBusy] = useState(false);
+  const hlPollRef = useRef(null);
   const [highlightOffset, setHighlightOffset] = useState(() => {
     try {
       const v = parseFloat(localStorage.getItem("zendocs:syncOffset"));
@@ -372,6 +380,49 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       audio.play().catch(() => {});
     }
   }, []);
+
+  // ── AI highlights: start the server job, then poll until it lands ─────────
+  const pollHighlights = useCallback(() => {
+    clearInterval(hlPollRef.current);
+    hlPollRef.current = setInterval(async () => {
+      try {
+        const st = await api.getHighlights(sessionRef.current.id);
+        if (st.status === "done") {
+          clearInterval(hlPollRef.current);
+          setHighlights(st.highlights || []);
+          // mirror into the client session so the next autosave keeps them
+          try {
+            sessionRef.current.settings = {
+              ...(sessionRef.current.settings || {}),
+              highlights: { status: "done", items: st.highlights || [] },
+            };
+          } catch { /* ref not ready */ }
+          setHlBusy(false);
+        } else if (st.status === "error" || st.status === "none") {
+          clearInterval(hlPollRef.current);
+          setHlBusy(false);
+        }
+      } catch { /* transient — keep polling */ }
+    }, 3000);
+  }, []);
+
+  const generateHighlights = useCallback(() => {
+    if (hlBusy) return;
+    setHlBusy(true);
+    api.startHighlights(sessionRef.current.id)
+      .catch(() => {})
+      .finally(pollHighlights);
+  }, [hlBusy, pollHighlights]);
+
+  // resume polling for a job that was already running server-side
+  useEffect(() => {
+    const st = initialSession?.settings?.highlights;
+    if (st && st.status === "running") {
+      setHlBusy(true);
+      pollHighlights();
+    }
+    return () => clearInterval(hlPollRef.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Position the playhead WITHOUT starting playback — clicking a word or a
   // paragraph must never auto-play; only the play buttons do.
@@ -1295,6 +1346,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               mediaRef={audioRef}
               audioOnly={audioOnlyVideo}
             />
+            <AiChatPanel sessionId={session.id} onSeek={seekTo} />
           </aside>
 
           <section>
@@ -1346,6 +1398,15 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             ) : (
 
               <div className="pb-10">
+                <HighlightCards
+                  sessionId={session.id}
+                  mediaSrc={mediaSrc}
+                  kind={mediaKind}
+                  highlights={highlights}
+                  hlBusy={hlBusy}
+                  onGenerate={generateHighlights}
+                  onPreview={(h) => seekTo(h.start)}
+                />
                 <div className="bg-white rounded-[28px] border border-slate-200 shadow-xl shadow-[#18123b]/10 p-6 sm:p-10 space-y-1">
                   {filteredSegments.map((seg, index) => (
                     <Segment

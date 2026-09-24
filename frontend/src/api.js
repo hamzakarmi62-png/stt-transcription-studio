@@ -233,6 +233,19 @@ export const api = {
   // Owner action: mint the stable share link for one transcript.
   createShareLink: (id) => request(`${BASE}/sessions/${id}/share`, { method: "POST" }),
 
+  // AI highlights: POST starts/refreshes the background job, GET polls it.
+  startHighlights: (id, force = false) =>
+    request(`${BASE}/sessions/${id}/highlights?force=${force}`, { method: "POST" }),
+  getHighlights: (id) => request(`${BASE}/sessions/${id}/highlights`),
+
+  // Grounded Q&A over the transcript.
+  askTranscript: (id, question) =>
+    request(`${BASE}/sessions/${id}/ask`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question }),
+    }),
+
   // <audio> tags cannot send headers, so the token rides in the query string.
   audioUrl: (id) => {
     const token = getAuthToken();
