@@ -96,8 +96,10 @@ _b2_lock = threading.Lock()
 _b2 = {"token": None, "accountId": None, "api": None, "dl": None, "bucketId": None, "expires": 0.0}
 
 B2_AUTH_URL = "https://api.backblazeb2.com/b2api/v3/b2_authorize_account"
-LARGE_FILE_THRESHOLD = 200 * 1024 * 1024  # above this, use the part-based upload
-PART_SIZE = 100 * 1024 * 1024
+# Memory-safe on the 512 MB free instance: anything above 50 MB uploads in
+# 10 MB parts, so archiving a multi-GB video never spikes RAM.
+LARGE_FILE_THRESHOLD = 50 * 1024 * 1024
+PART_SIZE = 10 * 1024 * 1024
 
 
 def _b2_authorize(force: bool = False) -> dict:
