@@ -96,7 +96,51 @@ function VideoThumb({ src, at }) {
 
 // ── Highlights ───────────────────────────────────────────────────────────────
 
+function ArrowButton({ dir, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      aria-label={dir < 0 ? "السابق" : "التالي"}
+      className="absolute top-[38%] -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-white shadow-lg shadow-[#18123b]/25 border border-[#18123b]/[0.08] flex items-center justify-center text-[#18123b] hover:bg-[#f6f3ed] transition"
+      style={dir < 0 ? { left: 10 } : { right: 10 }}
+    >
+      <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        {dir < 0 ? <polyline points="15 18 9 12 15 6" /> : <polyline points="9 18 15 12 9 6" />}
+      </svg>
+    </button>
+  );
+}
+
 export function HighlightCards({ sessionId, mediaSrc, kind, highlights, hlBusy, onGenerate, onPreview }) {
+  const rowRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const updateArrows = () => {
+    const el = rowRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 4);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  };
+
+  useEffect(() => {
+    updateArrows();
+    const el = rowRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    window.addEventListener("resize", updateArrows);
+    return () => {
+      el.removeEventListener("scroll", updateArrows);
+      window.removeEventListener("resize", updateArrows);
+    };
+  }, [highlights]);
+
+  const slide = (dir) => {
+    const el = rowRef.current;
+    if (!el) return;
+    el.scrollBy({ left: dir * Math.max(el.clientWidth * 0.75, 260), behavior: "smooth" });
+  };
+
   if (hlBusy && (!highlights || highlights.length === 0)) {
     return (
       <section className="mb-6 rounded-2xl bg-white/80 border border-[#18123b]/[0.08] px-5 py-4 flex items-center gap-3">
@@ -148,39 +192,46 @@ export function HighlightCards({ sessionId, mediaSrc, kind, highlights, hlBusy, 
           </button>
         </div>
       </div>
-      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1">
-        {highlights.map((h, i) => (
-          <article
-            key={`${h.start}-${i}`}
-            className="shrink-0 w-[280px] rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm hover:shadow-md hover:border-[#6415f5]/30 transition overflow-hidden flex flex-col"
-          >
-            <div className="relative">
-              {kind === "video" ? (
-                <VideoThumb src={mediaSrc} at={(h.start + h.end) / 2} />
-              ) : (
-                <div className="w-full aspect-video bg-gradient-to-br from-[#262247] via-[#151226] to-[#0b0a16] flex items-center justify-center">
-                  <img src={audLogo} alt="" className="w-10 h-10 object-contain opacity-80" draggable={false} />
-                </div>
-              )}
-              <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md bg-black/75 text-white text-[11px] font-bold">
-                {fmtDuration(h.end - h.start)}
-              </span>
-            </div>
-            <div className="p-4 flex flex-col flex-1">
-              <h3 className="font-bold text-[14.5px] leading-snug text-[#18123b]">{h.title}</h3>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-[#4b4763] line-clamp-3 flex-1">{h.summary}</p>
-              <div className="mt-3 flex items-center justify-between">
-                <button
-                  onClick={() => onPreview(h)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white text-[13px] font-bold hover:bg-[#6415f5]/[0.06] transition"
-                >
-                  <Scissors className="w-3.5 h-3.5" /> Preview
-                </button>
-                <span className="text-[11px] font-mono text-[#4b4763]">{fmtClock(h.start)}</span>
+      <div className="relative">
+        {canLeft && <ArrowButton dir={-1} onClick={() => slide(-1)} />}
+        {canRight && <ArrowButton dir={1} onClick={() => slide(1)} />}
+        <div
+          ref={rowRef}
+          className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {highlights.map((h, i) => (
+            <article
+              key={`${h.start}-${i}`}
+              className="shrink-0 w-[280px] rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm hover:shadow-md hover:border-[#6415f5]/30 transition overflow-hidden flex flex-col"
+            >
+              <div className="relative">
+                {kind === "video" ? (
+                  <VideoThumb src={mediaSrc} at={(h.start + h.end) / 2} />
+                ) : (
+                  <div className="w-full aspect-video bg-gradient-to-br from-[#262247] via-[#151226] to-[#0b0a16] flex items-center justify-center">
+                    <img src={audLogo} alt="" className="w-10 h-10 object-contain opacity-80" draggable={false} />
+                  </div>
+                )}
+                <span className="absolute bottom-2 right-2 px-1.5 py-0.5 rounded-md bg-black/75 text-white text-[11px] font-bold">
+                  {fmtDuration(h.end - h.start)}
+                </span>
               </div>
-            </div>
-          </article>
-        ))}
+              <div className="p-4 flex flex-col flex-1">
+                <h3 className="font-bold text-[14.5px] leading-snug text-[#18123b]">{h.title}</h3>
+                <p className="mt-1.5 text-[13px] leading-relaxed text-[#4b4763] line-clamp-3 flex-1">{h.summary}</p>
+                <div className="mt-3 flex items-center justify-between">
+                  <button
+                    onClick={() => onPreview(h)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white text-[13px] font-bold hover:bg-[#6415f5]/[0.06] transition"
+                  >
+                    <Scissors className="w-3.5 h-3.5" /> Preview
+                  </button>
+                  <span className="text-[11px] font-mono text-[#4b4763]">{fmtClock(h.start)}</span>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   );
