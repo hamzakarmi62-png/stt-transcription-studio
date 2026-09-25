@@ -76,7 +76,7 @@ const TRANSLATIONS = {
     availableFolders: "المجلدات المتاحة",
     open: "فتح",
     noFilesFolder: "لا توجد ملفات في هذا المجلد حالياً.",
-    noFilesFolderDesc: "انقر على أيقونة النجمة (★) في الأرشيف لحفظ الملفات هنا ونقلها بين المجلدات.",
+    noFilesFolderDesc: "انقر على المربع الصغير في الأرشيف لحفظ الملفات هنا ونقلها بين المجلدات.",
     folderLabel: "المجلد:",
     systemState: "حالة النظام",
     active: "نشط",
@@ -150,7 +150,7 @@ const TRANSLATIONS = {
     availableFolders: "Available Folders",
     open: "Open",
     noFilesFolder: "No files in this folder yet.",
-    noFilesFolderDesc: "Click the star icon (★) in the archive to save files here and organize them.",
+    noFilesFolderDesc: "Click the small square in the archive to save files here and organize them.",
     folderLabel: "Folder:",
     systemState: "System State",
     active: "Active",
@@ -224,7 +224,7 @@ const TRANSLATIONS = {
     availableFolders: "Dossiers Disponibles",
     open: "Ouvrir",
     noFilesFolder: "Aucun fichier dans ce dossier pour le moment.",
-    noFilesFolderDesc: "Cliquez sur l'icône étoile (★) dans l'archive pour enregistrer des fichiers ici.",
+    noFilesFolderDesc: "Cliquez sur le petit carré dans l'archive pour enregistrer des fichiers ici.",
     folderLabel: "Dossier :",
     systemState: "État du système",
     active: "Actif",
@@ -1288,10 +1288,17 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
               {/* Table — Rev style */}
               {visibleFiles.length === 0 && visibleFolders.length === 0 ? (
-                <div className={`text-center py-20 mt-8 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
-                  <Inbox className="w-9 h-9 mx-auto mb-3 opacity-40" />
-                  <p className="font-bold text-sm">{t.noFilesFolder}</p>
-                  <p className={`text-xs mt-1.5 ${textSub}`}>{t.noFilesFolderDesc}</p>
+                <div className="text-center py-16 mt-8 rounded-[26px] border border-[#18123b]/[0.07] bg-white/60">
+                  <div className="relative inline-block">
+                    <div className="absolute -inset-5 rounded-full bg-[#6415f5]/[0.08] blur-2xl" />
+                    <div className="relative w-16 h-16 mx-auto rounded-3xl bg-white border-[1.5px] border-[#18123b]/10 shadow-sm flex items-center justify-center">
+                      <FolderOpen className="w-7 h-7 text-[#6415f5]" />
+                    </div>
+                  </div>
+                  <h3 className="mt-5 font-bold text-[#18123b]">{t.noFilesFolder}</h3>
+                  <p className={`text-sm mt-2 max-w-sm mx-auto leading-relaxed ${textSub}`}>
+                    {t.noFilesFolderDesc}
+                  </p>
                 </div>
               ) : (
                 <div className="mt-8">
