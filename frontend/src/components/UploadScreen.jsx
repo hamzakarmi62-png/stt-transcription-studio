@@ -1208,7 +1208,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={(e) => toggleCustomWork(e, s.id)}
-                            className={`w-8 h-8 rounded-lg border border-[#18123b]/20 flex items-center justify-center transition ${
+                            className={`w-5 h-5 rounded border border-[#18123b]/30 transition ${
                               isCustom ? "bg-[#18123b]/[0.05]" : "hover:bg-[#18123b]/[0.05]"
                             }`}
                             title={isCustom ? t.removeFromCustom : t.addToCustom}
