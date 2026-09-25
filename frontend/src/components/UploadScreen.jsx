@@ -871,7 +871,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
-              <UserMenu user={user} onLogout={onLogout} />
+              <UserMenu user={user} onLogout={onLogout} dark={isDark} />
             </div>
           </div>
 

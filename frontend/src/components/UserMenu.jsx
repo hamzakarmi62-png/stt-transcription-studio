@@ -27,15 +27,15 @@ export default function UserMenu({ user, onLogout, dark = false }) {
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2.5 rounded-2xl px-2 py-1.5 hover:bg-white/[0.07] transition"
+        className={`flex items-center gap-2.5 rounded-2xl px-2 py-1.5 transition ${dark ? "hover:bg-white/[0.07]" : "hover:bg-[#18123b]/[0.05]"}`}
         title="Mon compte"
       >
         <span className="w-9 h-9 rounded-2xl border-[1.5px] border-[#18123b]/30 bg-white flex items-center justify-center text-[#18123b] text-[11px] font-black shrink-0">
           {initials}
         </span>
         <span className="hidden sm:block text-start leading-tight">
-          <span className="block text-xs font-bold text-white">{displayName}</span>
-          <span className="block text-[10px] text-slate-400">Compte gratuit</span>
+          <span className={`block text-xs font-bold ${dark ? "text-white" : "text-[#18123b]"}`}>{displayName}</span>
+          <span className={`block text-[10px] ${dark ? "text-slate-400" : "text-[#4b4763]"}`}>Compte gratuit</span>
         </span>
         <svg
           className={`w-3.5 h-3.5 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
