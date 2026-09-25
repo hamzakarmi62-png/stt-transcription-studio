@@ -82,7 +82,7 @@ export default function LandingScreen({ onStart }) {
   return (
     <div
       className="min-h-screen bg-[#f6f3ed] text-[#18123b] antialiased"
-      style={{ fontFamily: "'Inter', 'IBM Plex Sans Arabic', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" }}
+      style={{ fontFamily: "'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif" }}
       dir="ltr"
       lang="fr"
     >
