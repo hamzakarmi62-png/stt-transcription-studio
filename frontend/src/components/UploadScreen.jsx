@@ -1213,7 +1213,6 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             }`}
                             title={isCustom ? t.removeFromCustom : t.addToCustom}
                           >
-                            {isCustom ? <Star className="w-4 h-4 text-[#18123b]" filled /> : <Star className="w-4 h-4 text-[#18123b]" />}
                           </button>
                           <button
                             onClick={(e) => handleRename(e, s.id)}
