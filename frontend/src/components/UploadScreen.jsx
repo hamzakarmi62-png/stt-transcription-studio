@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import { sleep, uid } from "../utils.js";
 import UserMenu from "./UserMenu.jsx";
-import { Mic, Zap, Folder, FolderOpen, Star, FileVideo, FileAudio, FileText, Headphones, X, Check, AlertTriangle, Loader, Inbox, Pencil, Trash, Sun, Moon, Settings, ArrowUpRight, Lightbulb, Home, Box, AlignLeft } from "./Icons.jsx";
+import { Mic, Zap, Folder, FolderOpen, Star, FileVideo, FileAudio, FileText, Headphones, X, Check, AlertTriangle, Loader, Inbox, Pencil, Trash, Sun, Moon, Settings, ArrowUpRight, Lightbulb, Home, Box, AlignLeft, ChevronDown } from "./Icons.jsx";
 import audLogo from "../assets/aud-logo.png";
 
 const ACCEPTED = ".mp3,.wav,.m4a,.ogg,.mp4,.webm,.mkv,.avi";
