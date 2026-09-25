@@ -247,6 +247,61 @@ const LANGUAGES = [
 // instantly while the fresh list loads in the background.
 let _sessionsCache = null;
 
+// In-app dialog replacing window.prompt/confirm — browsers can silently
+// block native dialogs after repeated use, which made rename/delete appear
+// completely dead. This one always shows, matching the app's design.
+function AskDialog({ ask, onClose }) {
+  const [val, setVal] = useState("");
+  const inputRef = useRef(null);
+  useEffect(() => {
+    if (ask) {
+      setVal(ask.value || "");
+      const t = setTimeout(() => inputRef.current && inputRef.current.focus(), 60);
+      return () => clearTimeout(t);
+    }
+  }, [ask]);
+  if (!ask) return null;
+  const submit = () => {
+    if (ask.type === "prompt" && !val.trim()) return;
+    ask.onOk && ask.onOk(ask.type === "prompt" ? val.trim() : true);
+    onClose();
+  };
+  return (
+    <div className="fixed inset-0 z-[600] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4" onMouseDown={onClose}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5" onMouseDown={(e) => e.stopPropagation()}>
+        <h3 className={`font-bold text-sm mb-1 ${ask.danger ? "text-red-600" : "text-[#18123b]"}`}>{ask.title}</h3>
+        {ask.type === "confirm" && ask.message ? (
+          <p className="text-[13px] text-slate-500 leading-relaxed">{ask.message}</p>
+        ) : null}
+        {ask.type === "prompt" ? (
+          <input
+            ref={inputRef}
+            value={val}
+            onChange={(e) => setVal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") submit();
+              if (e.key === "Escape") onClose();
+            }}
+            dir="auto"
+            className="w-full mt-3 px-3 py-2.5 rounded-xl border border-slate-300 text-sm text-[#18123b] focus:outline-none focus:border-[#6415f5]"
+          />
+        ) : null}
+        <div className="flex justify-end gap-2 mt-4">
+          <button onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-300 text-slate-600 hover:bg-slate-50 transition">
+            Annuler
+          </button>
+          <button
+            onClick={submit}
+            className={`px-4 py-2 rounded-xl text-xs font-bold text-white transition ${ask.danger ? "bg-red-500 hover:bg-red-600" : "bg-[#6415f5] hover:bg-[#5311cf]"}`}
+          >
+            {ask.okText || "OK"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function UploadScreen({ onComplete, user, onLogout }) {
   const [activeTab, setActiveTab] = useState(() => {
     // Returning here via browser-back restores the tab recorded in the
@@ -416,44 +471,86 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   const toggleCustomWork = (e, id) => {
     e.stopPropagation();
-    setCustomWorkIds((prev) => {
-      const next = prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id];
-      if (!prev.includes(id) && !customFileNames[id]) {
-        const session = sessions.find((s) => s.id === id);
-        const defaultName = session ? session.filename : "My File";
-        const customName = prompt(t.renamePrompt, defaultName);
-        if (customName && customName.trim()) {
-          setCustomFileNames((fn) => ({ ...fn, [id]: customName.trim() }));
-        }
-      }
-      return next;
-    });
+    const adding = !customWorkIds.includes(id);
+    setCustomWorkIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+    if (adding && !customFileNames[id]) {
+      const session = sessions.find((s) => s.id === id);
+      const defaultName = session ? session.filename : "My File";
+      setAsk({
+        type: "prompt",
+        title: t.renamePrompt,
+        value: defaultName,
+        onOk: (v) => {
+          if (v.trim()) setCustomFileNames((fn) => ({ ...fn, [id]: v.trim() }));
+        },
+      });
+    }
   };
 
   const handleRename = (e, id) => {
     e.stopPropagation();
     const currentName = customFileNames[id] || sessions.find((s) => s.id === id)?.filename || "";
-    const newName = prompt(t.renamePrompt, currentName);
-    if (newName !== null && newName.trim()) {
-      setCustomFileNames((fn) => ({ ...fn, [id]: newName.trim() }));
-    }
+    setAsk({
+      type: "prompt",
+      title: t.renamePrompt,
+      value: currentName,
+      onOk: (v) => {
+        if (v.trim()) setCustomFileNames((fn) => ({ ...fn, [id]: v.trim() }));
+      },
+    });
   };
 
   const handleCreateFolder = () => {
-    const folderName = prompt(t.folderPrompt);
-    if (folderName && folderName.trim()) {
-      const newFolder = { id: uid(), name: folderName.trim(), createdAt: Date.now() };
-      setFolders((prev) => [...prev, newFolder]);
-    }
+    setAsk({
+      type: "prompt",
+      title: "Nouveau dossier",
+      onOk: (v) => {
+        if (v.trim()) setFolders((prev) => [...prev, { id: uid(), name: v.trim(), createdAt: Date.now() }]);
+      },
+    });
   };
 
   const handleMoveToFolder = (sessionId, folderId) => {
     setSessionFolderMap((prev) => ({ ...prev, [sessionId]: folderId }));
   };
 
+  const handleRenameFolder = (e, folderId) => {
+    e.stopPropagation();
+    const f = folders.find((x) => x.id === folderId);
+    setAsk({
+      type: "prompt",
+      title: "Renommer le dossier",
+      value: f?.name || "",
+      onOk: (v) => {
+        if (v.trim()) setFolders((prev) => prev.map((x) => (x.id === folderId ? { ...x, name: v.trim() } : x)));
+      },
+    });
+  };
+
+  const handleDeleteFolder = (e, folderId) => {
+    e.stopPropagation();
+    setAsk({
+      type: "confirm",
+      danger: true,
+      title: "Supprimer le dossier ?",
+      message: "Ses fichiers retourneront dans Général.",
+      okText: "Supprimer",
+      onOk: () => {
+        setFolders((prev) => prev.filter((x) => x.id !== folderId));
+        setSessionFolderMap((prev) => {
+          const next = { ...prev };
+          for (const k of Object.keys(next)) if (next[k] === folderId) next[k] = "default";
+          return next;
+        });
+        if (selectedFolderFilter === folderId) setSelectedFolderFilter("all");
+      },
+    });
+  };
+
   // ── Rev-style files table state ──
   const [folderMenuOpen, setFolderMenuOpen] = useState(false);
   const [filesSortDesc, setFilesSortDesc] = useState(true);
+  const [ask, setAsk] = useState(null);
 
   const resetRecording = () => {
     setRecording(false);
@@ -581,26 +678,33 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     onComplete(s);
   };
 
-  const deleteSession = async (e, id) => {
+  const deleteSession = (e, id) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this session?")) return;
-    try {
-      await api.deleteSession(id);
-      setCustomWorkIds((prev) => prev.filter((i) => i !== id));
-      setCustomFileNames((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      setSessionFolderMap((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-      loadSessions();
-    } catch {
-      /* ignore */
-    }
+    setAsk({
+      type: "confirm",
+      danger: true,
+      title: "Supprimer cette session ?",
+      okText: "Supprimer",
+      onOk: async () => {
+        try {
+          await api.deleteSession(id);
+          setCustomWorkIds((prev) => prev.filter((i) => i !== id));
+          setCustomFileNames((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+          setSessionFolderMap((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+          });
+          loadSessions();
+        } catch {
+          /* ignore */
+        }
+      },
+    });
   };
 
   const busy = phase === "uploading" || phase === "transcribing" || phase === "diarizing";
@@ -1490,6 +1594,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
         <footer className={`relative pb-8 text-center text-[11px] ${textSub}`}>
           Aud — Studio de transcription audio & vidéo par IA
         </footer>
+      <AskDialog ask={ask} onClose={() => setAsk(null)} />
       </div>
     </div>
   );
