@@ -164,6 +164,13 @@ export default function App() {
     }
   };
 
+  // The AUD logo in the transcript header: land on the app dashboard
+  // (Tableau de Bord) directly, leaving the session one back-step away.
+  const goDashboard = () => {
+    window.history.pushState({ aud: "app", view: "home" }, "");
+    setSession(null);
+  };
+
   const handleLogin = (u, token) => {
     // Consumed the login entry — clear the flag so browser-back from the app
     // doesn't re-open the login screen.
@@ -218,6 +225,7 @@ export default function App() {
                   key={session.id}
                   initialSession={session}
                   onBack={closeSession}
+                  onGoDashboard={goDashboard}
                   user={user}
                   onLogout={handleLogout}
                 />

@@ -11,7 +11,9 @@ import { ArrowLeft, Play, MessageSquarePlus, Scissors, Highlighter, CornerUpLeft
 
 const VIDEO_EXTS = ["mp4", "webm", "mov", "m4v", "mkv", "avi"];
 
-export default function TranscriptScreen({ initialSession, onBack, user, onLogout }) {
+import audLogo from "../assets/aud-logo.png";
+
+export default function TranscriptScreen({ initialSession, onBack, user, onLogout, onGoDashboard }) {
   const [session, setSession] = useState(initialSession || {});
   const [currentTime, setCurrentTime] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -1087,6 +1089,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       <div className="relative">
       <header className="bg-white/85 backdrop-blur-2xl border-b border-[#18123b]/[0.08]">
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
+          <button
+            onClick={onGoDashboard || onBack}
+            className="shrink-0"
+            title="لوحة التحكم"
+            aria-label="لوحة التحكم"
+          >
+            <img src={audLogo} alt="Aud" className="h-9 w-auto" draggable={false} />
+          </button>
           <button
             onClick={onBack}
             className="px-3 py-1.5 rounded-xl border border-[#18123b]/15 text-[#4b4763] text-sm hover:bg-[#18123b]/[0.06] transition inline-flex items-center gap-1.5"
