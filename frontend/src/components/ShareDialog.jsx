@@ -159,7 +159,9 @@ export default function ShareDialog({ open, onClose, sessionId, filename }) {
                 WhatsApp
               </button>
               <a
-                href={`mailto:?subject=${encodeURIComponent(`Transcription : "${filename}" — Aud Studio`)}&body=${encodeURIComponent(url)}`}
+                href={`https://mail.google.com/mail/?view=cm&fs=1&su=${encodeURIComponent(`Transcription : "${filename}" — Aud Studio`)}&body=${encodeURIComponent(url)}`}
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#18123b]/15 text-sm font-semibold text-[#18123b] hover:bg-[#18123b]/[0.06] transition"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
