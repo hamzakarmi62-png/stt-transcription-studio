@@ -1091,11 +1091,10 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         <div className="max-w-4xl mx-auto px-6 py-3 flex items-center gap-3 flex-wrap">
           <button
             onClick={onGoDashboard || onBack}
-            className="shrink-0"
-            title="لوحة التحكم"
+            className="shrink-0 cursor-pointer transition-transform hover:scale-105"
             aria-label="لوحة التحكم"
           >
-            <img src={audLogo} alt="Aud" className="h-9 w-auto" draggable={false} />
+            <img src={audLogo} alt="Aud" className="h-10 w-auto" draggable={false} />
           </button>
           <button
             onClick={onBack}
