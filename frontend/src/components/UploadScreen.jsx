@@ -1329,7 +1329,27 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{f.name}</span>
                       </div>
                       <span className={`text-sm ${textSub}`}>{new Date(folderCreatedAt(f)).toLocaleDateString()}</span>
-                      <span />
+                      <div
+                        className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={(e) => handleRenameFolder(e, f.id)}
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
+                          title="Renommer le dossier"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        {f.id !== "default" && (
+                          <button
+                            onClick={(e) => handleDeleteFolder(e, f.id)}
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
+                            title="Supprimer le dossier"
+                          >
+                            <Trash className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
                     </div>
                   ))}
 
