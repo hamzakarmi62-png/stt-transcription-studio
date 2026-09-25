@@ -674,16 +674,16 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       Icon: Mic,
     },
     {
-      id: "myFiles",
-      label: t.navMyFiles,
-      badge: customWorksSessions.length,
-      Icon: Star,
-    },
-    {
       id: "archive",
       label: t.navArchive,
       badge: sessions.length,
       Icon: Box,
+    },
+    {
+      id: "myFiles",
+      label: t.navMyFiles,
+      badge: customWorksSessions.length,
+      Icon: Star,
     },
     {
       id: "settings",
