@@ -46,7 +46,7 @@ const TRANSLATIONS = {
     archiveDesc: "سجل كامل لجميع عمليات التفريغ السابقة مع إمكانية التصدير والبحث",
     openSession: "فتح واستعراض الملف ←",
     delete: "حذف",
-    myFilesTitle: "إدارة المجلدات والملفات المخصصة",
+    myFilesTitle: "ملفاتي",
     myFilesDesc: "نظم تفريغاتك داخل مجلدات مسمّاة لضمان عدم حدوث أي خلط في بياناتك",
     createNewFolder: "إنشاء مجلد جديد +",
     folderPrompt: "أدخل اسم المجلد الجديد (مثال: مقابلات العملاء، محاضرات جامعية):",
@@ -120,7 +120,7 @@ const TRANSLATIONS = {
     archiveDesc: "Complete history of previous transcriptions with export & search",
     openSession: "Open & Review File →",
     delete: "Delete",
-    myFilesTitle: "Custom Folders & Files Manager",
+    myFilesTitle: "My files",
     myFilesDesc: "Organize transcriptions into named folders to prevent any confusion",
     createNewFolder: "+ New Folder",
     folderPrompt: "Enter new folder name (e.g., Client Interviews):",
@@ -194,7 +194,7 @@ const TRANSLATIONS = {
     archiveDesc: "Historique complet des transcriptions précédentes",
     openSession: "Ouvrir le fichier →",
     delete: "Supprimer",
-    myFilesTitle: "Gestionnaire de Dossiers & Fichiers",
+    myFilesTitle: "Mes fichiers",
     myFilesDesc: "Organisez vos transcriptions dans des dossiers nommés",
     createNewFolder: "+ Nouveau Dossier",
     folderPrompt: "Entrez le nom du nouveau dossier (ex: Réunions, Cours) :",
@@ -442,13 +442,39 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const handleCreateFolder = () => {
     const folderName = prompt(t.folderPrompt);
     if (folderName && folderName.trim()) {
-      const newFolder = { id: uid(), name: folderName.trim() };
+      const newFolder = { id: uid(), name: folderName.trim(), createdAt: Date.now() };
       setFolders((prev) => [...prev, newFolder]);
     }
   };
 
   const handleMoveToFolder = (sessionId, folderId) => {
     setSessionFolderMap((prev) => ({ ...prev, [sessionId]: folderId }));
+  };
+
+  // ── Rev-style files table state ──
+  const [folderMenuOpen, setFolderMenuOpen] = useState(false);
+  const [selectedFileIds, setSelectedFileIds] = useState(() => new Set());
+  const [filesSortDesc, setFilesSortDesc] = useState(true);
+
+  const toggleFileSelected = (id) =>
+    setSelectedFileIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+
+  const bulkDeleteFiles = async () => {
+    if (!confirm(`Supprimer ${selectedFileIds.size} session(s) ?`)) return;
+    for (const id of selectedFileIds) {
+      try {
+        await api.deleteSession(id);
+      } catch {
+        /* keep going */
+      }
+    }
+    setSelectedFileIds(new Set());
+    await loadSessions();
   };
 
   const resetRecording = () => {
@@ -617,6 +643,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     selectedFolderFilter === "all"
       ? customWorksSessions
       : customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === selectedFolderFilter);
+
+  const byDate = (a, b) => (new Date(a.created_at) - new Date(b.created_at)) * (filesSortDesc ? -1 : 1);
+  const visibleFolders = (selectedFolderFilter === "all" ? folders : [])
+    .slice()
+    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  const visibleFiles = folderFilteredSessions.slice().sort(byDate);
 
   // ---- Rev Cream design tokens (light) / Aurora Glass (dark) ----
   const isDark = theme === "dark";
@@ -1224,94 +1256,175 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
           {/* ══ MY FILES ══ */}
           {activeTab === "myFiles" && (
-            <div className={`${glass} rounded-[30px] p-6 sm:p-8 border space-y-6`}>
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div>
-                  <h2 className="text-xl font-black">{t.myFilesTitle}</h2>
-                  <p className={`text-xs ${textSub} mt-1`}>{t.myFilesDesc}</p>
-                </div>
+            <div className={`${glass} rounded-[30px] p-6 sm:p-10 border`}>
+              {/* Title + purple folder picker — Rev style */}
+              <div className="relative flex items-center gap-3 flex-wrap">
+                <h2 className="text-3xl font-black tracking-tight">{t.myFilesTitle}</h2>
                 <button
-                  onClick={handleCreateFolder}
-                  className="px-4 py-2.5 rounded-xl bg-[#6415f5] text-white font-bold text-xs hover:bg-[#5311cf] shadow-md shadow-[#6415f5]/30 transition-all flex items-center gap-1.5"
+                  onClick={() => setFolderMenuOpen((o) => !o)}
+                  className="inline-flex items-center gap-1 text-[#6415f5] hover:bg-[#6415f5]/[0.08] rounded-lg px-1.5 py-1 transition"
+                  aria-label="Choisir le dossier"
                 >
-                  {t.createNewFolder}
+                  <FolderOpen className="w-6 h-6" />
+                  <ChevronDown className="w-4 h-4" />
                 </button>
+
+                {folderMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setFolderMenuOpen(false)} />
+                    <div className={`absolute top-full left-0 mt-2 z-40 w-72 rounded-2xl shadow-xl border p-2 ${isDark ? "bg-[#181430] border-white/10" : "bg-white border-slate-200"}`}>
+                      <button
+                        onClick={() => { setSelectedFolderFilter("all"); setFolderMenuOpen(false); }}
+                        className={`w-full text-start px-3 py-2.5 rounded-xl text-sm font-bold transition ${selectedFolderFilter === "all" ? "bg-[#6415f5]/[0.08] text-[#6415f5]" : "hover:bg-[#18123b]/[0.05]"}`}
+                      >
+                        {t.allFiles} ({customWorksSessions.length})
+                      </button>
+                      {folders.map((f) => {
+                        const count = customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === f.id).length;
+                        return (
+                          <button
+                            key={f.id}
+                            onClick={() => { setSelectedFolderFilter(f.id); setFolderMenuOpen(false); }}
+                            className={`w-full text-start px-3 py-2.5 rounded-xl text-sm font-semibold flex items-center gap-2 transition ${selectedFolderFilter === f.id ? "bg-[#6415f5]/[0.08] text-[#6415f5]" : "hover:bg-[#18123b]/[0.05]"}`}
+                          >
+                            <FolderOpen className="w-4 h-4 opacity-70" /> {f.name} ({count})
+                          </button>
+                        );
+                      })}
+                      <div className={`my-2 border-t ${hairline}`} />
+                      <button
+                        onClick={handleCreateFolder}
+                        className="w-full text-start px-3 py-2.5 rounded-xl text-sm font-bold text-[#6415f5] hover:bg-[#6415f5]/[0.06] transition flex items-center gap-2"
+                      >
+                        + {t.createNewFolder}
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 flex-wrap">
-                <button
-                  onClick={() => setSelectedFolderFilter("all")}
-                  className={`px-4 py-2 rounded-full text-xs font-bold transition ${filePill(selectedFolderFilter === "all")}`}
-                >
-                  {t.allFiles} ({customWorksSessions.length})
-                </button>
-                {folders.map((f) => {
-                  const count = customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === f.id).length;
-                  return (
+              {/* Bulk bar */}
+              {selectedFileIds.size > 0 && (
+                <div className={`mt-6 flex items-center gap-3 px-4 py-3 rounded-2xl border ${isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-slate-200"}`}>
+                  <span className="text-sm font-bold">{selectedFileIds.size} sélectionné(s)</span>
+                  <div className="ms-auto flex items-center gap-2">
                     <button
-                      key={f.id}
-                      onClick={() => setSelectedFolderFilter(f.id)}
-                      className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition ${filePill(selectedFolderFilter === f.id)}`}
+                      onClick={() => setSelectedFileIds(new Set())}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${isDark ? "border-white/15 hover:bg-white/[0.05]" : "border-slate-300 hover:bg-slate-50"}`}
                     >
-                      <FolderOpen className="w-3.5 h-3.5 opacity-70" /> {f.name} ({count})
+                      Annuler
                     </button>
-                  );
-                })}
-              </div>
+                    <button
+                      onClick={bulkDeleteFiles}
+                      className="px-3 py-2 rounded-xl text-xs font-bold bg-red-500 text-white hover:bg-red-600 transition"
+                    >
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              )}
 
-              {folderFilteredSessions.length === 0 ? (
-                <div className={`text-center py-20 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
+              {/* Table — Rev style */}
+              {visibleFiles.length === 0 && visibleFolders.length === 0 ? (
+                <div className={`text-center py-20 mt-8 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
                   <Inbox className="w-9 h-9 mx-auto mb-3 opacity-40" />
                   <p className="font-bold text-sm">{t.noFilesFolder}</p>
                   <p className={`text-xs mt-1.5 ${textSub}`}>{t.noFilesFolderDesc}</p>
                 </div>
               ) : (
-                <div className="space-y-2.5">
-                  {folderFilteredSessions.map((s) => {
+                <div className="mt-8">
+                  {/* header */}
+                  <div className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-3 border-b-2 ${hairline}`}>
+                    <input
+                      type="checkbox"
+                      checked={visibleFiles.length > 0 && visibleFiles.every((s) => selectedFileIds.has(s.id))}
+                      onChange={toggleAllFiles}
+                      className="w-5 h-5 accent-[#6415f5] cursor-pointer"
+                      aria-label="Tout sélectionner"
+                    />
+                    <span className="text-sm font-black">Nom</span>
+                    <button
+                      onClick={() => setFilesSortDesc((d) => !d)}
+                      className="text-sm font-black flex items-center gap-1 hover:text-[#6415f5] transition text-start"
+                    >
+                      Date de création
+                      <ChevronDown className={`w-4 h-4 transition-transform ${filesSortDesc ? "" : "rotate-180"}`} />
+                    </button>
+                    <span />
+                  </div>
+
+                  {/* folder rows (only in "all" view) */}
+                  {visibleFolders.map((f) => (
+                    <div
+                      key={f.id}
+                      onClick={() => setSelectedFolderFilter(f.id)}
+                      className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-4 border-b ${hairline} group cursor-pointer hover:bg-[#18123b]/[0.03] transition-colors`}
+                    >
+                      <span />
+                      <div className="flex items-center gap-3 min-w-0">
+                        <FolderOpen className="w-6 h-6 text-[#18123b] shrink-0" />
+                        <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{f.name}</span>
+                      </div>
+                      <span className={`text-sm ${textSub}`}>{f.createdAt ? new Date(f.createdAt).toLocaleDateString() : "—"}</span>
+                      <span />
+                    </div>
+                  ))}
+
+                  {/* file rows */}
+                  {visibleFiles.map((s) => {
                     const displayName = customFileNames[s.id] || s.filename;
                     const currentFolderId = sessionFolderMap[s.id] || "default";
+                    const isVideo = s.kind === "video";
                     return (
                       <div
                         key={s.id}
-                        onClick={() => openSession(s)}
-                        className={`group flex items-center gap-4 p-4 rounded-3xl border cursor-pointer transition-all duration-200 ${
-                          isDark
-                            ? "bg-white/[0.02] border-white/[0.06] hover:bg-white/[0.05] hover:border-indigo-500/40"
-                            : "bg-white/70 border-slate-200 hover:border-indigo-400 hover:shadow-md"
-                        }`}
+                        className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-4 border-b ${hairline} group hover:bg-[#18123b]/[0.03] transition-colors`}
                       >
-                        <div className="w-12 h-12 rounded-xl border-[1.5px] border-[#18123b]/25 bg-transparent flex items-center justify-center shrink-0 text-[#18123b]">
-                          <Star className="w-5 h-5" filled />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-sm truncate group-hover:text-indigo-400 transition-colors">{displayName}</h3>
-                          <p className={`text-[11px] ${textSub} mt-1 truncate`}>
-                            {new Date(s.created_at).toLocaleString()} · {s.segments?.length ?? 0} segments
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          type="checkbox"
+                          checked={selectedFileIds.has(s.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={() => toggleFileSelected(s.id)}
+                          className="w-5 h-5 accent-[#6415f5] cursor-pointer"
+                          aria-label={`Sélectionner ${displayName}`}
+                        />
+                        <button
+                          onClick={() => openSession(s)}
+                          className="flex items-center gap-3 min-w-0 text-start"
+                          title={displayName}
+                        >
+                          {isVideo ? (
+                            <FileVideo className="w-6 h-6 text-[#18123b] shrink-0" />
+                          ) : (
+                            <FileAudio className="w-6 h-6 text-[#18123b] shrink-0" />
+                          )}
+                          <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{displayName}</span>
+                        </button>
+                        <span className={`text-sm ${textSub}`}>{new Date(s.created_at).toLocaleDateString()}</span>
+                        <div
+                          className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <select
                             value={currentFolderId}
                             onChange={(e) => handleMoveToFolder(s.id, e.target.value)}
-                            className={`text-[11px] rounded-xl px-2.5 py-2 border font-bold focus:outline-none max-w-[140px] ${inputBg} cursor-pointer`}
+                            className={`text-[11px] rounded-lg px-1.5 py-1.5 border font-bold focus:outline-none max-w-[86px] ${inputBg} cursor-pointer`}
                             title={t.moveToFolder}
                           >
                             {folders.map((f) => (
-                              <option key={f.id} value={f.id}>
-                                {f.name}
-                              </option>
+                              <option key={f.id} value={f.id}>{f.name}</option>
                             ))}
                           </select>
                           <button
                             onClick={(e) => handleRename(e, s.id)}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
                             title={t.renameFile}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </button>
                           <button
                             onClick={(e) => deleteSession(e, s.id)}
-                            className="w-8 h-8 rounded-xl flex items-center justify-center text-sm text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
+                            className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
                             title={t.delete}
                           >
                             <Trash className="w-3.5 h-3.5" />
