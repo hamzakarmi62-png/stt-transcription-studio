@@ -453,36 +453,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   // ── Rev-style files table state ──
   const [folderMenuOpen, setFolderMenuOpen] = useState(false);
-  const [selectedFileIds, setSelectedFileIds] = useState(() => new Set());
   const [filesSortDesc, setFilesSortDesc] = useState(true);
-
-  const toggleFileSelected = (id) =>
-    setSelectedFileIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const toggleAllFiles = () =>
-    setSelectedFileIds((prev) => {
-      const all = selectedFolderFilter === "all" ? customWorksSessions : folderFilteredSessions;
-      const every = all.length > 0 && all.every((s) => prev.has(s.id));
-      return every ? new Set() : new Set(all.map((s) => s.id));
-    });
-
-  const bulkDeleteFiles = async () => {
-    if (!confirm(`Supprimer ${selectedFileIds.size} session(s) ?`)) return;
-    for (const id of selectedFileIds) {
-      try {
-        await api.deleteSession(id);
-      } catch {
-        /* keep going */
-      }
-    }
-    setSelectedFileIds(new Set());
-    await loadSessions();
-  };
 
   const resetRecording = () => {
     setRecording(false);
@@ -648,9 +619,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const customWorksSessions = sessions.filter((s) => customWorkIds.includes(s.id));
   const folderFilteredSessions =
     selectedFolderFilter === "all"
-      ? customWorksSessions
+      ? customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === "default")
       : customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === selectedFolderFilter);
 
+  const folderCreatedAt = (f) => {
+    if (f.createdAt) return f.createdAt;
+    const inFolder = customWorksSessions.filter((s) => (sessionFolderMap[s.id] || "default") === f.id);
+    const times = inFolder.map((s) => new Date(s.created_at).getTime()).filter((t) => !isNaN(t));
+    return times.length ? Math.min(...times) : Date.now();
+  };
   const byDate = (a, b) => (new Date(a.created_at) - new Date(b.created_at)) * (filesSortDesc ? -1 : 1);
   const visibleFolders = (selectedFolderFilter === "all" ? folders : [])
     .slice()
@@ -1310,27 +1287,6 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 )}
               </div>
 
-              {/* Bulk bar */}
-              {selectedFileIds.size > 0 && (
-                <div className={`mt-6 flex items-center gap-3 px-4 py-3 rounded-2xl border ${isDark ? "bg-white/[0.03] border-white/10" : "bg-white border-slate-200"}`}>
-                  <span className="text-sm font-bold">{selectedFileIds.size} sélectionné(s)</span>
-                  <div className="ms-auto flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedFileIds(new Set())}
-                      className={`px-3 py-2 rounded-xl text-xs font-bold border transition ${isDark ? "border-white/15 hover:bg-white/[0.05]" : "border-slate-300 hover:bg-slate-50"}`}
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      onClick={bulkDeleteFiles}
-                      className="px-3 py-2 rounded-xl text-xs font-bold bg-red-500 text-white hover:bg-red-600 transition"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Table — Rev style */}
               {visibleFiles.length === 0 && visibleFolders.length === 0 ? (
                 <div className={`text-center py-20 mt-8 rounded-[26px] border-2 border-dashed ${isDark ? "border-white/10" : "border-slate-300"}`}>
@@ -1342,13 +1298,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <div className="mt-8">
                   {/* header */}
                   <div className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-3 border-b-2 ${hairline}`}>
-                    <input
-                      type="checkbox"
-                      checked={visibleFiles.length > 0 && visibleFiles.every((s) => selectedFileIds.has(s.id))}
-                      onChange={toggleAllFiles}
-                      className="w-5 h-5 accent-[#6415f5] cursor-pointer"
-                      aria-label="Tout sélectionner"
-                    />
+                    <span />
                     <span className="text-sm font-black">Nom</span>
                     <button
                       onClick={() => setFilesSortDesc((d) => !d)}
@@ -1372,7 +1322,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         <FolderOpen className="w-6 h-6 text-[#18123b] shrink-0" />
                         <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{f.name}</span>
                       </div>
-                      <span className={`text-sm ${textSub}`}>{f.createdAt ? new Date(f.createdAt).toLocaleDateString() : "—"}</span>
+                      <span className={`text-sm ${textSub}`}>{new Date(folderCreatedAt(f)).toLocaleDateString()}</span>
                       <span />
                     </div>
                   ))}
@@ -1387,14 +1337,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         key={s.id}
                         className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-4 border-b ${hairline} group hover:bg-[#18123b]/[0.03] transition-colors`}
                       >
-                        <input
-                          type="checkbox"
-                          checked={selectedFileIds.has(s.id)}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={() => toggleFileSelected(s.id)}
-                          className="w-5 h-5 accent-[#6415f5] cursor-pointer"
-                          aria-label={`Sélectionner ${displayName}`}
-                        />
+                        <span />
                         <button
                           onClick={() => openSession(s)}
                           className="flex items-center gap-3 min-w-0 text-start"
