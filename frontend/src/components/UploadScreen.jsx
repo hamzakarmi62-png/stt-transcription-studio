@@ -1208,12 +1208,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={(e) => toggleCustomWork(e, s.id)}
-                            className={`w-8 h-8 rounded-xl flex items-center justify-center text-sm transition ${
-                              isCustom ? "text-amber-400 bg-amber-400/15" : "text-slate-500 hover:text-amber-400 hover:bg-amber-400/10"
+                            className={`w-9 h-9 rounded-xl border-[1.5px] border-[#18123b]/25 flex items-center justify-center transition ${
+                              isCustom ? "bg-[#18123b]/[0.05]" : "hover:bg-[#18123b]/[0.05]"
                             }`}
                             title={isCustom ? t.removeFromCustom : t.addToCustom}
                           >
-                            {isCustom ? <Star className="w-4 h-4" filled /> : <Star className="w-4 h-4" />}
+                            {isCustom ? <Star className="w-4 h-4 text-[#18123b]" filled /> : <Star className="w-4 h-4 text-[#18123b]" />}
                           </button>
                           <button
                             onClick={(e) => handleRename(e, s.id)}
