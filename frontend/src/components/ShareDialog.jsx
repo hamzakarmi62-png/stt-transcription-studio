@@ -72,15 +72,6 @@ export default function ShareDialog({ open, onClose, sessionId, filename }) {
     window.open(`https://wa.me/?text=${encodeURIComponent(`${text}\n${url}`)}`, "_blank");
   };
 
-  const nativeShare = async () => {
-    if (!navigator.share) return;
-    try {
-      await navigator.share({ title: `Transcription — ${filename}`, url });
-    } catch {
-      /* user cancelled */
-    }
-  };
-
   const downloadFile = async (format) => {
     setBusyFile(format);
     try {
@@ -167,14 +158,16 @@ export default function ShareDialog({ open, onClose, sessionId, filename }) {
                 </svg>
                 WhatsApp
               </button>
-              {typeof navigator.share === "function" && (
-                <button
-                  onClick={nativeShare}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#18123b]/15 text-sm font-semibold text-[#18123b] hover:bg-[#18123b]/[0.06] transition"
-                >
-                  <ShareIcon className="w-4 h-4" /> Autre…
-                </button>
-              )}
+              <a
+                href={`mailto:?subject=${encodeURIComponent(`Transcription : "${filename}" — Aud Studio`)}&body=${encodeURIComponent(url)}`}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#18123b]/15 text-sm font-semibold text-[#18123b] hover:bg-[#18123b]/[0.06] transition"
+              >
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-10 6L2 7" />
+                </svg>
+                E-mail
+              </a>
             </div>
 
             <div className="border-t border-[#18123b]/[0.08] pt-4">
