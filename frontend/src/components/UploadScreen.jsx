@@ -464,6 +464,13 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       return next;
     });
 
+  const toggleAllFiles = () =>
+    setSelectedFileIds((prev) => {
+      const all = selectedFolderFilter === "all" ? customWorksSessions : folderFilteredSessions;
+      const every = all.length > 0 && all.every((s) => prev.has(s.id));
+      return every ? new Set() : new Set(all.map((s) => s.id));
+    });
+
   const bulkDeleteFiles = async () => {
     if (!confirm(`Supprimer ${selectedFileIds.size} session(s) ?`)) return;
     for (const id of selectedFileIds) {
