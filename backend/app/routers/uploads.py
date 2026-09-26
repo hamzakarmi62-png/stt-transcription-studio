@@ -1,3 +1,5 @@
+import os
+import re
 import shutil
 import tempfile
 import threading
@@ -464,3 +466,110 @@ def delete_session(session_id: str, request: Request = None):
 @router.post("/jobs/refresh")
 def _noop():
     return {"ok": True, "threads": threading.active_count()}
+
+
+# ── Import from an internet link (direct media URL or YouTube etc.) ──────────
+
+class FromUrlRequest(BaseModel):
+    url: str
+
+_BLOCKED_HOSTS = ("localhost", "127.", "10.", "192.168.", "172.16.", "172.17.",
+                  "172.18.", "172.19.", "172.2", "172.30.", "172.31.", "169.254.", "[::1]")
+
+_MEDIA_EXTS = (".mp3", ".wav", ".m4a", ".ogg", ".flac", ".aac", ".mp4", ".webm", ".mov", ".mkv")
+
+
+def _download_thread(session_id: str, url: str) -> None:
+    """Runs off the request path: fetch the media, register it as the session's
+    file, archive to the bucket — then the normal transcription flow takes over."""
+    try:
+        upload_path = settings.upload_path
+        upload_path.mkdir(parents=True, exist_ok=True)
+        dest_base = str(upload_path / session_id)
+        filename, dest = None, None
+
+        is_yt = any(d in url for d in ("youtube.com/", "youtu.be/", "dailymotion.com/", "vimeo.com/", "facebook.com/", "tiktok.com/"))
+        if is_yt:
+            import yt_dlp
+
+            def _hook(d):
+                if d.get("status") == "finished":
+                    print(f"URL import {session_id}: download finished")
+
+            opts = {
+                "outtmpl": dest_base + ".%(ext)s",
+                # progressive mp4 first — no ffmpeg merge needed on the server
+                "format": "best[height<=720][ext=mp4]/best[height<=720]/best",
+                "max_filesize": settings.max_upload_mb * 1024 * 1024,
+                "quiet": True,
+                "no_warnings": True,
+                "noplaylist": True,
+                "progress_hooks": [_hook],
+            }
+            with yt_dlp.YoutubeDL(opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+            filename = (info.get("title") or session_id) + ".mp4"
+            import glob
+            candidates = [p for p in glob.glob(dest_base + ".*") if not p.endswith((".part", ".ytdl"))]
+            if not candidates:
+                raise RuntimeError("yt-dlp produced no file")
+            dest = Path(candidates[0])
+            filename = (info.get("title") or session_id)[:120] + dest.suffix
+        else:
+            # direct media link — stream to disk with a size guard
+            import requests as rq
+            with rq.get(url, stream=True, timeout=(15, 120), headers={"User-Agent": "Mozilla/5.0"}) as r:
+                r.raise_for_status()
+                size = 0
+                dest = Path(dest_base + ".mp4")
+                with dest.open("wb") as fh:
+                    for chunk in r.iter_content(512 * 1024):
+                        if not chunk:
+                            continue
+                        size += len(chunk)
+                        if size > settings.max_upload_mb * 1024 * 1024:
+                            raise RuntimeError(f"Le fichier dépasse {settings.max_upload_mb} MB")
+                        fh.write(chunk)
+            # extension from the URL path if it carries one
+            from urllib.parse import urlparse
+            path_ext = os.path.splitext(urlparse(url).path)[1].lower()
+            if path_ext in _MEDIA_EXTS and dest.suffix != path_ext:
+                renamed = dest.with_suffix(path_ext)
+                dest.rename(renamed)
+                dest = renamed
+
+        size = dest.stat().st_size
+        if size <= 0:
+            raise RuntimeError("Le fichier téléchargé est vide.")
+        mime = MIME_BY_EXT.get(dest.suffix.lower().lstrip("."), "application/octet-stream")
+        safe_title = filename or (session_id + dest.suffix)
+        db.update_session(session_id, filename=safe_title, audio_path=str(dest), status="uploaded")
+        print(f"URL import {session_id}: {size / (1024 * 1024):.1f} MB archived as {dest.name}")
+        threading.Thread(target=_publish_to_cloud, args=(session_id, dest, mime, size), daemon=True).start()
+    except Exception as exc:
+        print(f"URL import failed for {session_id}: {exc}")
+        db.update_session(session_id, status="error",
+                          error=f"فشل تحميل الرابط: {str(exc)[:180]}")
+
+
+@router.post("/sessions/from-url")
+def create_from_url(req: FromUrlRequest, request: Request):
+    """Create a session from an internet link; the download runs in the
+    background and the session flips to 'uploaded' when ready to transcribe."""
+    user_id = user_id_from_request(request)
+    if not user_id:
+        raise HTTPException(401, "Authentification requise.")
+    url = (req.url or "").strip()
+    if not re.match(r"^https?://", url, re.IGNORECASE):
+        raise HTTPException(400, "الرابط غير صالح — يجب أن يبدأ بـ http أو https.")
+    from urllib.parse import urlparse
+    host = (urlparse(url).hostname or "").lower()
+    if not host or any(host == b or host.startswith(b) for b in _BLOCKED_HOSTS):
+        raise HTTPException(400, "الرابط غير مسموح به.")
+
+    session_id = uuid.uuid4().hex[:12]
+    db.create_session(session_id, filename=url.rsplit("/", 1)[-1][:120] or url,
+                      audio_path=str(settings.upload_path / session_id), user_id=user_id)
+    db.update_session(session_id, status="downloading")
+    threading.Thread(target=_download_thread, args=(session_id, url), daemon=True).start()
+    return {"ok": True, "id": session_id, "status": "downloading"}

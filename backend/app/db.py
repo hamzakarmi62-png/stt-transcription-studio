@@ -585,7 +585,7 @@ def list_sessions(user_id: str | None = None) -> list[dict]:
 
 
 def update_session(session_id: str, **fields) -> dict | None:
-    allowed = {"duration", "language", "status", "error", "segments", "speakers", "settings"}
+    allowed = {"duration", "language", "status", "error", "segments", "speakers", "settings", "filename", "audio_path"}
     update_data = {}
     for key, value in fields.items():
         if key not in allowed:
@@ -665,7 +665,7 @@ def recover_orphan_processing() -> int:
     with _lock:
         conn = _local_conn()
         rows = conn.execute(
-            "SELECT id FROM sessions WHERE status = 'processing'"
+            "SELECT id FROM sessions WHERE status IN ('processing', 'downloading')"
         ).fetchall()
         conn.close()
     for row in rows:
@@ -673,7 +673,7 @@ def recover_orphan_processing() -> int:
         recovered += 1
 
     for sess in _list_session_cloud_meta():
-        if sess.get("status") == "processing":
+        if sess.get("status") in ("processing", "downloading"):
             update_session(sess["id"], status="error", error=RESTART_ERROR)
             recovered += 1
     return recovered
