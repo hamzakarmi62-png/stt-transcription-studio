@@ -499,6 +499,8 @@ def _download_thread(session_id: str, url: str) -> None:
             # Datacenter IPs often trigger YouTube's bot check with the default
             # web client — fall back through alternate player clients.
             client_attempts = [
+                {"youtube": {"player_client": ["web_embedded"]}},
+                {"youtube": {"player_client": ["android_vr"]}},
                 None,
                 {"youtube": {"player_client": ["android"]}},
                 {"youtube": {"player_client": ["ios"]}},
