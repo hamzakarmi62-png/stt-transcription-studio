@@ -496,39 +496,56 @@ def _download_thread(session_id: str, url: str) -> None:
                 if d.get("status") == "finished":
                     print(f"URL import {session_id}: download finished")
 
+            # Owner-provided YouTube cookies (secrets/youtube_cookies.txt in the
+            # bucket) bypass the datacenter bot-check for EVERY user's import.
+            cookie_tmp = None
+            try:
+                cdata = storage.get_bytes("secrets/youtube_cookies.txt")
+                if cdata:
+                    cookie_tmp = Path(tempfile.gettempdir()) / f"yt_cookies_{session_id}.txt"
+                    cookie_tmp.write_bytes(cdata)
+            except Exception:
+                cookie_tmp = None
+
             # Datacenter IPs often trigger YouTube's bot check with the default
             # web client — fall back through alternate player clients.
             client_attempts = [
+                None,
                 {"youtube": {"player_client": ["web_embedded"]}},
                 {"youtube": {"player_client": ["android_vr"]}},
-                None,
                 {"youtube": {"player_client": ["android"]}},
                 {"youtube": {"player_client": ["ios"]}},
                 {"youtube": {"player_client": ["tv"]}},
                 {"youtube": {"player_client": ["mweb"]}},
             ]
             info, last_err = None, None
-            for extractor_args in client_attempts:
-                opts = {
-                    "outtmpl": dest_base + ".%(ext)s",
-                    # progressive mp4 first — no ffmpeg merge needed on the server
-                    "format": "best[height<=720][ext=mp4]/best[height<=720]/best",
-                    "max_filesize": settings.max_upload_mb * 1024 * 1024,
-                    "quiet": True,
-                    "no_warnings": True,
-                    "noplaylist": True,
-                    "progress_hooks": [_hook],
-                }
-                if extractor_args:
-                    opts["extractor_args"] = extractor_args
-                try:
-                    with yt_dlp.YoutubeDL(opts) as ydl:
-                        info = ydl.extract_info(url, download=True)
-                    break
-                except Exception as exc:
-                    last_err = exc
-                    print(f"URL import {session_id}: player client failed ({str(exc)[:90]}), trying next")
-                    continue
+            try:
+                for extractor_args in client_attempts:
+                    opts = {
+                        "outtmpl": dest_base + ".%(ext)s",
+                        # progressive mp4 first — no ffmpeg merge needed on the server
+                        "format": "best[height<=720][ext=mp4]/best[height<=720]/best",
+                        "max_filesize": settings.max_upload_mb * 1024 * 1024,
+                        "quiet": True,
+                        "no_warnings": True,
+                        "noplaylist": True,
+                        "progress_hooks": [_hook],
+                    }
+                    if cookie_tmp and cookie_tmp.exists():
+                        opts["cookiefile"] = str(cookie_tmp)
+                    if extractor_args:
+                        opts["extractor_args"] = extractor_args
+                    try:
+                        with yt_dlp.YoutubeDL(opts) as ydl:
+                            info = ydl.extract_info(url, download=True)
+                        break
+                    except Exception as exc:
+                        last_err = exc
+                        print(f"URL import {session_id}: player client failed ({str(exc)[:90]}), trying next")
+                        continue
+            finally:
+                if cookie_tmp:
+                    cookie_tmp.unlink(missing_ok=True)
             if info is None:
                 raise RuntimeError(last_err)
             import glob
