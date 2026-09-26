@@ -100,6 +100,11 @@ const TRANSLATIONS = {
     browse: "Browse Files",
     orRecord: "or direct recording",
     recordMic: "Start Live Microphone Recording",
+    orLink: "Or from an internet link (YouTube, MP4, MP3)",
+    linkPlaceholder: "Paste the video or audio link here",
+    linkBtn: "Transcribe from link",
+    downloadingMsg: "Downloading media from the link... may take several minutes depending on size",
+    linkBadUrl: "Invalid link — it must start with http or https",
     recording: "Recording live...",
     stopRecord: "Stop Recording",
     discardRecord: "Discard",
@@ -174,6 +179,11 @@ const TRANSLATIONS = {
     browse: "Parcourir",
     orRecord: "ou enregistrement direct",
     recordMic: "Enregistrement Micro en Direct",
+    orLink: "Ou depuis un lien internet (YouTube, MP4, MP3)",
+    linkPlaceholder: "Collez le lien de la vidéo ou de l'audio ici",
+    linkBtn: "Transcrire depuis le lien",
+    downloadingMsg: "Téléchargement des médias depuis le lien... cela peut prendre plusieurs minutes",
+    linkBadUrl: "Lien invalide — il doit commencer par http ou https",
     recording: "Enregistrement en cours...",
     stopRecord: "Arrêter l'enregistrement",
     discardRecord: "Supprimer",
@@ -331,6 +341,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [theme, setTheme] = useState("light"); // dark | light (light = Rev cream by default)
 
   const [file, setFile] = useState(null);
+  const [linkUrl, setLinkUrl] = useState("");
   const [language, setLanguage] = useState("");
   const [detectSpeakers, setDetectSpeakers] = useState(true);
   const [numSpeakers, setNumSpeakers] = useState(2);
@@ -599,6 +610,57 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     if (timerRef.current) clearInterval(timerRef.current);
   };
 
+  // ── Import from an internet link: create → download → transcribe → done ──
+  const startFromUrl = async () => {
+    const url = linkUrl.trim();
+    if (!url) return;
+    setError("");
+    setMessage("");
+    if (!/^https?:\/\//i.test(url)) {
+      setError(t.linkBadUrl);
+      return;
+    }
+    try {
+      setPhase("downloading");
+      setMessage(uiLang === "ar"
+        ? "جاري تحميل الوسائط من الرابط... قد يستغرق عدة دقائق حسب الحجم"
+        : uiLang === "fr"
+        ? "Téléchargement des médias depuis le lien... cela peut prendre plusieurs minutes"
+        : "Downloading media from the link... may take several minutes");
+      const created = await api.fromUrl(url);
+      const sid = created.id;
+      let sess = null;
+      const startedAt = Date.now();
+      for (;;) {
+        await sleep(3000);
+        if (Date.now() - startedAt > 40 * 60 * 1000) throw new Error("Download timed out");
+        sess = await api.getSession(sid);
+        if (sess.status !== "downloading") break;
+      }
+      if (sess.status === "error") throw new Error(sess.error || "Download failed");
+
+      setPhase("transcribing");
+      setMessage(t.transcribingMsg);
+      await api.startTranscribe(sid, language);
+      await pollStatus(sid, "transcribed");
+
+      setPhase("diarizing");
+      setMessage(t.diarizingMsg);
+      await api.startDiarize(sid, detectSpeakers ? numSpeakers : 1);
+      await pollStatus(sid, "done");
+
+      const full = await api.getSession(sid);
+      setPhase("done");
+      await loadSessions();
+      onComplete(full);
+    } catch (e) {
+      console.error("URL pipeline error:", e);
+      setPhase("error");
+      const errText = e?.message || "";
+      setError(errText && errText !== "{}" ? errText : t.linkBadUrl);
+    }
+  };
+
   useEffect(() => () => resetRecording(), []);
 
   const selectedBlob = file || recBlob;
@@ -715,7 +777,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     });
   };
 
-  const busy = phase === "uploading" || phase === "transcribing" || phase === "diarizing";
+  const busy = phase === "uploading" || phase === "downloading" || phase === "transcribing" || phase === "diarizing";
   const hasAudio = !!selectedBlob;
 
   const totalSessionsCount = sessions.length;
@@ -1073,6 +1135,32 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     {t.recordMic}
                   </button>
                 )}
+
+                <div className="pt-2">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className={`h-px flex-1 ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+                    <span className="text-[10px] font-black tracking-widest text-[#4b4763]">{t.orLink}</span>
+                    <div className={`h-px flex-1 ${isDark ? "bg-white/10" : "bg-slate-200"}`} />
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input
+                      value={linkUrl}
+                      onChange={(e) => setLinkUrl(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") startFromUrl(); }}
+                      placeholder={t.linkPlaceholder}
+                      dir="ltr"
+                      disabled={busy}
+                      className="flex-1 min-w-0 px-4 py-3 rounded-2xl border-[1.5px] border-[#18123b]/15 text-sm text-[#18123b] bg-white focus:outline-none focus:border-[#6415f5] placeholder:text-[#4b4763]/60 disabled:opacity-50"
+                    />
+                    <button
+                      onClick={startFromUrl}
+                      disabled={busy || !linkUrl.trim()}
+                      className="px-5 py-3 rounded-2xl bg-[#6415f5] text-white text-sm font-bold hover:bg-[#5311cf] shadow-md shadow-[#6415f5]/25 transition-all disabled:opacity-40 shrink-0"
+                    >
+                      {t.linkBtn}
+                    </button>
+                  </div>
+                </div>
 
                 {recording && (
                   <div className="rounded-3xl border-2 border-red-500/50 bg-red-500/10 p-4 flex items-center justify-between">

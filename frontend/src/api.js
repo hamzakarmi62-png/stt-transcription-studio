@@ -238,6 +238,14 @@ export const api = {
     request(`${BASE}/sessions/${id}/highlights?force=${force}`, { method: "POST" }),
   getHighlights: (id) => request(`${BASE}/sessions/${id}/highlights`),
 
+  // Create a session from an internet link (YouTube, direct MP4/MP3...).
+  fromUrl: (url) =>
+    request(`${BASE}/sessions/from-url`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    }),
+
   // Grounded Q&A over the transcript.
   askTranscript: (id, question) =>
     request(`${BASE}/sessions/${id}/ask`, {
