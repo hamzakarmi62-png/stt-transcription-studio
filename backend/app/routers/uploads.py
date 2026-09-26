@@ -496,19 +496,39 @@ def _download_thread(session_id: str, url: str) -> None:
                 if d.get("status") == "finished":
                     print(f"URL import {session_id}: download finished")
 
-            opts = {
-                "outtmpl": dest_base + ".%(ext)s",
-                # progressive mp4 first — no ffmpeg merge needed on the server
-                "format": "best[height<=720][ext=mp4]/best[height<=720]/best",
-                "max_filesize": settings.max_upload_mb * 1024 * 1024,
-                "quiet": True,
-                "no_warnings": True,
-                "noplaylist": True,
-                "progress_hooks": [_hook],
-            }
-            with yt_dlp.YoutubeDL(opts) as ydl:
-                info = ydl.extract_info(url, download=True)
-            filename = (info.get("title") or session_id) + ".mp4"
+            # Datacenter IPs often trigger YouTube's bot check with the default
+            # web client — fall back through alternate player clients.
+            client_attempts = [
+                None,
+                {"youtube": {"player_client": ["android"]}},
+                {"youtube": {"player_client": ["ios"]}},
+                {"youtube": {"player_client": ["tv"]}},
+                {"youtube": {"player_client": ["mweb"]}},
+            ]
+            info, last_err = None, None
+            for extractor_args in client_attempts:
+                opts = {
+                    "outtmpl": dest_base + ".%(ext)s",
+                    # progressive mp4 first — no ffmpeg merge needed on the server
+                    "format": "best[height<=720][ext=mp4]/best[height<=720]/best",
+                    "max_filesize": settings.max_upload_mb * 1024 * 1024,
+                    "quiet": True,
+                    "no_warnings": True,
+                    "noplaylist": True,
+                    "progress_hooks": [_hook],
+                }
+                if extractor_args:
+                    opts["extractor_args"] = extractor_args
+                try:
+                    with yt_dlp.YoutubeDL(opts) as ydl:
+                        info = ydl.extract_info(url, download=True)
+                    break
+                except Exception as exc:
+                    last_err = exc
+                    print(f"URL import {session_id}: player client failed ({str(exc)[:90]}), trying next")
+                    continue
+            if info is None:
+                raise RuntimeError(last_err)
             import glob
             candidates = [p for p in glob.glob(dest_base + ".*") if not p.endswith((".part", ".ytdl"))]
             if not candidates:
@@ -547,9 +567,16 @@ def _download_thread(session_id: str, url: str) -> None:
         print(f"URL import {session_id}: {size / (1024 * 1024):.1f} MB archived as {dest.name}")
         threading.Thread(target=_publish_to_cloud, args=(session_id, dest, mime, size), daemon=True).start()
     except Exception as exc:
-        print(f"URL import failed for {session_id}: {exc}")
-        db.update_session(session_id, status="error",
-                          error=f"فشل تحميل الرابط: {str(exc)[:180]}")
+        msg = str(exc)
+        if "Sign in to confirm" in msg or "not a bot" in msg:
+            user_msg = ("يوتيوب يطلب تحققاً أمنياً من خوادم السحابة لهذا الرابط. "
+                        "حمّل الفيديو على جهازك وارفعه كملف، أو استخدم رابطاً مباشراً للملف (MP4/MP3).")
+        elif "Sign in to confirm" in msg or "bot" in msg:
+            user_msg = "المنصة المصدرة تطلب تحققاً أمنياً — حمّل الملف على جهازك وارفعه، أو استخدم رابطاً مباشراً."
+        else:
+            user_msg = f"فشل تحميل الرابط: {msg[:150]}"
+        print(f"URL import failed for {session_id}: {msg[:200]}")
+        db.update_session(session_id, status="error", error=user_msg)
 
 
 @router.post("/sessions/from-url")

@@ -1118,23 +1118,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
                 <div className="my-7 flex items-center gap-3">
                   <div className={`h-px flex-1 ${isDark ? "bg-white/[0.07]" : "bg-slate-200"}`} />
-                  <span className={`text-[10px] ${textSub} uppercase tracking-[0.25em] font-black`}>{t.orRecord}</span>
+                  <span className={`text-[10px] ${textSub} uppercase tracking-[0.25em] font-black`}>{t.orLink}</span>
                   <div className={`h-px flex-1 ${isDark ? "bg-white/[0.07]" : "bg-slate-200"}`} />
                 </div>
-
-                {!recording && !recBlob && (
-                  <button
-                    onClick={startRecording}
-                    className={`w-full rounded-3xl border-2 py-4 text-center font-bold transition-all flex items-center justify-center gap-2.5 ${
-                      isDark
-                        ? "border-white/10 bg-white/[0.02] hover:border-red-500/60 hover:bg-red-500/10 text-slate-200"
-                        : "border-slate-300 bg-white hover:border-red-400 hover:bg-red-50 text-slate-700"
-                    }`}
-                  >
-                    <span className="w-3 h-3 rounded-full bg-red-500 shadow shadow-red-500/50"></span>
-                    {t.recordMic}
-                  </button>
-                )}
 
                 <div className="pt-2">
                   <div className="flex items-center gap-3 mb-3">
@@ -1160,6 +1146,27 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                       {t.linkBtn}
                     </button>
                   </div>
+
+                <div className="my-7 flex items-center gap-3">
+                  <div className={`h-px flex-1 ${isDark ? "bg-white/[0.07]" : "bg-slate-200"}`} />
+                  <span className={`text-[10px] ${textSub} uppercase tracking-[0.25em] font-black`}>{t.orRecord}</span>
+                  <div className={`h-px flex-1 ${isDark ? "bg-white/[0.07]" : "bg-slate-200"}`} />
+                </div>
+
+                {!recording && !recBlob && (
+                  <button
+                    onClick={startRecording}
+                    className={`w-full rounded-3xl border-2 py-4 text-center font-bold transition-all flex items-center justify-center gap-2.5 ${
+                      isDark
+                        ? "border-white/10 bg-white/[0.02] hover:border-red-500/60 hover:bg-red-500/10 text-slate-200"
+                        : "border-slate-300 bg-white hover:border-red-400 hover:bg-red-50 text-slate-700"
+                    }`}
+                  >
+                    <span className="w-3 h-3 rounded-full bg-red-500 shadow shadow-red-500/50"></span>
+                    {t.recordMic}
+                  </button>
+                )}
+
                 </div>
 
                 {recording && (
