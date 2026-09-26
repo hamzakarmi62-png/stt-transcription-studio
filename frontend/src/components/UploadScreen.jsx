@@ -1221,7 +1221,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                       : "bg-[#18123b] text-white hover:bg-[#2a2455] shadow-lg shadow-[#18123b]/20"
                   }`}
                 >
-                  <span className="inline-flex items-center justify-center gap-2">{busy ? <Loader className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}{busy ? t.processing : t.startTranscribe}</span>
+                  <span className="inline-flex items-center justify-center gap-2">{busy ? <Loader className="w-4 h-4 animate-spin" /> : null}{busy ? t.processing : t.startTranscribe}</span>
                 </button>
               </div>
             </div>
