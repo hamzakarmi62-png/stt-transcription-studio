@@ -69,7 +69,7 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-import { setAuthToken, api } from "./api.js";
+import { setAuthToken, getAuthToken, api } from "./api.js";
 import ShareView from "./components/ShareView.jsx";
 
 export default function App() {
@@ -106,6 +106,23 @@ export default function App() {
       clearTimeout(t1);
       clearTimeout(t2);
     };
+  }, []);
+
+  // F5 on a transcript page: the history entry carries the session id, so a
+  // refresh restores the same session instead of bouncing to the dashboard.
+  useEffect(() => {
+    const st = window.history.state;
+    if (st?.aud === "session" && st.id && getAuthToken()) {
+      api
+        .getSession(st.id)
+        .then((s) => {
+          if (s) {
+            lastSessionRef.current = s;
+            setSession(s);
+          }
+        })
+        .catch(() => {});
+    }
   }, []);
 
   useEffect(() => {

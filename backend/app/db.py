@@ -98,12 +98,18 @@ def _catalog_read(name: str) -> bytes | None:
 
 
 def _catalog_write(name: str, data: bytes) -> bool:
-    return storage.put_bytes(name, data) if storage.enabled() else False
+    ok = storage.put_bytes(name, data) if storage.enabled() else False
+    if ok:
+        # keep the last-good fallback identical to what we just wrote —
+        # otherwise a cap-window read resurrects deleted content
+        _catalog_memory[name] = data
+    return ok
 
 
 def _catalog_delete(name: str) -> None:
     if storage.enabled():
         storage.delete(name)
+    _catalog_memory.pop(name, None)
 
 
 def _read_json(name: str):

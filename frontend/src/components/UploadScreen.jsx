@@ -688,6 +688,14 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       onOk: async () => {
         try {
           await api.deleteSession(id);
+          // instant removal: drop it locally before the silent re-fetch
+          setSessions((prev) => prev.filter((s) => s.id !== id));
+          if (_sessionsCache && _sessionsCache.uid === (user?.id || null)) {
+            _sessionsCache = {
+              uid: user?.id || null,
+              list: _sessionsCache.list.filter((s) => s.id !== id),
+            };
+          }
           setCustomWorkIds((prev) => prev.filter((i) => i !== id));
           setCustomFileNames((prev) => {
             const next = { ...prev };
