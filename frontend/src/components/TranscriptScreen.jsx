@@ -711,6 +711,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       segments: prev.segments.map((s) => (s.id === id ? { ...s, speaker: speakerId } : s)),
     })), [mutate]);
 
+  // Freedom of color: the user picks any color for any speaker — it rides the
+  // same mutation/autosave path as everything else.
+  const setSpeakerColor = useCallback((speakerId, color) =>
+    mutate((prev) => ({
+      ...prev,
+      speakers: prev.speakers.map((s) => (s.id === speakerId ? { ...s, color } : s)),
+    })), [mutate]);
+
   // ── Word-like paragraph flow ─────────────────────────────────────────────
   // DOWN: the paragraph — or just the selected words — is sent to the START
   // of the next paragraph. UP: to the END of the previous one. The moved
@@ -1435,6 +1443,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onMoveUp={moveSegmentUp}
                       onMoveDown={moveSegmentDown}
                       onAddSpeakerFor={addSpeakerForSegment}
+                      onSpeakerColor={setSpeakerColor}
                       onRenameSpeaker={renameSpeaker}
                       onDeleteSpeaker={deleteSpeaker}
                       speakers={speakers}
