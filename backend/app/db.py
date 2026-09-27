@@ -420,9 +420,18 @@ def _save_session_cloud_meta(session_dict: dict):
         sid = session_dict["id"]
         _write_json(f"meta_{sid}.json", session_dict)
 
+        # The catalog is downloaded and re-uploaded on every session write, so
+        # it must stay lean: full transcripts live in the per-session meta
+        # files, the catalog carries only listable metadata.
+        def lean(s: dict) -> dict:
+            return {k: v for k, v in s.items() if k not in ("segments", "speakers")}
+
         catalog = _list_session_cloud_meta()
-        catalog_dict = {s["id"]: s for s in catalog if isinstance(s, dict) and s.get("id")}
-        catalog_dict[sid] = session_dict
+        catalog_dict = {}
+        for s in catalog:
+            if isinstance(s, dict) and s.get("id"):
+                catalog_dict[s["id"]] = lean(s)
+        catalog_dict[sid] = lean(session_dict)
         sorted_list = sorted(
             catalog_dict.values(), key=lambda s: s.get("created_at", ""), reverse=True
         )
@@ -458,7 +467,8 @@ def _delete_session_cloud_meta(session_id: str):
         print("Cloud meta delete error:", e)
 
 
-def create_session(session_id: str, filename: str, audio_path: str, user_id: str | None = None) -> dict:
+def create_session(session_id: str, filename: str, audio_path: str, user_id: str | None = None,
+                   status: str = "uploaded", sync_cloud: bool = True) -> dict:
     now = datetime.now(timezone.utc).isoformat()
     sess_data = {
         "id": session_id,
@@ -467,7 +477,7 @@ def create_session(session_id: str, filename: str, audio_path: str, user_id: str
         "audio_path": audio_path,
         "duration": 0,
         "language": None,
-        "status": "uploaded",
+        "status": status,
         "error": None,
         "segments": "[]",
         "speakers": "[]",
@@ -481,7 +491,8 @@ def create_session(session_id: str, filename: str, audio_path: str, user_id: str
             r = requests.post(url, headers=_headers(), json=sess_data, timeout=5)
             if r.status_code in (200, 201):
                 formatted = _format_session(sess_data)
-                _save_session_cloud_meta(formatted)
+                if sync_cloud:
+                    _save_session_cloud_meta(formatted)
         except Exception as e:
             print("Supabase create_session error:", e)
 
@@ -498,7 +509,8 @@ def create_session(session_id: str, filename: str, audio_path: str, user_id: str
         conn.commit()
         conn.close()
 
-    _save_session_cloud_meta(formatted)
+    if sync_cloud:
+        _save_session_cloud_meta(formatted)
     return formatted
 
 

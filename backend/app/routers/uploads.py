@@ -676,8 +676,15 @@ def create_from_url(req: FromUrlRequest, request: Request):
         raise HTTPException(400, "الرابط غير مسموح به.")
 
     session_id = uuid.uuid4().hex[:12]
+    # The request must answer immediately: the catalog sync is heavy (bucket
+    # read-modify-write), so the session lands in local SQLite here and the
+    # cloud copy catches up in the background.
     db.create_session(session_id, filename=url.rsplit("/", 1)[-1][:120] or url,
-                      audio_path=str(settings.upload_path / session_id), user_id=user_id)
-    db.update_session(session_id, status="downloading")
+                      audio_path=str(settings.upload_path / session_id), user_id=user_id,
+                      status="downloading", sync_cloud=False)
+    threading.Thread(
+        target=db.update_session, args=(session_id,), kwargs={"status": "downloading"},
+        daemon=True,
+    ).start()
     threading.Thread(target=_download_thread, args=(session_id, url), daemon=True).start()
     return {"ok": True, "id": session_id, "status": "downloading"}
