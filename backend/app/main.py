@@ -122,6 +122,11 @@ def health():
         diag["bgutil_plugin"] = True
     except Exception:
         diag["bgutil_plugin"] = False
+    try:
+        from .routers.uploads import bgutil_status
+        diag["bgutil"] = bgutil_status()
+    except Exception:
+        pass
     return {"ok": True, **diag}
 
 

@@ -484,6 +484,20 @@ _MEDIA_EXTS = (".mp3", ".wav", ".m4a", ".ogg", ".flac", ".aac", ".mp4", ".webm",
 
 _bgutil_proc = None
 _bgutil_lock = threading.Lock()
+_bgutil_last_error = ""
+
+
+def bgutil_status() -> dict:
+    """Fast observability for /api/health: is the local PO-token server up,
+    and if not, why did its last start attempt fail?"""
+    base = (os.environ.get("BGUTIL_BASE_URL") or "http://127.0.0.1:4416").rstrip("/")
+    up = False
+    if base.startswith("http://127.0.0.1"):
+        try:
+            up = requests.get(f"{base}/ping", timeout=3).status_code == 200
+        except Exception:
+            up = False
+    return {"up": up, "last_error": _bgutil_last_error[:200]}
 
 
 def _ensure_bgutil() -> str:
@@ -491,6 +505,7 @@ def _ensure_bgutil() -> str:
     The bgutil Node server runs in-container on localhost and issues the
     BotGuard attestation YouTube demands from datacenter IPs — without it
     every player client hits the "confirm you're not a bot" wall."""
+    global _bgutil_last_error
     base = (os.environ.get("BGUTIL_BASE_URL") or "http://127.0.0.1:4416").rstrip("/")
     if not base.startswith("http://127.0.0.1"):
         return base  # external sidecar — managed elsewhere
@@ -503,6 +518,7 @@ def _ensure_bgutil() -> str:
     script = Path(__file__).resolve().parents[2] / "pot_server" / "build" / "main.js"
     node = shutil.which("node")
     if not script.exists() or not node:
+        _bgutil_last_error = "script or node missing"
         return ""
     with _bgutil_lock:
         try:
@@ -511,26 +527,63 @@ def _ensure_bgutil() -> str:
         except Exception:
             pass
         import subprocess
-        _bgutil_proc = subprocess.Popen(
-            [node, str(script), "--host", "127.0.0.1", "--port", "4416"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
-        for _ in range(15):
+        log_file = Path(tempfile.gettempdir()) / "bgutil_server.log"
+        try:
+            with log_file.open("w", encoding="utf-8") as lf:
+                _bgutil_proc = subprocess.Popen(
+                    [node, str(script), "--host", "127.0.0.1", "--port", "4416"],
+                    stdout=lf,
+                    stderr=subprocess.STDOUT,
+                )
+            for _ in range(15):
+                try:
+                    if requests.get(f"{base}/ping", timeout=3).status_code == 200:
+                        print("bgutil PO-token server started on :4416")
+                        return base
+                except Exception:
+                    pass
+                time.sleep(2)
+            tail = ""
             try:
-                if requests.get(f"{base}/ping", timeout=3).status_code == 200:
-                    print("bgutil PO-token server started on :4416")
-                    return base
+                tail = log_file.read_text(encoding="utf-8", errors="ignore")[-300:]
             except Exception:
                 pass
-            time.sleep(2)
-        print("bgutil PO-token server failed to start")
+            _bgutil_last_error = f"no ping after spawn; log: {tail}"
+            print("bgutil PO-token server failed to start:", _bgutil_last_error[:200])
+        except Exception as exc:
+            _bgutil_last_error = f"spawn failed: {exc}"
+            print("bgutil spawn failed:", exc)
         return ""
+
+
+class _PotCapture:
+    """yt-dlp logger that keeps only PO-token related debug lines — enough to
+    see whether the provider engaged, without verbose noise."""
+
+    def __init__(self):
+        self.lines: list[str] = []
+
+    def debug(self, msg):
+        try:
+            if any(k in msg.lower() for k in ("pot", "bgutil", "botguard")):
+                self.lines.append(str(msg)[:220])
+        except Exception:
+            pass
+
+    def info(self, msg):
+        pass
+
+    def warning(self, msg):
+        pass
+
+    def error(self, msg):
+        self.lines.append("ERR " + str(msg)[:220])
 
 
 def _download_thread(session_id: str, url: str) -> None:
     """Runs off the request path: fetch the media, register it as the session's
     file, archive to the bucket — then the normal transcription flow takes over."""
+    pot_cap, bgutil_url = None, ""
     try:
         upload_path = settings.upload_path
         upload_path.mkdir(parents=True, exist_ok=True)
@@ -575,6 +628,7 @@ def _download_thread(session_id: str, url: str) -> None:
                 {"youtube": {"player_client": ["mweb"]}},
             ]
             info, last_err = None, None
+            pot_cap = _PotCapture()
             try:
                 for extractor_args in client_attempts:
                     import imageio_ffmpeg
@@ -585,10 +639,9 @@ def _download_thread(session_id: str, url: str) -> None:
                         "format": "bv*[height<=720]+ba/b",
                         "ffmpeg_location": imageio_ffmpeg.get_ffmpeg_exe(),
                         "max_filesize": settings.max_upload_mb * 1024 * 1024,
-                        "quiet": True,
-                        "no_warnings": True,
                         "noplaylist": True,
                         "progress_hooks": [_hook],
+                        "logger": pot_cap,
                     }
                     if cookie_tmp and cookie_tmp.exists():
                         opts["cookiefile"] = str(cookie_tmp)
@@ -649,6 +702,8 @@ def _download_thread(session_id: str, url: str) -> None:
         threading.Thread(target=_publish_to_cloud, args=(session_id, dest, mime, size), daemon=True).start()
     except Exception as exc:
         msg = str(exc)
+        pot_tail = " | ".join(pot_cap.lines[-4:]) if pot_cap and pot_cap.lines else ""
+        diag = f" [bgutil={bgutil_url or 'off'}]" + (f" [pot: {pot_tail[:220]}]" if pot_tail else "")
         if "Sign in to confirm" in msg or "not a bot" in msg:
             user_msg = ("يوتيوب يطلب تحققاً أمنياً من خوادم السحابة لهذا الرابط. "
                         "حمّل الفيديو على جهازك وارفعه كملف، أو استخدم رابطاً مباشراً للملف (MP4/MP3).")
@@ -656,8 +711,9 @@ def _download_thread(session_id: str, url: str) -> None:
             user_msg = "المنصة المصدرة تطلب تحققاً أمنياً — حمّل الملف على جهازك وارفعه، أو استخدم رابطاً مباشراً."
         else:
             user_msg = f"فشل تحميل الرابط: {msg[:150]}"
-        print(f"URL import failed for {session_id}: {msg[:200]}")
-        db.update_session(session_id, status="error", error=user_msg)
+        # TEMP diagnosis: the [bgutil=…] tail rides along in the stored error so
+        # the failure mode is readable via the API; strip once YouTube works.
+        db.update_session(session_id, status="error", error=user_msg + diag[:260])
 
 
 @router.post("/sessions/from-url")
