@@ -164,13 +164,23 @@ export default function App() {
 
   const lastSessionRef = useRef(null);
 
-  const openSession = (s) => {
-    lastSessionRef.current = s;
+  const openSession = async (s) => {
     const st = window.history.state;
     if (st?.aud !== "session" || st?.id !== s.id) {
       window.history.pushState({ aud: "session", id: s.id }, "");
     }
-    setSession(s);
+    // Archive rows are lean (no transcript payloads) since the catalog
+    // slim-down — always resolve the full session before showing the screen,
+    // and cache the FULL object for popstate restores.
+    try {
+      const full = await api.getSession(s.id);
+      const sess = full && full.id ? full : s;
+      lastSessionRef.current = sess;
+      setSession(sess);
+    } catch {
+      lastSessionRef.current = s;
+      setSession(s);
+    }
   };
 
   const closeSession = () => {
