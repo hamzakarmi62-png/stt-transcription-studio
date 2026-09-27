@@ -1394,17 +1394,20 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     return (
                       <div key={i}>
                         {showMark && (
-                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                          <div className="flex items-center gap-2.5 mb-1 flex-wrap">
                             <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }}></span>
-                            <span className="font-bold text-[15px]" style={{ color }}>
+                            <span className="font-medium text-[15px]" style={{ color }}>
                               {spk?.name || "—"}
                             </span>
-                            <span className="text-[12px] text-[#4b4763] tabular-nums opacity-70">
-                              {formatTime(seg.start || 0)}
+                            <span className="inline-flex items-center gap-1.5 text-[#4b4763]">
+                              <span className="w-[18px] h-[18px] rounded-full border border-current flex items-center justify-center">
+                                <Play className="w-2.5 h-2.5" filled />
+                              </span>
+                              <span className="text-[13px] tabular-nums">{formatTime(seg.start || 0)}</span>
                             </span>
                           </div>
                         )}
-                        <p dir="auto" className="text-[19px] leading-[2] text-[#18123b] select-text">
+                        <p dir="auto" className="text-[16px] leading-[1.75] text-[#18123b] select-text">
                           {tr.text}
                         </p>
                       </div>

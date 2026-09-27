@@ -301,7 +301,7 @@ function Segment({
 
       {/* Speaker mark — only when the speaker changes (Word-like flow) */}
       {showMark && (
-        <div className="flex items-center gap-2 mb-0.5 flex-wrap" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-2.5 mb-1 flex-wrap" onClick={(e) => e.stopPropagation()}>
           <span className="w-2 h-2 rounded-full shrink-0" style={{ background: speakerColor }}></span>
           {renaming ? (
             <input
@@ -313,7 +313,7 @@ function Segment({
                 if (e.key === "Enter") e.currentTarget.blur();
                 if (e.key === "Escape") setRenaming(false);
               }}
-              className="bg-transparent border-0 border-b-2 border-dotted font-bold text-[15px] outline-none max-w-[180px] px-0 py-0"
+              className="bg-transparent border-0 border-b-2 border-dotted font-medium text-[15px] outline-none max-w-[180px] px-0 py-0"
               style={{ color: speakerColor, borderColor: speakerColor }}
               dir="auto"
             />
@@ -323,7 +323,7 @@ function Segment({
                 <button
                   type="button"
                   onClick={() => setSpkMenu((o) => !o)}
-                  className="font-bold text-[15px] cursor-pointer max-w-[160px] truncate"
+                  className="font-medium text-[15px] cursor-pointer max-w-[160px] truncate"
                   style={{ color: speakerColor }}
                   title="Cliquez pour changer de locuteur · la pastille de couleur est libre"
                 >
@@ -344,11 +344,11 @@ function Segment({
               {spkMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => { setSpkMenu(false); setEditingNames(false); }} />
-                  <div className="absolute left-0 top-full mt-1 z-50 w-60 rounded-2xl bg-white shadow-xl border border-slate-200 p-1.5">
+                  <div className="absolute left-0 top-full mt-1.5 z-50 w-[248px] rounded-xl bg-white shadow-xl shadow-slate-900/10 border border-slate-200 py-1 overflow-hidden">
                     {speakers.map((s) => (
-                      <div key={s.id} className="flex items-center gap-2 px-2 py-1.5 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div key={s.id} className="flex items-center gap-3 px-4 py-[9px] hover:bg-slate-50 transition-colors">
                         <span className="w-4 flex items-center justify-center shrink-0 text-[#18123b]">
-                          {segment.speaker === s.id ? <Check className="w-3.5 h-3.5" /> : null}
+                          {segment.speaker === s.id ? <Check className="w-4 h-4" /> : null}
                         </span>
                         {editingNames ? (
                           <input
@@ -357,19 +357,19 @@ function Segment({
                               setNameDrafts((d) => ({ ...d, [s.id]: e.target.value }));
                               onRenameSpeaker(s.id, e.target.value);
                             }}
-                            className="flex-1 min-w-0 text-sm font-semibold bg-transparent outline-none border-b border-dotted border-slate-300"
+                            className="flex-1 min-w-0 text-[15px] bg-transparent outline-none border-b border-dotted border-slate-300"
                             dir="auto"
                           />
                         ) : (
                           <button
                             onClick={() => { onReassign(segment.id, s.id); setSpkMenu(false); }}
-                            className="flex-1 min-w-0 text-start text-sm font-semibold text-[#18123b] truncate"
+                            className="flex-1 min-w-0 text-start text-[15px] text-slate-800 truncate"
                           >
                             {s.name}
                           </button>
                         )}
                         <label
-                          className="w-[18px] h-[18px] rounded-full border border-black/10 cursor-pointer shrink-0"
+                          className="w-3.5 h-3.5 rounded-full cursor-pointer shrink-0 ring-1 ring-inset ring-black/10"
                           style={{ background: s.color }}
                           title="Choisir la couleur de ce locuteur"
                         >
@@ -382,23 +382,23 @@ function Segment({
                         </label>
                       </div>
                     ))}
-                    <div className="my-1 border-t border-slate-200" />
+                    <div className="my-1.5 border-t border-slate-200" />
                     <button
                       onClick={() => setEditingNames((o) => !o)}
-                      className="w-full text-start px-2 py-1.5 rounded-lg text-sm text-[#18123b] hover:bg-slate-50 transition"
+                      className="w-full text-start px-4 py-[9px] text-[15px] text-slate-800 hover:bg-slate-50 transition"
                     >
                       {editingNames ? "Terminer" : "Modifier les noms des locuteurs"}
                     </button>
                     <button
                       onClick={() => { onAddSpeakerFor(segment.id); setSpkMenu(false); }}
-                      className="w-full text-start px-2 py-1.5 rounded-lg text-sm text-[#18123b] hover:bg-slate-50 transition flex items-center gap-2"
+                      className="w-full text-start px-4 py-[9px] text-[15px] text-slate-800 hover:bg-slate-50 transition flex items-center gap-2"
                     >
-                      <span className="font-bold">+</span> Nouveau locuteur
+                      <span className="text-lg leading-none">+</span> Nouveau locuteur
                     </button>
                     {speakers.length > 1 && (
                       <button
                         onClick={() => { onDeleteSpeaker(segment.speaker); setSpkMenu(false); }}
-                        className="w-full text-start px-2 py-1.5 rounded-lg text-sm text-red-500 hover:bg-red-50 transition"
+                        className="w-full text-start px-4 py-[9px] text-[15px] text-red-500 hover:bg-red-50 transition"
                       >
                         × Supprimer ce locuteur
                       </button>
@@ -408,9 +408,16 @@ function Segment({
               )}
             </div>
           )}
-          <span className="text-[12px] text-slate-400 tabular-nums opacity-70">
-            {formatTime(segment.start)}
-          </span>
+          <button
+            onClick={() => onSeek(segment.start)}
+            className="inline-flex items-center gap-1.5 text-[#4b4763] hover:text-[#6415f5] transition"
+            title="Lire depuis le début de ce paragraphe"
+          >
+            <span className="w-[18px] h-[18px] rounded-full border border-current flex items-center justify-center">
+              <Play className="w-2.5 h-2.5" filled />
+            </span>
+            <span className="text-[13px] tabular-nums">{formatTime(segment.start)}</span>
+          </button>
         </div>
       )}
 
@@ -439,7 +446,7 @@ function Segment({
           pendingCaretRef.current = off;
           onStartEdit(segment.id);
         }}
-        className="cursor-text text-[19px] leading-[2] text-slate-800 select-text focus:outline-none"
+        className="cursor-text text-[16px] leading-[1.75] text-slate-800 select-text focus:outline-none"
       >
         {segment.words && segment.words.length > 0 ? (
           segment.words.map((w, i) => {
