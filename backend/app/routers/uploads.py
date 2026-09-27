@@ -3,6 +3,7 @@ import re
 import shutil
 import tempfile
 import threading
+import time
 import uuid
 from pathlib import Path
 from typing import Optional
@@ -507,6 +508,25 @@ def _download_thread(session_id: str, url: str) -> None:
             except Exception:
                 cookie_tmp = None
 
+            # PO-token provider: a bgutil sidecar generates the BotGuard
+            # attestation YouTube demands from datacenter IPs — without it
+            # every player client hits the "confirm you're not a bot" wall.
+            # The sidecar sleeps when idle, so wake it before the first
+            # attempt (free services take ~30-60s to spin up).
+            bgutil_url = (os.environ.get("BGUTIL_BASE_URL") or "").rstrip("/")
+            pot_args = None
+            if bgutil_url:
+                for _ in range(18):
+                    try:
+                        if requests.get(f"{bgutil_url}/ping", timeout=5).status_code == 200:
+                            pot_args = {"youtubepot-bgutilhttp": {"base_url": [bgutil_url]}}
+                            break
+                    except Exception:
+                        pass
+                    time.sleep(5)
+                if pot_args:
+                    print(f"URL import {session_id}: bgutil PO-token provider awake")
+
             # Datacenter IPs often trigger YouTube's bot check with the default
             # web client — fall back through alternate player clients.
             client_attempts = [
@@ -536,8 +556,11 @@ def _download_thread(session_id: str, url: str) -> None:
                     }
                     if cookie_tmp and cookie_tmp.exists():
                         opts["cookiefile"] = str(cookie_tmp)
-                    if extractor_args:
-                        opts["extractor_args"] = extractor_args
+                    if extractor_args or pot_args:
+                        merged = dict(extractor_args or {})
+                        if pot_args:
+                            merged.update(pot_args)
+                        opts["extractor_args"] = merged
                     try:
                         with yt_dlp.YoutubeDL(opts) as ydl:
                             info = ydl.extract_info(url, download=True)
