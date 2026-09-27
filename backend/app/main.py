@@ -99,7 +99,19 @@ def _load_bucket_secrets() -> None:
 
 @app.get("/api/health")
 def health():
-    return {"ok": True}
+    # Node availability decides whether the bgutil PO-token provider can run
+    # in-service (YouTube bot-check bypass for datacenter IPs).
+    import shutil
+    import subprocess
+    node = shutil.which("node")
+    node_ver = None
+    if node:
+        try:
+            out = subprocess.run([node, "--version"], capture_output=True, text=True, timeout=10)
+            node_ver = out.stdout.strip()
+        except Exception:
+            node_ver = None
+    return {"ok": True, "node": node_ver}
 
 
 # Serve Frontend Static Files
