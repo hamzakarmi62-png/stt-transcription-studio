@@ -556,20 +556,6 @@ def _ensure_bgutil() -> str:
         return ""
 
 
-def _write_import_debug(pot_cap: "_PotCapture | None", bgutil_url: str, outcome: str):
-    """Full verbose tail of the last URL import — read it back through
-    GET /api/debug/pot-log when diagnosing the YouTube chain remotely."""
-    try:
-        parts = [f"outcome: {outcome}", f"bgutil: {bgutil_url or 'off'}"]
-        if pot_cap and pot_cap.lines:
-            parts.append("--- yt-dlp debug tail ---")
-            parts.extend(pot_cap.lines[-120:])
-        log = Path(tempfile.gettempdir()) / "last_import_debug.log"
-        log.write_text("\n".join(parts), encoding="utf-8")
-    except Exception:
-        pass
-
-
 class _PotCapture:
     """yt-dlp verbose logger keeping a bounded tail — enough to see whether
     the PO-token provider engaged and which player API responded."""
@@ -659,7 +645,6 @@ def _download_thread(session_id: str, url: str) -> None:
                         "max_filesize": settings.max_upload_mb * 1024 * 1024,
                         "noplaylist": True,
                         "progress_hooks": [_hook],
-                        "verbose": True,
                         "logger": pot_cap,
                         # yt-dlp enables only deno for the JS n-challenge by
                         # default; node is what the container has.
@@ -720,7 +705,6 @@ def _download_thread(session_id: str, url: str) -> None:
         mime = MIME_BY_EXT.get(dest.suffix.lower().lstrip("."), "application/octet-stream")
         safe_title = filename or (session_id + dest.suffix)
         db.update_session(session_id, filename=safe_title, audio_path=str(dest), status="uploaded")
-        _write_import_debug(pot_cap, bgutil_url, f"ok: {size // 1024} KB as {dest.name}")
         print(f"URL import {session_id}: {size / (1024 * 1024):.1f} MB archived as {dest.name}")
         threading.Thread(target=_publish_to_cloud, args=(session_id, dest, mime, size), daemon=True).start()
     except Exception as exc:
@@ -741,28 +725,8 @@ def _download_thread(session_id: str, url: str) -> None:
             user_msg = "المنصة المصدرة تطلب تحققاً أمنياً — حمّل الملف على جهازك وارفعه، أو استخدم رابطاً مباشراً."
         else:
             user_msg = f"فشل تحميل الرابط: {msg[:150]}"
-        # TEMP diagnosis: the [bgutil=…] tail rides along in the stored error so
-        # the failure mode is readable via the API; strip once YouTube works.
-        _write_import_debug(pot_cap, bgutil_url, f"error: {msg[:200]} {diag[:300]}")
-        db.update_session(session_id, status="error", error=user_msg + diag[:260])
-
-
-@router.get("/debug/pot-log")
-def debug_pot_log(request: Request):
-    """TEMP: verbose tail of the last URL import + the bgutil server log, for
-    remote diagnosis of the YouTube chain. Strip once it works everywhere."""
-    if not user_id_from_request(request):
-        raise HTTPException(401, "Authentification requise.")
-    tmp = Path(tempfile.gettempdir())
-    out = {"import_log": "", "bgutil_log": "", "bgutil": bgutil_status()}
-    for key, name in (("import_log", "last_import_debug.log"), ("bgutil_log", "bgutil_server.log")):
-        try:
-            p = tmp / name
-            if p.exists():
-                out[key] = p.read_text(encoding="utf-8", errors="ignore")[-4000:]
-        except Exception as exc:
-            out[key] = f"read failed: {exc}"
-    return out
+        print(f"URL import failed for {session_id}: {msg[:200]}{diag[:300]}")
+        db.update_session(session_id, status="error", error=user_msg)
 
 
 @router.post("/sessions/from-url")
