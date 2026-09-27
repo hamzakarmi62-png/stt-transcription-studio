@@ -557,27 +557,31 @@ def _ensure_bgutil() -> str:
 
 
 class _PotCapture:
-    """yt-dlp logger that keeps only PO-token related debug lines — enough to
-    see whether the provider engaged, without verbose noise."""
+    """yt-dlp verbose logger keeping a bounded tail — enough to see whether
+    the PO-token provider engaged and which player API responded."""
 
     def __init__(self):
         self.lines: list[str] = []
 
-    def debug(self, msg):
+    def _keep(self, msg):
         try:
-            if any(k in msg.lower() for k in ("pot", "bgutil", "botguard")):
-                self.lines.append(str(msg)[:220])
+            self.lines.append(str(msg)[:220])
+            if len(self.lines) > 400:
+                del self.lines[:200]
         except Exception:
             pass
+
+    def debug(self, msg):
+        self._keep(msg)
 
     def info(self, msg):
         pass
 
     def warning(self, msg):
-        pass
+        self._keep("WARN " + str(msg))
 
     def error(self, msg):
-        self.lines.append("ERR " + str(msg)[:220])
+        self._keep("ERR " + str(msg))
 
 
 def _download_thread(session_id: str, url: str) -> None:
@@ -641,6 +645,7 @@ def _download_thread(session_id: str, url: str) -> None:
                         "max_filesize": settings.max_upload_mb * 1024 * 1024,
                         "noplaylist": True,
                         "progress_hooks": [_hook],
+                        "verbose": True,
                         "logger": pot_cap,
                     }
                     if cookie_tmp and cookie_tmp.exists():
@@ -702,8 +707,15 @@ def _download_thread(session_id: str, url: str) -> None:
         threading.Thread(target=_publish_to_cloud, args=(session_id, dest, mime, size), daemon=True).start()
     except Exception as exc:
         msg = str(exc)
-        pot_tail = " | ".join(pot_cap.lines[-4:]) if pot_cap and pot_cap.lines else ""
-        diag = f" [bgutil={bgutil_url or 'off'}]" + (f" [pot: {pot_tail[:220]}]" if pot_tail else "")
+        interesting = []
+        if pot_cap and pot_cap.lines:
+            keys = ("pot", "token", "player", "format", "bot", "visitor", "fetching")
+            for line in pot_cap.lines:
+                low = line.lower()
+                if any(k in low for k in keys):
+                    interesting.append(line)
+        pot_tail = " | ".join(interesting[-5:])
+        diag = f" [bgutil={bgutil_url or 'off'}]" + (f" [pot: {pot_tail[:240]}]" if pot_tail else "")
         if "Sign in to confirm" in msg or "not a bot" in msg:
             user_msg = ("يوتيوب يطلب تحققاً أمنياً من خوادم السحابة لهذا الرابط. "
                         "حمّل الفيديو على جهازك وارفعه كملف، أو استخدم رابطاً مباشراً للملف (MP4/MP3).")
