@@ -480,6 +480,54 @@ _BLOCKED_HOSTS = ("localhost", "127.", "10.", "192.168.", "172.16.", "172.17.",
 _MEDIA_EXTS = (".mp3", ".wav", ".m4a", ".ogg", ".flac", ".aac", ".mp4", ".webm", ".mov", ".mkv")
 
 
+# ── bgutil PO-token server (YouTube bot-check bypass) ───────────────────────
+
+_bgutil_proc = None
+_bgutil_lock = threading.Lock()
+
+
+def _ensure_bgutil() -> str:
+    """Return the PO-token server base URL, starting it first if needed.
+    The bgutil Node server runs in-container on localhost and issues the
+    BotGuard attestation YouTube demands from datacenter IPs — without it
+    every player client hits the "confirm you're not a bot" wall."""
+    base = (os.environ.get("BGUTIL_BASE_URL") or "http://127.0.0.1:4416").rstrip("/")
+    if not base.startswith("http://127.0.0.1"):
+        return base  # external sidecar — managed elsewhere
+    try:
+        if requests.get(f"{base}/ping", timeout=3).status_code == 200:
+            return base
+    except Exception:
+        pass
+    global _bgutil_proc
+    script = Path(__file__).resolve().parents[2] / "pot_server" / "build" / "main.js"
+    node = shutil.which("node")
+    if not script.exists() or not node:
+        return ""
+    with _bgutil_lock:
+        try:
+            if requests.get(f"{base}/ping", timeout=3).status_code == 200:
+                return base
+        except Exception:
+            pass
+        import subprocess
+        _bgutil_proc = subprocess.Popen(
+            [node, str(script), "--host", "127.0.0.1", "--port", "4416"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        for _ in range(15):
+            try:
+                if requests.get(f"{base}/ping", timeout=3).status_code == 200:
+                    print("bgutil PO-token server started on :4416")
+                    return base
+            except Exception:
+                pass
+            time.sleep(2)
+        print("bgutil PO-token server failed to start")
+        return ""
+
+
 def _download_thread(session_id: str, url: str) -> None:
     """Runs off the request path: fetch the media, register it as the session's
     file, archive to the bucket — then the normal transcription flow takes over."""
@@ -508,24 +556,12 @@ def _download_thread(session_id: str, url: str) -> None:
             except Exception:
                 cookie_tmp = None
 
-            # PO-token provider: a bgutil sidecar generates the BotGuard
-            # attestation YouTube demands from datacenter IPs — without it
-            # every player client hits the "confirm you're not a bot" wall.
-            # The sidecar sleeps when idle, so wake it before the first
-            # attempt (free services take ~30-60s to spin up).
-            bgutil_url = (os.environ.get("BGUTIL_BASE_URL") or "").rstrip("/")
-            pot_args = None
-            if bgutil_url:
-                for _ in range(18):
-                    try:
-                        if requests.get(f"{bgutil_url}/ping", timeout=5).status_code == 200:
-                            pot_args = {"youtubepot-bgutilhttp": {"base_url": [bgutil_url]}}
-                            break
-                    except Exception:
-                        pass
-                    time.sleep(5)
-                if pot_args:
-                    print(f"URL import {session_id}: bgutil PO-token provider awake")
+            # PO-token provider: bgutil generates the BotGuard attestation
+            # YouTube demands from datacenter IPs.
+            bgutil_url = _ensure_bgutil()
+            pot_args = {"youtubepot-bgutilhttp": {"base_url": [bgutil_url]}} if bgutil_url else None
+            if pot_args:
+                print(f"URL import {session_id}: bgutil PO-token provider ready")
 
             # Datacenter IPs often trigger YouTube's bot check with the default
             # web client — fall back through alternate player clients.

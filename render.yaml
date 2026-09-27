@@ -4,7 +4,7 @@ services:
     env: python
     region: frankfurt
     plan: free
-    buildCommand: pip install -r backend/requirements.txt
+    buildCommand: pip install -r backend/requirements.txt && cd backend/pot_server && npm ci --omit=dev --no-audit --no-fund
     startCommand: python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300
     envVars:
       - key: PYTHON_VERSION
@@ -14,7 +14,7 @@ services:
       - key: TRANSCRIPTION_ENGINE
         value: auto
       - key: BGUTIL_BASE_URL
-        value: https://aud-pot-provider.onrender.com
+        value: http://127.0.0.1:4416
       - key: GROQ_API_KEY
         sync: false
       - key: AUTH_SECRET
@@ -35,14 +35,3 @@ services:
         value: 0058fc90bf9d6d40000000001
       - key: S3_SECRET_KEY
         value: K005VVwPBZE+VUc+0ly/kuuIrJDAQNI
-  # PO-token sidecar: generates YouTube BotGuard attestations so the main
-  # service's yt-dlp downloads aren't bot-checked at the datacenter IP.
-  # Sleeps when idle (free plan); the backend wakes it on demand.
-  - type: web
-    name: aud-pot-provider
-    plan: free
-    region: frankfurt
-    image:
-      url: docker.io/brainicism/bgutil-ytdlp-pot-provider:latest
-    dockerCommand: --host 0.0.0.0 --port 10000
-    healthCheckPath: /ping
