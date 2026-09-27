@@ -111,7 +111,18 @@ def health():
             node_ver = out.stdout.strip()
         except Exception:
             node_ver = None
-    return {"ok": True, "node": node_ver}
+    pot_server = BACKEND_DIR / "pot_server"
+    diag = {
+        "node": node_ver,
+        "bgutil_script": (pot_server / "build" / "main.js").exists(),
+        "bgutil_modules": (pot_server / "node_modules").exists(),
+    }
+    try:
+        import yt_dlp_plugins.extractor.getpot_bgutil_http  # noqa: F401
+        diag["bgutil_plugin"] = True
+    except Exception:
+        diag["bgutil_plugin"] = False
+    return {"ok": True, **diag}
 
 
 # Serve Frontend Static Files
