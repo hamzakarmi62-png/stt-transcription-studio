@@ -661,6 +661,9 @@ def _download_thread(session_id: str, url: str) -> None:
                         "progress_hooks": [_hook],
                         "verbose": True,
                         "logger": pot_cap,
+                        # yt-dlp enables only deno for the JS n-challenge by
+                        # default; node is what the container has.
+                        "js_runtimes": ["node"],
                     }
                     if cookie_tmp and cookie_tmp.exists():
                         opts["cookiefile"] = str(cookie_tmp)
