@@ -521,10 +521,13 @@ def _download_thread(session_id: str, url: str) -> None:
             info, last_err = None, None
             try:
                 for extractor_args in client_attempts:
+                    import imageio_ffmpeg
                     opts = {
                         "outtmpl": dest_base + ".%(ext)s",
-                        # progressive mp4 first — no ffmpeg merge needed on the server
-                        "format": "best[height<=720][ext=mp4]/best[height<=720]/best",
+                        # YouTube serves video-only + audio-only DASH streams for
+                        # logged-in sessions — the bundled ffmpeg merges them.
+                        "format": "bv*[height<=720]+ba/b",
+                        "ffmpeg_location": imageio_ffmpeg.get_ffmpeg_exe(),
                         "max_filesize": settings.max_upload_mb * 1024 * 1024,
                         "quiet": True,
                         "no_warnings": True,
