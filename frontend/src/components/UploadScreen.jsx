@@ -375,9 +375,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [folders, setFolders] = useState(() => {
     try {
       const k = user?.id ? `custom_folders_${user.id}` : "custom_folders";
-      return JSON.parse(localStorage.getItem(k) || '[{"id":"default","name":"Général"}]');
+      // Only user-created folders exist — the built-in "Général" is gone;
+      // stored copies of it are dropped and its files become loose (Tous).
+      return JSON.parse(localStorage.getItem(k) || "[]").filter((f) => f && f.id !== "default");
     } catch {
-      return [{ id: "default", name: "Général" }];
+      return [];
     }
   });
 
@@ -396,7 +398,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     try {
       setCustomWorkIds(JSON.parse(localStorage.getItem(`custom_works_${user.id}`) || "[]"));
       setCustomFileNames(JSON.parse(localStorage.getItem(`custom_file_names_${user.id}`) || "{}"));
-      setFolders(JSON.parse(localStorage.getItem(`custom_folders_${user.id}`) || '[{"id":"default","name":"Général"}]'));
+      setFolders(JSON.parse(localStorage.getItem(`custom_folders_${user.id}`) || "[]").filter((f) => f && f.id !== "default"));
       setSessionFolderMap(JSON.parse(localStorage.getItem(`session_folder_map_${user.id}`) || "{}"));
     } catch {
       /* ignore */
@@ -544,7 +546,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       type: "confirm",
       danger: true,
       title: "Supprimer le dossier ?",
-      message: "Ses fichiers retourneront dans Général.",
+      message: "Ses fichiers resteront sans dossier — visibles dans Tous.",
       okText: "Supprimer",
       onOk: () => {
         setFolders((prev) => prev.filter((x) => x.id !== folderId));
@@ -803,6 +805,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     return times.length ? Math.min(...times) : Date.now();
   };
   const byDate = (a, b) => (new Date(a.created_at) - new Date(b.created_at)) * (filesSortDesc ? -1 : 1);
+  // The column arrow doubles as a date display toggle: ▼ shows the full
+  // day/month/year, ▲ collapses the cell to the time only.
+  const dateCell = (ts) => {
+    const d = new Date(ts);
+    if (isNaN(d.getTime())) return "";
+    return filesSortDesc
+      ? d.toLocaleDateString()
+      : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  };
   const visibleFolders = (selectedFolderFilter === "all" ? folders : [])
     .slice()
     .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -1535,7 +1546,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         <FolderOpen className="w-6 h-6 text-[#18123b] shrink-0" />
                         <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{f.name}</span>
                       </div>
-                      <span className={`text-sm ${textSub}`}>{new Date(folderCreatedAt(f)).toLocaleDateString()}</span>
+                      <span className={`text-sm ${textSub}`}>{dateCell(folderCreatedAt(f))}</span>
                       <div
                         className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => e.stopPropagation()}
@@ -1583,7 +1594,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                           )}
                           <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{displayName}</span>
                         </button>
-                        <span className={`text-sm ${textSub}`}>{new Date(s.created_at).toLocaleDateString()}</span>
+                        <span className={`text-sm ${textSub}`}>{dateCell(s.created_at)}</span>
                         <div
                           className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
                           onClick={(e) => e.stopPropagation()}
@@ -1597,6 +1608,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             {folders.map((f) => (
                               <option key={f.id} value={f.id}>{f.name}</option>
                             ))}
+                            <option value="default">—</option>
                           </select>
                           <button
                             onClick={(e) => handleRename(e, s.id)}
