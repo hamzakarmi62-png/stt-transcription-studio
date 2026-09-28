@@ -1523,12 +1523,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   {/* header */}
                   <div className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-3 border-b-2 ${hairline}`}>
                     <span />
-                    <span className="text-sm font-black">Nom</span>
+                    <span className="text-sm font-black">Name</span>
                     <button
                       onClick={() => setFilesSortDesc((d) => !d)}
                       className="text-sm font-black flex items-center gap-1 hover:text-[#6415f5] transition text-start"
                     >
-                      Date de création
+                      Date created
                       <ChevronDown className={`w-4 h-4 transition-transform ${filesSortDesc ? "" : "rotate-180"}`} />
                     </button>
                     <span />
@@ -1641,7 +1641,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   <span className="w-10 h-10 rounded-xl border-[1.5px] border-[#18123b]/25 bg-transparent flex items-center justify-center text-[#18123b]"><Settings className="w-5 h-5" /></span>
                   <div>
                     <h2 className="text-lg font-black">{t.settingsTitle}</h2>
-                    <p className={`text-xs ${textSub}`}>Préférences de l'espace de travail</p>
+                    <p className={`text-xs ${textSub}`}>Workspace preferences</p>
                   </div>
                 </div>
 
