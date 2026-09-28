@@ -102,7 +102,7 @@ export default function ShareDialog({ open, onClose, sessionId, filename }) {
         <button
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 rounded-full hover:bg-[#18123b]/[0.06] text-[#4b4763] flex items-center justify-center transition"
-          aria-label="Fermer"
+          aria-label="Close"
         >
           <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <line x1="18" y1="6" x2="6" y2="18" />

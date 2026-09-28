@@ -516,7 +516,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const handleCreateFolder = () => {
     setAsk({
       type: "prompt",
-      title: "Nouveau dossier",
+      title: "New folder",
       onOk: (v) => {
         if (v.trim()) setFolders((prev) => [...prev, { id: uid(), name: v.trim(), createdAt: Date.now() }]);
       },
@@ -532,7 +532,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     const f = folders.find((x) => x.id === folderId);
     setAsk({
       type: "prompt",
-      title: "Renommer le dossier",
+      title: "Rename folder",
       value: f?.name || "",
       onOk: (v) => {
         if (v.trim()) setFolders((prev) => prev.map((x) => (x.id === folderId ? { ...x, name: v.trim() } : x)));
@@ -545,9 +545,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     setAsk({
       type: "confirm",
       danger: true,
-      title: "Supprimer le dossier ?",
-      message: "Ses fichiers resteront sans dossier — visibles dans Tous.",
-      okText: "Supprimer",
+      title: "Delete this folder?",
+      message: "Its files will stay without a folder — visible in All files.",
+      okText: "Delete",
       onOk: () => {
         setFolders((prev) => prev.filter((x) => x.id !== folderId));
         setSessionFolderMap((prev) => {
@@ -747,8 +747,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     setAsk({
       type: "confirm",
       danger: true,
-      title: "Supprimer cette session ?",
-      okText: "Supprimer",
+      title: "Delete this session?",
+      okText: "Delete",
       onOk: async () => {
         // instant removal: drop it locally FIRST, then sync with the server
         setSessions((prev) => prev.filter((s) => s.id !== id));
@@ -1464,7 +1464,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <button
                   onClick={() => setFolderMenuOpen((o) => !o)}
                   className="inline-flex items-center gap-1 text-[#6415f5] hover:bg-[#6415f5]/[0.08] rounded-lg px-1.5 py-1 transition"
-                  aria-label="Choisir le dossier"
+                  aria-label="Choose folder"
                 >
                   <FolderOpen className="w-6 h-6" />
                   <ChevronDown className="w-4 h-4" />
@@ -1554,7 +1554,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                         <button
                           onClick={(e) => handleRenameFolder(e, f.id)}
                           className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-indigo-400 hover:bg-indigo-400/10 transition"
-                          title="Renommer le dossier"
+                          title="Rename folder"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
@@ -1562,7 +1562,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                           <button
                             onClick={(e) => handleDeleteFolder(e, f.id)}
                             className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-400/10 transition"
-                            title="Supprimer le dossier"
+                            title="Delete folder"
                           >
                             <Trash className="w-3.5 h-3.5" />
                           </button>

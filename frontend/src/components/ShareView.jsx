@@ -125,7 +125,7 @@ export default function ShareView({ sessionId }) {
           </span>
           {speakers.length > 0 && (
             <span className="px-3 py-1.5 rounded-full bg-white border border-[#18123b]/12">
-              {speakers.length} locuteurs
+              {speakers.length} speakers
             </span>
           )}
           <span className="px-3 py-1.5 rounded-full bg-white border border-[#18123b]/12">{words} mots</span>
