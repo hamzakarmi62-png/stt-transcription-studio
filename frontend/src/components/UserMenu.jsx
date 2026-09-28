@@ -34,7 +34,7 @@ export default function UserMenu({ user, onLogout, dark = false }) {
           {initials}
         </span>
         <span className="hidden sm:block text-start leading-tight">
-          <span className={`block text-sm font-bold ${dark ? "text-white" : "text-[#18123b]"}`}>{displayName}</span>
+          <span className={`block text-sm font-normal ${dark ? "text-white" : "text-[#18123b]"}`}>{displayName}</span>
           <span className={`block text-[10px] ${dark ? "text-slate-400" : "text-[#4b4763]"}`}>Compte gratuit</span>
         </span>
         <svg
