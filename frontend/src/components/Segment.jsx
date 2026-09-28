@@ -344,7 +344,7 @@ function Segment({
               {spkMenu && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => { setSpkMenu(false); setEditingNames(false); }} />
-                  <div className="absolute left-0 top-full mt-1.5 z-50 w-[248px] rounded-xl bg-white shadow-xl shadow-slate-900/10 border border-slate-200 py-1 overflow-hidden">
+                  <div className="absolute left-0 top-full mt-1.5 z-50 w-[264px] rounded-xl bg-white shadow-xl shadow-slate-900/10 border border-slate-200 py-1 overflow-hidden">
                     {speakers.map((s) => (
                       <div key={s.id} className="flex items-center gap-3 px-4 py-[9px] hover:bg-slate-50 transition-colors">
                         <span className="w-4 flex items-center justify-center shrink-0 text-[#18123b]">
@@ -357,13 +357,13 @@ function Segment({
                               setNameDrafts((d) => ({ ...d, [s.id]: e.target.value }));
                               onRenameSpeaker(s.id, e.target.value);
                             }}
-                            className="flex-1 min-w-0 text-[15px] bg-transparent outline-none border-b border-dotted border-slate-300"
+                            className="flex-1 min-w-0 text-[16px] bg-transparent outline-none border-b border-dotted border-slate-300"
                             dir="auto"
                           />
                         ) : (
                           <button
                             onClick={() => { onReassign(segment.id, s.id); setSpkMenu(false); }}
-                            className="flex-1 min-w-0 text-start text-[15px] text-slate-800 truncate"
+                            className="flex-1 min-w-0 text-start text-[16px] text-slate-800 truncate"
                           >
                             {s.name}
                           </button>
@@ -385,20 +385,20 @@ function Segment({
                     <div className="my-1.5 border-t border-slate-200" />
                     <button
                       onClick={() => setEditingNames((o) => !o)}
-                      className="w-full text-start px-4 py-[9px] text-[15px] text-slate-800 hover:bg-slate-50 transition"
+                      className="w-full text-start px-4 py-[9px] text-[16px] text-slate-800 hover:bg-slate-50 transition"
                     >
                       {editingNames ? "Terminer" : "Modifier les noms des locuteurs"}
                     </button>
                     <button
                       onClick={() => { onAddSpeakerFor(segment.id); setSpkMenu(false); }}
-                      className="w-full text-start px-4 py-[9px] text-[15px] text-slate-800 hover:bg-slate-50 transition flex items-center gap-2"
+                      className="w-full text-start px-4 py-[9px] text-[16px] text-slate-800 hover:bg-slate-50 transition flex items-center gap-2"
                     >
                       <span className="text-lg leading-none">+</span> Nouveau locuteur
                     </button>
                     {speakers.length > 1 && (
                       <button
                         onClick={() => { onDeleteSpeaker(segment.speaker); setSpkMenu(false); }}
-                        className="w-full text-start px-4 py-[9px] text-[15px] text-red-500 hover:bg-red-50 transition"
+                        className="w-full text-start px-4 py-[9px] text-[16px] text-red-500 hover:bg-red-50 transition"
                       >
                         × Supprimer ce locuteur
                       </button>
