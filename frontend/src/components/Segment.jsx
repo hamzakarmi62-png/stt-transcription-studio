@@ -357,13 +357,13 @@ function Segment({
                               setNameDrafts((d) => ({ ...d, [s.id]: e.target.value }));
                               onRenameSpeaker(s.id, e.target.value);
                             }}
-                            className="flex-1 min-w-0 text-[16px] bg-transparent outline-none border-b border-dotted border-slate-300"
+                            className="flex-1 min-w-0 text-[17px] bg-transparent outline-none border-b border-dotted border-slate-300"
                             dir="auto"
                           />
                         ) : (
                           <button
                             onClick={() => { onReassign(segment.id, s.id); setSpkMenu(false); }}
-                            className="flex-1 min-w-0 text-start text-[16px] text-slate-800 truncate"
+                            className="flex-1 min-w-0 text-start text-[17px] text-slate-800 truncate"
                           >
                             {s.name}
                           </button>
