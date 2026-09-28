@@ -337,7 +337,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
-  const [uiLang, setUiLang] = useState("fr"); // ar | en | fr (Default to French)
+  const [uiLang, setUiLang] = useState("en"); // ar | en | fr (Default to English)
   const [theme, setTheme] = useState("light"); // dark | light (light = Rev cream by default)
 
   const [file, setFile] = useState(null);

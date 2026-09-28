@@ -249,7 +249,7 @@ function Segment({
         <button
           onClick={() => onSeek(segment.start)}
           className="inline-flex items-center gap-1.5 px-1.5 py-1 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-indigo-600 transition tabular-nums"
-          title="Lire depuis le début du paragraphe"
+          title="Play from the start of this paragraph"
         >
           <Play className="w-3.5 h-3.5" filled />
           <span className="text-[11px] font-bold">{formatTime(segment.start)}</span>
@@ -259,7 +259,7 @@ function Segment({
           onClick={() => onMoveUp(segment.id)}
           disabled={!canMoveUp}
           className={toolBtn}
-          title="Envoyer (le texte sélectionné) à la fin du paragraphe précédent"
+          title="Send (selected text) to the end of the previous paragraph"
         >
           <ChevronUp className="w-4 h-4" />
         </button>
@@ -267,33 +267,33 @@ function Segment({
           onClick={() => onMoveDown(segment.id)}
           disabled={!canMoveDown}
           className={toolBtn}
-          title="Envoyer (le texte sélectionné) au début du paragraphe suivant"
+          title="Send (selected text) to the start of the next paragraph"
         >
           <ChevronDown className="w-4 h-4" />
         </button>
         <span className="h-4 w-px bg-slate-200 mx-0.5"></span>
-        <button onClick={doSplit} className={toolBtn} title="Couper à la sélection / au curseur">
+        <button onClick={doSplit} className={toolBtn} title="Cut at selection / cursor">
           <Scissors className="w-4 h-4" />
         </button>
-        <button onClick={copyText} className={toolBtn} title="Copier le texte">
+        <button onClick={copyText} className={toolBtn} title="Copy text">
           {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
         </button>
-        <button onClick={() => onMerge(segment.id)} disabled={!canMerge} className={toolBtn} title="Fusionner avec le suivant">
+        <button onClick={() => onMerge(segment.id)} disabled={!canMerge} className={toolBtn} title="Merge with next">
           <CornerDownRight className="w-4 h-4" />
         </button>
         {!editing ? (
-          <button onClick={() => onStartEdit(segment.id)} className={toolBtn} title="Modifier le texte">
+          <button onClick={() => onStartEdit(segment.id)} className={toolBtn} title="Edit text">
             <Pencil className="w-4 h-4" />
           </button>
         ) : (
-          <button onClick={() => onStartEdit(null)} className={toolBtn} title="Terminer la modification">
+          <button onClick={() => onStartEdit(null)} className={toolBtn} title="Finish editing">
             <Check className="w-4 h-4 text-emerald-500" />
           </button>
         )}
         <button
           onClick={() => onDelete(segment.id)}
           className="p-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition"
-          title="Supprimer le segment"
+          title="Delete segment"
         >
           <Trash className="w-4 h-4" />
         </button>
@@ -325,7 +325,7 @@ function Segment({
                   onClick={() => setSpkMenu((o) => !o)}
                   className="font-medium text-[15px] cursor-pointer max-w-[160px] truncate"
                   style={{ color: speakerColor }}
-                  title="Cliquez pour changer de locuteur · la pastille de couleur est libre"
+                  title="Click to change speaker · pick any color you like"
                 >
                   {currentSpeaker?.name || "—"}
                 </button>
@@ -336,7 +336,7 @@ function Segment({
                   }}
                   className="opacity-0 group-hover:opacity-60 hover:!opacity-100 transition"
                   style={{ color: speakerColor }}
-                  title="Renommer ce locuteur"
+                  title="Rename this speaker"
                 >
                   <Pencil className="w-3 h-3" />
                 </button>
@@ -371,7 +371,7 @@ function Segment({
                         <label
                           className="w-3.5 h-3.5 rounded-full cursor-pointer shrink-0 ring-1 ring-inset ring-black/10"
                           style={{ background: s.color }}
-                          title="Choisir la couleur de ce locuteur"
+                          title="Choose this speaker's color"
                         >
                           <input
                             type="color"
@@ -387,20 +387,20 @@ function Segment({
                       onClick={() => setEditingNames((o) => !o)}
                       className="w-full text-start px-4 py-[9px] text-sm text-slate-800 hover:bg-slate-50 transition"
                     >
-                      {editingNames ? "Terminer" : "Modifier les noms des locuteurs"}
+                      {editingNames ? "Done" : "Edit speaker names"}
                     </button>
                     <button
                       onClick={() => { onAddSpeakerFor(segment.id); setSpkMenu(false); }}
                       className="w-full text-start px-4 py-[9px] text-sm text-slate-800 hover:bg-slate-50 transition flex items-center gap-2"
                     >
-                      <span className="text-lg leading-none">+</span> Nouveau locuteur
+                      <span className="text-lg leading-none">+</span> New speaker
                     </button>
                     {speakers.length > 1 && (
                       <button
                         onClick={() => { onDeleteSpeaker(segment.speaker); setSpkMenu(false); }}
                         className="w-full text-start px-4 py-[9px] text-sm text-red-500 hover:bg-red-50 transition"
                       >
-                        × Supprimer ce locuteur
+                        × Delete this speaker
                       </button>
                     )}
                   </div>
@@ -411,7 +411,7 @@ function Segment({
           <button
             onClick={() => onSeek(segment.start)}
             className="inline-flex items-center gap-1.5 text-[#4b4763] hover:text-[#6415f5] transition"
-            title="Lire depuis le début de ce paragraphe"
+            title="Play from the start of this paragraph"
           >
             <span className="w-[18px] h-[18px] rounded-full border border-current flex items-center justify-center">
               <Play className="w-2.5 h-2.5" filled />

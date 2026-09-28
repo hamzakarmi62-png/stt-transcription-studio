@@ -1215,7 +1215,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                         id: uid(),
                         start: t,
                         end: t + 3,
-                        text: "Nouveau segment...",
+                        text: "New segment...",
                         speaker: prev.speakers[0]?.id || "s1",
                         words: [],
                       },
@@ -1237,7 +1237,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 }}
                 disabled={!activeSegment}
                 className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] disabled:opacity-40 transition-colors"
-                title="Couper / diviser le segment"
+                title="Cut / split segment"
               >
                 <Scissors className="w-4 h-4" />
               </button>
@@ -1252,7 +1252,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   }
                 }}
                 className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] border-b-2 border-fuchsia-400 transition-colors"
-                title="Outil de sélection, d'édition et de surlignage"
+                title="Select, edit and highlight tool"
               >
                 <Highlighter className="w-4 h-4" />
               </button>
@@ -1268,14 +1268,14 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               <button
                 onClick={() => openInsights("summary")}
                 className={`p-2 rounded-xl hover:bg-[#18123b]/[0.06] transition-colors ${insightsOpen && insightsTab === "summary" ? "text-amber-600" : "text-[#4b4763]"}`}
-                title="Résumé IA"
+                title="AI summary"
               >
                 <Sparkles className="w-4 h-4" />
               </button>
               <button
                 onClick={() => openInsights("stats")}
                 className={`p-2 rounded-xl hover:bg-[#18123b]/[0.06] transition-colors ${insightsOpen && insightsTab === "stats" ? "text-sky-400" : "text-[#4b4763]"}`}
-                title="Statistiques du dialogue"
+                title="Dialogue statistics"
               >
                 <Chart className="w-4 h-4" />
               </button>
@@ -1297,7 +1297,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 onClick={redo}
                 disabled={historyIndex >= history.length - 1}
                 className="p-2 rounded-xl hover:bg-[#18123b]/[0.06] text-[#4b4763] disabled:opacity-40 transition-colors"
-                title="Rétablir (Redo)"
+                title="Redo"
               >
                 <CornerUpRight className="w-4 h-4" />
               </button>
@@ -1383,7 +1383,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       onClick={() => setActiveLang(null)}
                       className="text-[11px] font-bold text-[#6415f5] hover:underline"
                     >
-                      Revenir à l'original
+                      Back to original
                     </button>
                   </div>
                   {translations[activeLang].map((tr, i) => {
@@ -1463,9 +1463,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                 </div>
                 <p className="text-[11px] text-[#4b4763] text-center mt-4">
-                  Entrée = valider le texte (rien ne bouge) · ✂ = couper à la sélection
-                  (le texte après descend avec son propre temps) · Alt+↑/↓ = envoyer au paragraphe voisin ·
-                  Ctrl+Z / Ctrl+Y = annuler / rétablir
+                  Enter = save the text (nothing moves) · ✂ = cut at the selection
+                  (text after the caret moves down with its own time) · Alt+↑/↓ = send to the neighboring paragraph ·
+                  Ctrl+Z / Ctrl+Y = undo / redo
                 </p>
               </div>
             )}
@@ -1482,7 +1482,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
         <div className="h-full bg-white/95 backdrop-blur-2xl border-s border-[#18123b]/15 p-5 overflow-y-auto flex flex-col">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-black text-sm uppercase tracking-widest text-[#4b4763]">
-              {insightsTab === "translate" ? "Traduction IA" : insightsTab === "summary" ? "Résumé IA" : "Statistiques"}
+              {insightsTab === "translate" ? "AI translation" : insightsTab === "summary" ? "AI summary" : "Statistics"}
             </h3>
             <button
               onClick={() => setInsightsOpen(false)}
@@ -1502,7 +1502,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
             <div className="space-y-4">
               <p className="text-xs text-[#4b4763] leading-relaxed">
                 Traduisez tout le dialogue vers une autre langue avec l'IA (Llama 3.3 · Groq).
-                Le texte original reste intact — vous basculez à tout moment.
+                The original text stays intact — switch back at any time.
               </p>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-[#4b4763] mb-1.5">
@@ -1552,7 +1552,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
               {Object.keys(translations).length > 0 && (
                 <div className="space-y-2">
                   <p className="text-[10px] font-black uppercase tracking-widest text-[#4b4763]">
-                    Traductions prêtes — cliquez pour afficher
+                    Translations ready — click to view
                   </p>
                   {Object.entries(translations).map(([lang, arr]) => (
                     <div
@@ -1583,7 +1583,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                   ))}
                   {activeLang && (
                     <p className="text-[11px] text-emerald-600">
-                      Affichage actuel : {LANG_NAMES[activeLang] || activeLang} — « Revenir à l'original » en haut du document.
+                      Affichage actuel : {LANG_NAMES[activeLang] || activeLang} — « Back to original » en haut du document.
                     </p>
                   )}
                 </div>
@@ -1594,7 +1594,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
           {insightsTab === "summary" && (
             <div className="space-y-4">
               <p className="text-xs text-[#4b4763] leading-relaxed">
-                L'IA lit tout le dialogue et produit un résumé structuré : points clés puis actions.
+                The AI reads the whole dialogue and produces a structured summary: key points, then actions.
               </p>
               <button
                 onClick={startSummary}
@@ -1604,8 +1604,8 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 {summaryJob?.status === "running"
                   ? "Analyse du dialogue…"
                   : summary?.text
-                  ? "Régénérer le résumé"
-                  : "Générer le résumé"}
+                  ? "Regenerate summary"
+                  : "Generate summary"}
               </button>
 
               {summaryJob?.status === "running" && (
@@ -1632,7 +1632,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                     }
                     className="text-[11px] font-black text-[#6415f5] hover:underline"
                   >
-                    Télécharger le résumé (.txt)
+                    Download summary (.txt)
                   </button>
                 </>
               )}
@@ -1649,7 +1649,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <>
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { label: "Durée", value: formatTime(stats.duration || 0) },
+                      { label: "Duration", value: formatTime(stats.duration || 0) },
                       { label: "Mots", value: String(stats.words ?? 0) },
                       { label: "Segments", value: String(stats.segments ?? 0) },
                     ].map((c) => (

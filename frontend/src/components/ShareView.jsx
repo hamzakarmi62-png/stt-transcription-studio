@@ -43,7 +43,7 @@ export default function ShareView({ sessionId }) {
       .then((d) => {
         if (!alive) return;
         setData(d);
-        document.title = d.filename || "Transcription partagée";
+        document.title = d.filename || "Shared transcript";
       })
       .catch((e) => alive && setError(e.message));
     return () => {
@@ -69,7 +69,7 @@ export default function ShareView({ sessionId }) {
             href="/"
             className="inline-block px-5 py-2.5 rounded-xl bg-[#6415f5] text-white text-sm font-bold hover:bg-[#5311cf] transition"
           >
-            Découvrir Aud Studio
+            Discover Aud Studio
           </a>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default function ShareView({ sessionId }) {
           <img src={audLogo} alt="Aud Studio" className="w-9 h-9 object-contain" draggable={false} />
           <div className="min-w-0">
             <p className="text-sm font-semibold truncate">{data.filename}</p>
-            <p className="text-xs text-[#4b4763]">Transcription partagée · Aud Studio</p>
+            <p className="text-xs text-[#4b4763]">Shared transcript · Aud Studio</p>
           </div>
           <span className="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full bg-[#6415f5]/[0.08] border border-[#6415f5]/25 text-[#6415f5]">
             Lecture seule
@@ -156,7 +156,7 @@ export default function ShareView({ sessionId }) {
                 <p dir="auto" className="text-[15.5px] leading-[1.85] text-[#18123b] group">
                   <button
                     onClick={() => seek(s.start)}
-                    title={`Écouter à partir de ${fmtClock(s.start)}`}
+                    title={`Play from ${fmtClock(s.start)}`}
                     className="mr-2.5 align-baseline font-mono text-[11px] text-[#4b4763] px-1.5 py-0.5 rounded-md bg-[#18123b]/[0.05] hover:bg-[#6415f5] hover:text-white transition"
                   >
                     {fmtClock(s.start)}
@@ -173,7 +173,7 @@ export default function ShareView({ sessionId }) {
             href="/"
             className="inline-flex items-center gap-2 text-xs text-[#4b4763] hover:text-[#6415f5] transition"
           >
-            Transcription partagée avec
+            Transcript shared with
             <img src={audLogo} alt="Aud" className="w-4 h-4 object-contain" />
             <span className="font-bold">Aud Studio</span>
           </a>

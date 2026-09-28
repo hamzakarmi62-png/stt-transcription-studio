@@ -146,7 +146,7 @@ export function HighlightCards({ sessionId, mediaSrc, kind, highlights, hlBusy, 
       <section className="mb-6 rounded-2xl bg-white/80 border border-[#18123b]/[0.08] px-5 py-4 flex items-center gap-3">
         <Loader className="w-4 h-4 animate-spin text-[#6415f5]" />
         <p className="text-sm text-[#4b4763]">
-          Analyse de la transcription et création des moments clés…
+          Analyzing the transcript and building the key moments…
         </p>
       </section>
     );
@@ -159,9 +159,9 @@ export function HighlightCards({ sessionId, mediaSrc, kind, highlights, hlBusy, 
           <Sparkles className="w-4 h-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[#18123b]">Moments clés</p>
+          <p className="text-sm font-semibold text-[#18123b]">Key moments</p>
           <p className="text-xs text-[#4b4763]">
-            L'IA extrait les moments importants avec un aperçu vidéo.
+            The AI extracts the important moments with a video preview.
           </p>
         </div>
         <button
@@ -169,7 +169,7 @@ export function HighlightCards({ sessionId, mediaSrc, kind, highlights, hlBusy, 
           disabled={hlBusy}
           className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#6415f5] text-white text-sm font-bold hover:bg-[#5311cf] disabled:opacity-60 transition"
         >
-          <Sparkles className="w-4 h-4" /> Générer
+          <Sparkles className="w-4 h-4" /> Generate
         </button>
       </section>
     );
@@ -179,16 +179,16 @@ export function HighlightCards({ sessionId, mediaSrc, kind, highlights, hlBusy, 
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <Sparkles className="w-4 h-4 text-[#6415f5]" />
-        <h2 className="text-sm font-bold text-[#18123b]">Moments clés</h2>
+        <h2 className="text-sm font-bold text-[#18123b]">Key moments</h2>
         <div className="ml-auto">
           <button
             onClick={onGenerate}
             disabled={hlBusy}
             className="text-xs font-semibold text-[#4b4763] hover:text-[#6415f5] transition inline-flex items-center gap-1 disabled:opacity-60"
-            title="Régénérer les moments clés"
+            title="Regenerate key moments"
           >
             {hlBusy ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-            Régénérer
+            Regenerate
           </button>
         </div>
       </div>
@@ -314,7 +314,7 @@ export function AiChatPanel({ sessionId, onSeek }) {
           <div ref={listRef} className="max-h-64 overflow-y-auto px-4 pb-3 space-y-2.5 border-t border-[#18123b]/[0.07] pt-3">
             {msgs.length === 0 && (
               <p className="text-xs text-[#4b4763] leading-relaxed">
-                Posez une question sur votre transcription — les réponses s'appuient sur son contenu, avec les horodatages cliquables.
+                Ask a question about your transcript — answers are grounded in its content, with clickable timestamps.
               </p>
             )}
             {msgs.map((m, i) =>

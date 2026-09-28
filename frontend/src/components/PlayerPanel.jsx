@@ -111,9 +111,9 @@ export default function PlayerPanel({
         <img src={audLogo} alt="" className="relative w-16 h-16 object-contain" draggable={false} />
       </div>
       <p className="mt-3 text-[11px] font-semibold text-white/75 leading-relaxed">
-        Vidéo volumineuse : seule la piste audio est archivée.
+        Large video: only the audio track is archived.
         <br />
-        L'écoute fonctionne normalement.
+        Playback works normally.
       </p>
       <audio ref={mediaRef} src={src} controls preload="auto" className="w-full mt-4" />
     </div>

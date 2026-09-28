@@ -144,7 +144,7 @@ export default function ShareDialog({ open, onClose, sessionId, filename }) {
                     : "bg-[#6415f5] text-white hover:bg-[#5311cf]"
                 }`}
               >
-                {copied ? "Copié ✓" : "Copier"}
+                {copied ? "Copied ✓" : "Copy"}
               </button>
             </div>
 

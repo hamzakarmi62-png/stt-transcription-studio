@@ -3,11 +3,6 @@ import { api } from "../api.js";
 import audLogo from "../assets/aud-logo.png";
 import { Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff, ArrowLeft } from "./Icons.jsx";
 
-const PAYS = [
-  "Algérie", "Maroc", "Tunisie", "Mauritanie", "France", "Belgique",
-  "Suisse", "Canada", "Émirats Arabes Unis", "Arabie Saoudite", "Autre",
-];
-
 function Logo({ size = "h-12" }) {
   return (
     <img
@@ -26,8 +21,6 @@ export default function LoginScreen({ onLogin, onBack }) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [country, setCountry] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,7 +34,7 @@ export default function LoginScreen({ onLogin, onBack }) {
     if (/[^A-Za-z0-9]/.test(password)) score++;
     return score;
   })();
-  const strengthLabel = ["Trop court", "Faible", "Moyen", "Bon", "Fort", "Excellent"][
+  const strengthLabel = ["Too short", "Weak", "Fair", "Good", "Strong", "Excellent"][
     password.length === 0 ? 0 : passwordScore
   ];
   const strengthColor = ["bg-slate-200", "bg-red-400", "bg-orange-400", "bg-yellow-400", "bg-lime-500", "bg-emerald-500"][
@@ -54,31 +47,29 @@ export default function LoginScreen({ onLogin, onBack }) {
 
     try {
       if (isRegister) {
-        if (!fullName.trim()) throw new Error("Veuillez saisir votre nom complet.");
+        if (!fullName.trim()) throw new Error("Please enter your full name.");
         if (!username || !email || !password) {
-          throw new Error("Veuillez remplir tous les champs obligatoires.");
+          throw new Error("Please fill in all required fields.");
         }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          throw new Error("Adresse e-mail invalide.");
+          throw new Error("Invalid email address.");
         }
         if (password !== confirmPassword) {
-          throw new Error("Les mots de passe ne correspondent pas.");
+          throw new Error("Passwords don't match.");
         }
         if (password.length < 6) {
-          throw new Error("Le mot de passe doit contenir au moins 6 caractères.");
+          throw new Error("Password must be at least 6 characters.");
         }
         setLoading(true);
         const res = await api.register(username, email, password, {
           full_name: fullName,
-          phone,
-          country,
         });
         if (res.success && res.user) {
           onLogin(res.user, res.token);
         }
       } else {
         if (!username || !password) {
-          throw new Error("Veuillez saisir votre identifiant et votre mot de passe.");
+          throw new Error("Please enter your username and password.");
         }
         setLoading(true);
         const res = await api.login(username, password);
@@ -87,14 +78,14 @@ export default function LoginScreen({ onLogin, onBack }) {
         }
       }
     } catch (err) {
-      setError(err.message || "Une erreur inattendue s'est produite.");
+      setError(err.message || "An unexpected error occurred.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex" dir="ltr" lang="fr">
+    <div className="min-h-screen bg-slate-950 flex" dir="ltr" lang="en">
       {/* Brand panel */}
       <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-950 to-violet-950">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
@@ -111,18 +102,18 @@ export default function LoginScreen({ onLogin, onBack }) {
 
           <div className="space-y-8 max-w-md">
             <h2 className="text-4xl font-black text-white leading-tight">
-              Transformez vos{" "}
+              Turn your{" "}
               <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
-                audio & vidéo
+                audio & video
               </span>{" "}
-              en texte, en quelques minutes.
+              into text, in minutes.
             </h2>
             <ul className="space-y-4">
               {[
-                [<Target className="w-4 h-4 text-indigo-300" key="t" />, "Transcription automatique fidèle, horodatage précis"],
-                [<Users className="w-4 h-4 text-violet-300" key="u" />, "Détection des locuteurs et suivi de qui parle quand"],
-                [<PenLine className="w-4 h-4 text-fuchsia-300" key="p" />, "Éditeur temps réel : corrigez en écoutant, mot par mot"],
-                [<FileText className="w-4 h-4 text-sky-300" key="f" />, "Export propre en TXT, SRT, DOCX et PDF"],
+                [<Target className="w-4 h-4 text-indigo-300" key="t" />, "Accurate automatic transcription with precise timestamps"],
+                [<Users className="w-4 h-4 text-violet-300" key="u" />, "Speaker detection — know who said what, when"],
+                [<PenLine className="w-4 h-4 text-fuchsia-300" key="p" />, "Real-time editor: fix while you listen, word by word"],
+                [<FileText className="w-4 h-4 text-sky-300" key="f" />, "Clean export to TXT, SRT, DOCX and PDF"],
               ].map(([icon, text]) => (
                 <li key={text} className="flex items-center gap-3 text-slate-300 text-sm">
                   <span className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
@@ -135,7 +126,7 @@ export default function LoginScreen({ onLogin, onBack }) {
           </div>
 
           <p className="text-slate-500 text-xs flex items-center gap-1.5">
-            <Lock className="w-3.5 h-3.5 shrink-0" /><span>Vos enregistrements restent privés — stockage chiffré et accès authentifié.</span>
+            <Lock className="w-3.5 h-3.5 shrink-0" /><span>Your recordings stay private — encrypted storage and authenticated access.</span>
           </p>
         </div>
       </div>
@@ -163,7 +154,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                     !isRegister ? "bg-white shadow text-slate-900" : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  Connexion
+                  Sign in
                 </button>
                 <button
                   type="button"
@@ -172,18 +163,18 @@ export default function LoginScreen({ onLogin, onBack }) {
                     isRegister ? "bg-white shadow text-slate-900" : "text-slate-500 hover:text-slate-700"
                   }`}
                 >
-                  Inscription
+                  Sign up
                 </button>
               </div>
             </div>
 
             <h2 className="text-xl font-bold text-slate-900 mt-5">
-              {isRegister ? "Créer votre compte" : "Bon retour parmi nous"}
+              {isRegister ? "Create your account" : "Welcome back"}
             </h2>
             <p className="text-sm text-slate-500 mt-1 mb-6">
               {isRegister
-                ? "Quelques informations et votre studio est prêt."
-                : "Connectez-vous pour accéder à vos transcriptions."}
+                ? "A few details and your studio is ready."
+                : "Sign in to access your transcriptions."}
             </p>
 
             {onBack && (
@@ -192,7 +183,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                 onClick={onBack}
                 className="mb-4 inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-indigo-600 transition"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Retour à l'accueil
+                <ArrowLeft className="w-3.5 h-3.5" /> Back to home
               </button>
             )}
 
@@ -205,12 +196,12 @@ export default function LoginScreen({ onLogin, onBack }) {
 
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               {isRegister && (
-                <Field label="Nom complet" required>
+                <Field label="Full name" required>
                   <input
                     type="text"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="Ex. : Hamza Karmi"
+                    placeholder="e.g. Hamza Karmi"
                     className={inputCls}
                     autoComplete="name"
                     required
@@ -218,12 +209,12 @@ export default function LoginScreen({ onLogin, onBack }) {
                 </Field>
               )}
 
-              <Field label={isRegister ? "Nom d'utilisateur" : "Nom d'utilisateur ou e-mail"} required>
+              <Field label={isRegister ? "Username" : "Username or email"} required>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder={isRegister ? "ex. : hamzakarmi" : "hamzakarmi"}
+                  placeholder={isRegister ? "e.g. hamzakarmi" : "hamzakarmi"}
                   className={inputCls}
                   autoComplete="username"
                   required
@@ -231,47 +222,20 @@ export default function LoginScreen({ onLogin, onBack }) {
               </Field>
 
               {isRegister && (
-                <>
-                  <Field label="Adresse e-mail" required>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="nom@exemple.com"
-                      className={inputCls}
-                      autoComplete="email"
-                      required
-                    />
-                  </Field>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Téléphone">
-                      <input
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        placeholder="+213 ..."
-                        className={inputCls}
-                        autoComplete="tel"
-                      />
-                    </Field>
-                    <Field label="Pays">
-                      <select
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        className={`${inputCls} cursor-pointer`}
-                      >
-                        <option value="">— Choisir —</option>
-                        {PAYS.map((p) => (
-                          <option key={p} value={p}>{p}</option>
-                        ))}
-                      </select>
-                    </Field>
-                  </div>
-                </>
+                <Field label="Email address" required>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className={inputCls}
+                    autoComplete="email"
+                    required
+                  />
+                </Field>
               )}
 
-              <Field label="Mot de passe" required>
+              <Field label="Password" required>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -287,7 +251,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-sm"
                     tabIndex={-1}
-                    title={showPassword ? "Masquer" : "Afficher"}
+                    title={showPassword ? "Hide" : "Show"}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -306,7 +270,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               </Field>
 
               {isRegister && (
-                <Field label="Confirmer le mot de passe" required>
+                <Field label="Confirm password" required>
                   <input
                     type={showPassword ? "text" : "password"}
                     value={confirmPassword}
@@ -319,7 +283,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                     required
                   />
                   {confirmPassword && confirmPassword !== password && (
-                    <p className="text-xs text-red-500 mt-1.5">Les mots de passe ne correspondent pas.</p>
+                    <p className="text-xs text-red-500 mt-1.5">Passwords don't match.</p>
                   )}
                 </Field>
               )}
@@ -333,15 +297,15 @@ export default function LoginScreen({ onLogin, onBack }) {
                   <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
                 )}
                 {loading
-                  ? "Un instant…"
+                  ? "One moment…"
                   : isRegister
-                  ? "Créer mon compte"
-                  : "Se connecter"}
+                  ? "Create my account"
+                  : "Sign in"}
               </button>
             </form>
 
             <p className="mt-6 text-center text-sm text-slate-500">
-              {isRegister ? "Vous avez déjà un compte ?" : "Pas encore de compte ?"}{" "}
+              {isRegister ? "Already have an account?" : "No account yet?"}{" "}
               <button
                 type="button"
                 onClick={() => {
@@ -350,13 +314,13 @@ export default function LoginScreen({ onLogin, onBack }) {
                 }}
                 className="font-bold text-indigo-600 hover:text-indigo-800 transition"
               >
-                {isRegister ? "Connectez-vous" : "Créez-en un gratuitement"}
+                {isRegister ? "Sign in" : "Create one for free"}
               </button>
             </p>
           </div>
 
           <p className="text-center text-xs text-slate-600 mt-6">
-            En continuant, vous acceptez que vos enregistrements soient traités pour la transcription.
+            By continuing, you agree that your recordings are processed for transcription.
           </p>
         </div>
       </div>
