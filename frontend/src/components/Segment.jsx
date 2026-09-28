@@ -357,13 +357,13 @@ function Segment({
                               setNameDrafts((d) => ({ ...d, [s.id]: e.target.value }));
                               onRenameSpeaker(s.id, e.target.value);
                             }}
-                            className="flex-1 min-w-0 text-sm font-bold text-[#18123b] bg-transparent outline-none border-b border-dotted border-slate-300"
+                            className="flex-1 min-w-0 text-sm bg-transparent outline-none border-b border-dotted border-slate-300"
                             dir="auto"
                           />
                         ) : (
                           <button
                             onClick={() => { onReassign(segment.id, s.id); setSpkMenu(false); }}
-                            className="flex-1 min-w-0 text-start text-sm font-bold text-[#18123b] truncate"
+                            className="flex-1 min-w-0 text-start text-sm text-slate-800 truncate"
                           >
                             {s.name}
                           </button>
@@ -385,20 +385,20 @@ function Segment({
                     <div className="my-1.5 border-t border-slate-200" />
                     <button
                       onClick={() => setEditingNames((o) => !o)}
-                      className="w-full text-start px-4 py-[9px] text-sm font-bold text-[#18123b] hover:bg-slate-50 transition"
+                      className="w-full text-start px-4 py-[9px] text-sm text-slate-800 hover:bg-slate-50 transition"
                     >
                       {editingNames ? "Terminer" : "Modifier les noms des locuteurs"}
                     </button>
                     <button
                       onClick={() => { onAddSpeakerFor(segment.id); setSpkMenu(false); }}
-                      className="w-full text-start px-4 py-[9px] text-sm font-bold text-[#18123b] hover:bg-slate-50 transition flex items-center gap-2"
+                      className="w-full text-start px-4 py-[9px] text-sm text-slate-800 hover:bg-slate-50 transition flex items-center gap-2"
                     >
                       <span className="text-lg leading-none">+</span> Nouveau locuteur
                     </button>
                     {speakers.length > 1 && (
                       <button
                         onClick={() => { onDeleteSpeaker(segment.speaker); setSpkMenu(false); }}
-                        className="w-full text-start px-4 py-[9px] text-sm font-bold text-red-500 hover:bg-red-50 transition"
+                        className="w-full text-start px-4 py-[9px] text-sm text-red-500 hover:bg-red-50 transition"
                       >
                         × Supprimer ce locuteur
                       </button>
