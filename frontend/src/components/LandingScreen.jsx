@@ -105,6 +105,190 @@ function TypedHeadline() {
   );
 }
 
+const DEMO_Q = "What did Speaker 2 say about the deadline?";
+const DEMO_FILES = ["interview_client.wav", "meeting_notes.m4a", "focus_group.mp3", "call_2231.mp3", "lecture_hall.wav"];
+const DEMO_A1 = "Speaker 2 moved the deadline to Friday \u2014 the full exchange runs 00:12:48 \u2013 00:14:02 in the transcript. [1][2]";
+const DEMO_CHAT2 = "Update the information in the document's table.";
+const DEMO_MEMO = [
+  ["TO:", "Assigned Counsel", "Jacobs & Ybarra"],
+  ["FROM:", "Legal Research & Investigations Unit", "Legal R&I Team"],
+  ["DATE:", "[Date of Preparation]", "July 09, 2026"],
+  ["RE:", "[Investigative Summary \u2013 People v. Daniel Mares]", "Investigative Summary \u2013 People v. Daniel Mares"],
+  ["RD #:", "JD275402", "JD275402"],
+  ["EVENT #:", "2017616455", "2017616455"],
+];
+const DEMO_LOOP = 270; // 100ms ticks — the walkthrough replays forever
+
+// The hero demo: real footage under a timed product walkthrough — question
+// typed, files analyzed, AI answer with timestamps, source card, then the
+// memo draft that fills itself. Everything loops like a product film.
+function HeroDemo() {
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setT((v) => (v + 1) % DEMO_LOOP), 100);
+    return () => clearInterval(iv);
+  }, []);
+
+  const qn = Math.max(0, Math.min(t - 4, DEMO_Q.length));
+  const an = Math.max(0, Math.min((t - 92) * 2, DEMO_A1.length));
+  const c2n = Math.max(0, Math.min(((t - 180) * 1.5) | 0, DEMO_CHAT2.length));
+  const showingWoman = t < 150;
+  const fadeOut = t >= 262;
+
+  return (
+    <div className="relative w-full h-[440px] sm:h-[520px] lg:h-[560px] rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/30 bg-[#12101f]">
+      {/* footage */}
+      <video
+        src="/videos/hero-woman.mp4"
+        autoPlay muted loop playsInline
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${showingWoman ? "opacity-100" : "opacity-0"}`}
+      />
+      <video
+        src="/videos/hero-man.mp4"
+        autoPlay muted loop playsInline
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${showingWoman ? "opacity-0" : "opacity-100"}`}
+      />
+      {/* ambient gradient + dim so the UI cards read on any frame */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#262247]/60 via-[#151226]/55 to-[#0b0a16]/80" />
+      <div className="absolute -top-24 -right-20 w-[420px] h-[420px] rounded-full bg-[#6415f5]/20 blur-[100px]" />
+
+      <div className={`absolute inset-0 transition-opacity duration-300 ${fadeOut ? "opacity-0" : "opacity-100"}`}>
+        {/* chat bar — question types itself */}
+        <div className="absolute top-6 left-6 right-6 sm:top-9 sm:left-9 sm:right-9">
+          <div className="max-w-[430px] rounded-2xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-2xl px-4 py-3 flex items-center gap-3">
+            <span className="text-[12.5px] text-white/95 truncate">
+              {qn > 0 ? DEMO_Q.slice(0, qn) : <span className="text-white/45">Ask your transcript…</span>}
+            </span>
+            <span
+              className={`ml-auto w-8 h-8 rounded-full flex items-center justify-center text-white text-[13px] shadow-lg shrink-0 transition-colors ${t >= 50 && t < 62 ? "hero-ring" : ""} ${qn >= DEMO_Q.length ? "bg-[#6415f5]" : "bg-white/15"}`}
+            >
+              ↑
+            </span>
+          </div>
+          {qn >= DEMO_Q.length && t < 66 && (
+            <div className="relative mt-2 inline-flex items-center gap-2.5">
+              <span className="rounded-xl bg-white/10 backdrop-blur border border-white/15 px-3.5 py-2 text-[10.5px] text-white/85">
+                Ask in your own words — answers cite timestamps.
+              </span>
+              <CursorIcon className="demo-cursor w-5 h-5 drop-shadow-lg" />
+            </div>
+          )}
+        </div>
+
+        {/* analyzing files */}
+        {t >= 58 && t < 150 && (
+          <div className="hero-in absolute top-[104px] left-6 right-6 sm:top-[128px] sm:left-9 sm:right-auto w-full max-w-[360px]">
+            <div className="rounded-2xl bg-[#181430]/85 backdrop-blur-xl border border-white/15 shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
+                <span className="text-[9px] font-bold tracking-[0.14em] text-white/85">ANALYZING…</span>
+                <span className="text-[8px] font-semibold text-white/45">5 SOURCE FILES</span>
+              </div>
+              <div className="p-3 space-y-2">
+                {DEMO_FILES.map((f, i) =>
+                  t >= 62 + i * 4 ? (
+                    <div key={f} className="hero-in flex items-center gap-2.5 rounded-lg bg-white/10 px-3 py-2">
+                      <span className={`w-1.5 h-1.5 rounded-full ${i === 0 ? "demo-pulse bg-emerald-400" : "bg-white/35"}`} />
+                      <span className="text-[10px] text-white/80 font-medium">{f}</span>
+                      {i === 0 && <span className="ml-auto text-[8px] font-bold text-emerald-300">RUNNING</span>}
+                    </div>
+                  ) : null
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI answer — types out with timestamps */}
+        {t >= 92 && t < 170 && (
+          <div className="hero-in absolute bottom-[96px] left-6 right-6 sm:left-9 sm:right-auto w-full max-w-[400px]">
+            <div className="rounded-2xl bg-white/90 backdrop-blur-xl shadow-2xl px-4 py-3.5">
+              <p className="text-[11.5px] leading-[1.6] text-slate-700">
+                {DEMO_A1.slice(0, an)}
+                {an < DEMO_A1.length && <span className="inline-block w-[1.5px] h-[12px] bg-[#6415f5] align-middle ml-[1px]" />}
+              </p>
+              {an >= DEMO_A1.length && (
+                <p className="text-[11.5px] leading-[1.6] text-slate-700 mt-2">Specifically, it suggests the following:</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* source material — transcript excerpt pops over the answer */}
+        {t >= 138 && t < 158 && (
+          <div className="hero-in absolute top-[92px] right-6 sm:right-9 w-[240px] rounded-xl bg-white/95 shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/90">
+              <span className="text-[7.5px] font-bold tracking-[0.14em] text-white/85">SOURCE MATERIAL</span>
+              <span className="text-[7.5px] font-semibold text-white/50">meeting_notes.m4a</span>
+            </div>
+            <div className="px-3 py-2.5 space-y-1">
+              <p className="text-[9px] text-slate-600"><b>00:12:48</b> — Speaker 2: The deadline moved to Friday, not Monday. Everything ships then.</p>
+            </div>
+          </div>
+        )}
+
+        {/* draft document button (man scene) */}
+        {t >= 158 && t < 172 && (
+          <div className="hero-in absolute bottom-[54px] left-6 sm:left-9">
+            <div className={`inline-flex items-center gap-2 rounded-xl bg-white/12 backdrop-blur border border-white/20 px-4 py-2.5 text-[11.5px] text-white/90 shadow-xl ${t >= 166 ? "hero-ring" : ""}`}>
+              ✎ Draft document
+            </div>
+            {t >= 166 && <CursorIcon className="demo-cursor w-5 h-5 drop-shadow-lg -ml-8 mt-1 inline-block" />}
+          </div>
+        )}
+
+        {/* memo card slides up, then fills itself */}
+        {t >= 172 && (
+          <div className="hero-in absolute bottom-6 left-6 right-6 sm:left-9 sm:right-auto w-full max-w-[400px]">
+            <div className="rounded-2xl bg-white/95 backdrop-blur shadow-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200/80">
+                <span className="text-[10.5px] font-bold text-slate-800">Transcript Memorandum</span>
+                <span className="flex items-center gap-2 text-[8.5px] font-semibold text-slate-400">
+                  <span>Citations</span>
+                  <span className="w-6 h-3 rounded-full bg-[#6415f5]/80 relative"><span className="absolute right-0.5 top-0.5 w-2 h-2 rounded-full bg-white" /></span>
+                  <span>Export ▾</span><span className="text-slate-600">Share</span>
+                </span>
+              </div>
+              <div className="px-5 py-4">
+                <p className="text-center text-[11px] font-extrabold tracking-[0.08em] text-slate-800">INVESTIGATIVE MEMORANDUM</p>
+                <p className="text-center text-[7px] font-semibold tracking-[0.14em] text-slate-400 mt-1">CONFIDENTIAL — ATTORNEY WORK PRODUCT / PRIVILEGED</p>
+                <div className="mt-3 rounded-lg border border-slate-200 overflow-hidden text-[8.5px]">
+                  {DEMO_MEMO.map(([k, before, after], i) => {
+                    const filled = t >= 218 + i * 4;
+                    return (
+                      <div key={k} className="grid grid-cols-[64px_1fr] border-b border-slate-100 last:border-b-0">
+                        <span className="px-2.5 py-1.5 font-bold text-slate-500 border-r border-slate-100">{k}</span>
+                        <span className={`px-2.5 py-1.5 ${filled ? "text-slate-800 font-semibold hero-in" : "text-slate-400"}`}>
+                          {filled ? after : before}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* second chat — the update command */}
+        {t >= 176 && (
+          <div className="absolute bottom-6 left-6 right-6 sm:left-9 sm:right-auto w-full max-w-[430px]">
+            <div className="rounded-2xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-2xl px-4 py-3 flex items-center gap-3">
+              <span className="text-[12.5px] text-white/95 truncate">
+                {t < 180 ? <span className="text-white/45">Ask your transcript…</span> : DEMO_CHAT2.slice(0, c2n)}
+              </span>
+              <span
+                className={`ml-auto w-8 h-8 rounded-full flex items-center justify-center text-white text-[13px] shadow-lg shrink-0 transition-colors ${t >= 214 && t < 224 ? "hero-ring" : ""} ${c2n >= DEMO_CHAT2.length ? "bg-[#6415f5]" : "bg-white/15"}`}
+              >
+                ↑
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function LandingScreen({ onStart }) {
   const [activeNav, setActiveNav] = useState(null);
 
@@ -121,22 +305,14 @@ export default function LandingScreen({ onStart }) {
       lang="en"
     >
       <style>{`
-        @keyframes demoScene {
-          0% {opacity:0; transform:translateY(18px) scale(.985)}
-          2.5% {opacity:1; transform:translateY(0) scale(1)}
-          22% {opacity:1; transform:translateY(0) scale(1)}
-          25% {opacity:0; transform:translateY(-14px) scale(.99)}
-          100% {opacity:0}
-        }
-        .demo-scene {animation: demoScene 16s ease-in-out infinite; opacity:0}
         @keyframes demoFloat {0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
         .demo-float {animation: demoFloat 5s ease-in-out infinite}
-        @keyframes demoType {0%{max-width:0}9%{max-width:0}19%{max-width:100%}23.5%{max-width:100%}25%{max-width:0}100%{max-width:0}}
-        .demo-type {display:inline-block; overflow:hidden; white-space:nowrap; vertical-align:bottom; max-width:0; animation: demoType 16s linear infinite; animation-delay:8s}
-        @keyframes demoBlink {0%,55%{opacity:1}60%,100%{opacity:0}}
-        .demo-caret {animation: demoBlink 1.1s steps(1) infinite}
-        @keyframes demoCursor {0%,100%{transform:translate(0,0)}50%{transform:translate(12px,-9px)}}
-        .demo-cursor {animation: demoCursor 4s ease-in-out infinite}
+        @keyframes demoCursor {0%,100%{transform:translate(0,0)}50%{transform:translate(10px,-8px)}}
+        .demo-cursor {animation: demoCursor 3s ease-in-out infinite}
+        @keyframes heroIn {from{opacity:0; transform:translateY(16px) scale(.98)} to{opacity:1; transform:translateY(0) scale(1)}}
+        .hero-in {animation: heroIn .5s cubic-bezier(.22,1,.36,1) both}
+        @keyframes heroRing {0%{box-shadow:0 0 0 0 rgba(100,21,245,.55)} 100%{box-shadow:0 0 0 14px rgba(100,21,245,0)}}
+        .hero-ring {animation: heroRing 1s ease-out infinite}
         @keyframes demoPulse {0%,100%{opacity:.35}50%{opacity:1}}
         .demo-pulse {animation: demoPulse 1.4s ease-in-out infinite}
       `}</style>
@@ -235,123 +411,8 @@ export default function LandingScreen({ onStart }) {
             </div>
           </div>
 
-          {/* Right — dark demo card playing the real product walkthrough */}
-          <div className="relative w-full h-[440px] sm:h-[520px] lg:h-[560px] rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/30 bg-[#12101f]">
-            {/* ambient backdrop (visible while the video buffers) */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#262247] via-[#151226] to-[#0b0a16]" />
-            <div className="absolute -top-24 -right-20 w-[420px] h-[420px] rounded-full bg-[#6415f5]/25 blur-[100px]" />
-            <div className="absolute bottom-[-60px] -left-16 w-[340px] h-[340px] rounded-full bg-teal-300/10 blur-[90px]" />
-
-            {/* Scene 1 — transcript editor */}
-            <div className="demo-scene absolute inset-0 p-6 sm:p-9 flex items-center justify-center" style={{ animationDelay: "0s" }}>
-              <div className="demo-float w-full max-w-[430px]">
-                <div className="rounded-2xl bg-white/95 backdrop-blur shadow-2xl overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200/80">
-                    <span className="text-[10.5px] font-semibold text-slate-700">Minutes — Strategy meeting</span>
-                    <span className="flex items-center gap-2 text-[8.5px] font-semibold text-slate-400">
-                      <span>Quotes</span>
-                      <span className="w-6 h-3 rounded-full bg-[#6415f5]/80 relative"><span className="absolute right-0.5 top-0.5 w-2 h-2 rounded-full bg-white" /></span>
-                      <span>Export ▾</span>
-                      <span className="text-slate-600">Share</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2.5 px-4 py-1.5 border-b border-slate-100 text-[9px] text-slate-400">
-                    <span>↩</span><span>↷</span><span>Paragraphe ▾</span><span className="font-bold">B</span><span className="italic">I</span><span className="underline">U</span><span>S</span><span>≡</span><span>≡☰</span><span>‹›</span><span>❞</span>
-                  </div>
-                  <div className="px-6 py-4">
-                    <p className="text-center text-[11px] font-extrabold tracking-[0.08em] text-slate-800">MEETING MINUTES</p>
-                    <p className="text-center text-[7px] font-semibold tracking-[0.14em] text-slate-400 mt-1">CONFIDENTIAL — INTERNAL USE</p>
-                    <div className="mt-3 rounded-lg border border-slate-200 overflow-hidden text-[8.5px]">
-                      {[
-                        ["SPEAKERS", "3 speakers detected"],
-                        ["DURATION", "45:12"],
-                        ["LANGUAGE", "French — auto-detected"],
-                        ["EXPORT", "PDF · DOCX · SRT · TXT"],
-                      ].map(([k, v]) => (
-                        <div key={k} className="grid grid-cols-[92px_1fr] border-b border-slate-100 last:border-b-0">
-                          <span className="px-2.5 py-1.5 font-bold text-slate-500 border-r border-slate-100">{k}:</span>
-                          <span className="px-2.5 py-1.5 text-slate-600">{v}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="mt-3 space-y-1.5">
-                      <p className="text-[8.5px] text-slate-500"><span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 align-middle" /><b>Speaker 1 · 00:12</b> — Welcome everyone, let's begin.</p>
-                      <p className="text-[8.5px] text-slate-500"><span className="inline-block w-1.5 h-1.5 rounded-full bg-fuchsia-500 mr-1.5 align-middle" /><b>Speaker 2 · 00:18</b> — I prepared the quarterly minutes.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="relative mt-4 ml-1 inline-flex items-center gap-2.5">
-                  <span className="rounded-xl bg-white/10 backdrop-blur border border-white/15 px-3.5 py-2 text-[10.5px] text-white/85">
-                    Edit the minutes live, word by word.
-                  </span>
-                  <CursorIcon className="demo-cursor w-5 h-5 drop-shadow-lg" />
-                </div>
-              </div>
-            </div>
-
-            {/* Scene 2 — share dialog */}
-            <div className="demo-scene absolute inset-0 p-6 sm:p-9 flex items-center justify-center" style={{ animationDelay: "4s" }}>
-              <div className="demo-float w-full max-w-[380px] rounded-2xl bg-white/95 backdrop-blur shadow-2xl overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
-                  <span className="text-[11px] font-bold text-slate-800">Share 'Meeting minutes'</span>
-                  <span className="text-slate-400 text-[12px]">✕</span>
-                </div>
-                <div className="px-4 py-3.5">
-                  <div className="rounded-lg border border-slate-200 px-3 py-2 text-[10.5px] text-slate-500">jacques@entreprise.com</div>
-                  <p className="mt-3 text-[7.5px] font-bold tracking-[0.14em] text-slate-400">GENERAL ACCESS</p>
-                  <div className="mt-1.5 flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 text-[9.5px] font-medium text-slate-600">
-                      <span className="w-[18px] h-[18px] rounded-full bg-slate-200 inline-flex items-center justify-center text-[7px] font-bold text-slate-500">ORG</span>
-                      The whole organization <span className="text-slate-400">▾</span>
-                    </span>
-                    <span className="text-[9.5px] font-medium text-slate-600">Viewer ▾</span>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-100">
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-[9.5px] font-semibold text-slate-600">🔗 Copy link</span>
-                  <span className="rounded-lg bg-slate-800 text-white px-3 py-1.5 text-[9.5px] font-semibold">Done</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Scene 3 — ask the AI */}
-            <div className="demo-scene absolute inset-0 p-6 sm:p-9 flex items-center justify-center" style={{ animationDelay: "8s" }}>
-              <div className="w-full max-w-[440px]">
-                <div className="rounded-2xl bg-white/12 backdrop-blur-xl border border-white/20 shadow-2xl px-4 py-3.5 flex items-center gap-3">
-                  <span className="text-[12.5px] text-white/95 whitespace-nowrap">
-                    <span className="demo-type">Summarize the key decisions of the meeting</span>
-                    <span className="demo-caret inline-block w-[1.5px] h-[14px] bg-white/90 align-middle ml-[1px]" />
-                  </span>
-                  <span className="ml-auto w-8 h-8 rounded-full bg-[#6415f5] flex items-center justify-center text-white text-[13px] shadow-lg shrink-0">↑</span>
-                </div>
-                <div className="relative mt-5 inline-flex items-center gap-2.5">
-                  <span className="rounded-xl bg-white/10 backdrop-blur border border-white/15 px-3.5 py-2 text-[10.5px] text-white/85">
-                    Ask a question about the meeting — the AI answers with quotes.
-                  </span>
-                  <CursorIcon className="demo-cursor w-5 h-5 drop-shadow-lg" />
-                </div>
-              </div>
-            </div>
-
-            {/* Scene 4 — analyzing files */}
-            <div className="demo-scene absolute inset-0 p-6 sm:p-9 flex items-center justify-center" style={{ animationDelay: "12s" }}>
-              <div className="demo-float w-full max-w-[420px] rounded-2xl bg-[#181430]/85 backdrop-blur-xl border border-white/15 shadow-2xl overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/10">
-                  <span className="text-[9px] font-bold tracking-[0.14em] text-white/85">TRANSCRIPTION IN PROGRESS…</span>
-                  <span className="text-[8px] font-semibold text-white/45">5 AUDIO FILES</span>
-                </div>
-                <div className="p-3 space-y-2">
-                  {["interview_client.wav", "reunion_conseil.mp3", "memo_vocal.webm", "rdv_terrain.mp4", "notes_reunion.m4a"].map((f, i) => (
-                    <div key={f} className="flex items-center gap-2.5 rounded-lg bg-white/10 px-3 py-2">
-                      <span className={`w-1.5 h-1.5 rounded-full ${i === 0 ? "demo-pulse bg-emerald-400" : "bg-white/35"}`} />
-                      <span className="text-[10px] text-white/80 font-medium">{f}</span>
-                      {i === 0 && <span className="ml-auto text-[8px] font-bold text-emerald-300">RUNNING</span>}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Right — dark demo card: real footage + a live product walkthrough */}
+          <HeroDemo />
         </div>
       </section>
 
