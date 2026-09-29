@@ -81,8 +81,13 @@ function TypedHeadline() {
   const total = H_LINE1.length + H_LINE2.length;
   const [n, setN] = useState(0);
   useEffect(() => {
-    if (n >= total) return;
-    const t = setTimeout(() => setN((v) => v + 1), 42 + Math.random() * 46);
+    if (n < total) {
+      // type on with a human-ish, slightly uneven cadence
+      const t = setTimeout(() => setN((v) => v + 1), 42 + Math.random() * 46);
+      return () => clearTimeout(t);
+    }
+    // full headline shown — hold it a moment, then write it again
+    const t = setTimeout(() => setN(0), 2600);
     return () => clearTimeout(t);
   }, [n, total]);
   const n1 = Math.min(n, H_LINE1.length);
