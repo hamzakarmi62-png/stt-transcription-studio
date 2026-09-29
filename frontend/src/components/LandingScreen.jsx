@@ -153,12 +153,12 @@ export default function LandingScreen({ onStart }) {
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 lg:pt-14 pb-14 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 items-center">
           {/* Left */}
           <div>
-            <h1 className="text-[clamp(36px,3.6vw,56px)] leading-[1.07] font-semibold tracking-[-0.025em] text-[#18123b]">
+            <h1 className="text-[clamp(40px,4.4vw,68px)] leading-[1.18] font-medium tracking-[-0.012em] text-[#18123b]">
               Transcribe everything
               <br /> in minutes, not hours
             </h1>
 
-            <p className="mt-7 text-[17px] leading-[1.65] text-[#4b4763] max-w-[580px]">
+            <p className="mt-9 text-[17px] leading-[1.6] text-[#4b4763] max-w-[580px]">
               The transcription platform built for teams that don't have
               time to re-listen to everything. Transcription, speaker detection,
               translation and summaries for all your recordings. Every word
