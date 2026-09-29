@@ -1707,7 +1707,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
         </main>
 
         <footer className={`relative pb-8 text-center text-[11px] ${textSub}`}>
-          Aud — Studio de transcription audio & vidéo par IA
+          Aud — AI audio & video transcription studio
         </footer>
       <AskDialog ask={ask} onClose={() => setAsk(null)} />
       </div>
