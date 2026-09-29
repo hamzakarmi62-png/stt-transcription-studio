@@ -96,10 +96,6 @@ function TypedHeadline() {
       {H_LINE1.slice(0, n1)}
       <br />
       {H_LINE2.slice(0, n2)}
-      <span
-        className="demo-caret inline-block w-[3px] h-[0.78em] bg-[#6415f5] rounded-sm align-[-0.06em] ml-2"
-        aria-hidden="true"
-      />
     </h1>
   );
 }
