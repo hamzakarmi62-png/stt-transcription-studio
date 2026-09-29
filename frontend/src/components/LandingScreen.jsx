@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
@@ -68,6 +68,39 @@ function CursorIcon({ className }) {
     <svg viewBox="0 0 24 24" className={className} fill="white" stroke="#18123b" strokeWidth="1.4">
       <path d="M5.5 3.2 19 11.4l-6.2 1.2-2.6 5.9z" />
     </svg>
+  );
+}
+
+const H_LINE1 = "Transcribe everything";
+const H_LINE2 = "in minutes, not hours";
+
+// The hero headline types itself out on arrival — a live-writing feel with a
+// blinking caret. min-height reserves the final two-line box so the page
+// below never jumps while the text grows.
+function TypedHeadline() {
+  const total = H_LINE1.length + H_LINE2.length;
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (n >= total) return;
+    const t = setTimeout(() => setN((v) => v + 1), 42 + Math.random() * 46);
+    return () => clearTimeout(t);
+  }, [n, total]);
+  const n1 = Math.min(n, H_LINE1.length);
+  const n2 = Math.max(0, Math.min(n - H_LINE1.length, H_LINE2.length));
+  return (
+    <h1
+      className="text-[clamp(40px,4.4vw,68px)] leading-[1.18] font-normal tracking-[-0.012em] text-[#18123b]"
+      style={{ minHeight: "2.4em" }}
+      aria-label={`${H_LINE1} ${H_LINE2}`}
+    >
+      {H_LINE1.slice(0, n1)}
+      <br />
+      {H_LINE2.slice(0, n2)}
+      <span
+        className="demo-caret inline-block w-[3px] h-[0.78em] bg-[#6415f5] rounded-sm align-[-0.06em] ml-2"
+        aria-hidden="true"
+      />
+    </h1>
   );
 }
 
@@ -153,10 +186,7 @@ export default function LandingScreen({ onStart }) {
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 lg:pt-14 pb-14 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 items-center">
           {/* Left */}
           <div>
-            <h1 className="text-[clamp(40px,4.4vw,68px)] leading-[1.18] font-medium tracking-[-0.012em] text-[#18123b]">
-              Transcribe everything
-              <br /> in minutes, not hours
-            </h1>
+            <TypedHeadline />
 
             <p className="mt-9 text-[17px] leading-[1.6] text-[#4b4763] max-w-[580px]">
               The transcription platform built for teams that don't have
