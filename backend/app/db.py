@@ -330,6 +330,14 @@ def get_user_by_username_or_email(identifier: str) -> dict | None:
                 (identifier_lower, identifier_lower),
             )
             row = cur.fetchone()
+            if not row:
+                # name-based login: match the stored full name too
+                for cand in cur.fetchall() if False else conn.execute("SELECT * FROM users").fetchall():
+                    cand = dict(cand)
+                    cand.update(_local_profile(cand))
+                    if cand.get("full_name", "").lower() == identifier_lower:
+                        row = cand
+                        break
             conn.close()
             if row:
                 user = dict(row)
@@ -344,7 +352,8 @@ def get_user_by_username_or_email(identifier: str) -> dict | None:
         catalog = _load_users_catalog()
         for u in catalog:
             if (u.get("username", "").lower() == identifier_lower
-                    or u.get("email", "").lower() == identifier_lower):
+                    or u.get("email", "").lower() == identifier_lower
+                    or u.get("full_name", "").lower() == identifier_lower):
                 # Warm the local cache so next login is fast
                 with _lock:
                     conn = _local_conn()

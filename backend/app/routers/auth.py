@@ -18,7 +18,7 @@ class RegisterRequest(BaseModel):
     # Username is no longer asked in the signup form — when absent it is
     # derived from the email prefix (kept unique below). Login works by email.
     username: str = Field("", max_length=50)
-    email: str = Field(..., min_length=5)
+    email: str = Field("", max_length=190)
     password: str = Field(..., min_length=6)
     full_name: str = Field("", max_length=120)
     phone: str = Field("", max_length=30)
@@ -137,21 +137,23 @@ def ensure_session_owner(session: dict, user_id: str | None) -> None:
 @router.post("/register")
 def register(req: RegisterRequest):
     try:
-        if not EMAIL_RE.match(req.email.strip()):
+        email_given = req.email.strip()
+        if email_given and not EMAIL_RE.match(email_given):
             raise HTTPException(status_code=400, detail="Adresse e-mail invalide.")
-
-        existing_email = get_user_by_username_or_email(req.email)
-        if existing_email:
+        if email_given and get_user_by_username_or_email(email_given):
             raise HTTPException(status_code=400, detail="Cette adresse e-mail est déjà utilisée.")
 
-        username = req.username.strip()
-        if not username:
-            base = re.sub(r"[^a-zA-Z0-9._-]", "", req.email.split("@", 1)[0]) or "user"
-            username = base
-            n = 1
-            while get_user_by_username_or_email(username):
-                n += 1
-                username = f"{base}{n}"
+        # Identity without a form field: the full name (or email prefix) seeds
+        # a unique internal username/email pair the user never has to see.
+        seed_source = email_given or req.full_name.strip() or "user"
+        base = re.sub(r"[^a-zA-Z0-9._-]", "", seed_source.split("@", 1)[0].lower()) or "user"
+        username = req.username.strip() or base
+        email = email_given or f"{base}@users.aud.studio"
+        n = 1
+        while get_user_by_username_or_email(username) or get_user_by_username_or_email(email):
+            n += 1
+            username = f"{base}{n}"
+            email = email_given or f"{username}@users.aud.studio"
 
         user_id = uuid.uuid4().hex[:12]
         profile = {
@@ -159,7 +161,7 @@ def register(req: RegisterRequest):
             "phone": req.phone.strip(),
             "country": req.country.strip(),
         }
-        user = create_user(user_id, username, req.email.strip(), req.password, profile)
+        user = create_user(user_id, username, email, req.password, profile)
         return {"success": True, "user": user, "token": make_token(user_id)}
     except HTTPException:
         raise

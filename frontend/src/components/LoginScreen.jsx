@@ -17,7 +17,6 @@ function Logo({ size = "h-12" }) {
 export default function LoginScreen({ onLogin, onBack }) {
   const [isRegister, setIsRegister] = useState(false);
   const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -47,17 +46,17 @@ export default function LoginScreen({ onLogin, onBack }) {
     try {
       if (isRegister) {
         if (!fullName.trim()) throw new Error("Please enter your full name.");
-        if (!email || !password) {
+        if (!username || !password) {
           throw new Error("Please fill in all required fields.");
         }
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(username)) {
           throw new Error("Invalid email address.");
         }
         if (password.length < 6) {
           throw new Error("Password must be at least 6 characters.");
         }
         setLoading(true);
-        const res = await api.register("", email, password, {
+        const res = await api.register("", username.trim().toLowerCase(), password, {
           full_name: fullName,
         });
         if (res.success && res.user) {
@@ -216,20 +215,6 @@ export default function LoginScreen({ onLogin, onBack }) {
                   required
                 />
               </Field>
-
-              {isRegister && (
-                <Field label="Email address" required>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
-                    className={inputCls}
-                    autoComplete="email"
-                    required
-                  />
-                </Field>
-              )}
 
               <Field label="Password" required>
                 <div className="relative">
