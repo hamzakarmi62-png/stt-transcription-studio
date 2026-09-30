@@ -19,7 +19,6 @@ export default function LoginScreen({ onLogin, onBack }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -48,20 +47,17 @@ export default function LoginScreen({ onLogin, onBack }) {
     try {
       if (isRegister) {
         if (!fullName.trim()) throw new Error("Please enter your full name.");
-        if (!username || !email || !password) {
+        if (!email || !password) {
           throw new Error("Please fill in all required fields.");
         }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
           throw new Error("Invalid email address.");
         }
-        if (password !== confirmPassword) {
-          throw new Error("Passwords don't match.");
-        }
         if (password.length < 6) {
           throw new Error("Password must be at least 6 characters.");
         }
         setLoading(true);
-        const res = await api.register(username, email, password, {
+        const res = await api.register("", email, password, {
           full_name: fullName,
         });
         if (res.success && res.user) {
@@ -69,7 +65,7 @@ export default function LoginScreen({ onLogin, onBack }) {
         }
       } else {
         if (!username || !password) {
-          throw new Error("Please enter your username and password.");
+          throw new Error("Please enter your email and password.");
         }
         setLoading(true);
         const res = await api.login(username, password);
@@ -209,14 +205,14 @@ export default function LoginScreen({ onLogin, onBack }) {
                 </Field>
               )}
 
-              <Field label={isRegister ? "Username" : "Username or email"} required>
+              <Field label="Email" required>
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder={isRegister ? "e.g. hamzakarmi" : "hamzakarmi"}
+                  placeholder="name@example.com"
                   className={inputCls}
-                  autoComplete="username"
+                  autoComplete="email"
                   required
                 />
               </Field>
@@ -269,24 +265,6 @@ export default function LoginScreen({ onLogin, onBack }) {
                 )}
               </Field>
 
-              {isRegister && (
-                <Field label="Confirm password" required>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className={`${inputCls} ${
-                      confirmPassword && confirmPassword !== password ? "border-red-300 focus:ring-red-300" : ""
-                    }`}
-                    autoComplete="new-password"
-                    required
-                  />
-                  {confirmPassword && confirmPassword !== password && (
-                    <p className="text-xs text-red-500 mt-1.5">Passwords don't match.</p>
-                  )}
-                </Field>
-              )}
 
               <button
                 type="submit"

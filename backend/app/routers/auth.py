@@ -15,7 +15,9 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 class RegisterRequest(BaseModel):
-    username: str = Field(..., min_length=3, max_length=50)
+    # Username is no longer asked in the signup form — when absent it is
+    # derived from the email prefix (kept unique below). Login works by email.
+    username: str = Field("", max_length=50)
     email: str = Field(..., min_length=5)
     password: str = Field(..., min_length=6)
     full_name: str = Field("", max_length=120)
@@ -138,13 +140,18 @@ def register(req: RegisterRequest):
         if not EMAIL_RE.match(req.email.strip()):
             raise HTTPException(status_code=400, detail="Adresse e-mail invalide.")
 
-        existing_username = get_user_by_username_or_email(req.username)
-        if existing_username:
-            raise HTTPException(status_code=400, detail="Ce nom d'utilisateur est déjà pris.")
-
         existing_email = get_user_by_username_or_email(req.email)
         if existing_email:
             raise HTTPException(status_code=400, detail="Cette adresse e-mail est déjà utilisée.")
+
+        username = req.username.strip()
+        if not username:
+            base = re.sub(r"[^a-zA-Z0-9._-]", "", req.email.split("@", 1)[0]) or "user"
+            username = base
+            n = 1
+            while get_user_by_username_or_email(username):
+                n += 1
+                username = f"{base}{n}"
 
         user_id = uuid.uuid4().hex[:12]
         profile = {
@@ -152,7 +159,7 @@ def register(req: RegisterRequest):
             "phone": req.phone.strip(),
             "country": req.country.strip(),
         }
-        user = create_user(user_id, req.username.strip(), req.email.strip(), req.password, profile)
+        user = create_user(user_id, username, req.email.strip(), req.password, profile)
         return {"success": True, "user": user, "token": make_token(user_id)}
     except HTTPException:
         raise
