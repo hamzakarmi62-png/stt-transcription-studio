@@ -140,11 +140,15 @@ function HeroDemo() {
       {/* footage */}
       <video
         src="/videos/hero-woman.mp4"
+        poster="/videos/hero-woman.jpg"
+        preload="auto"
         autoPlay muted loop playsInline
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${showingWoman ? "opacity-100" : "opacity-0"}`}
       />
       <video
         src="/videos/hero-man.mp4"
+        poster="/videos/hero-man.jpg"
+        preload="auto"
         autoPlay muted loop playsInline
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${showingWoman ? "opacity-0" : "opacity-100"}`}
       />
