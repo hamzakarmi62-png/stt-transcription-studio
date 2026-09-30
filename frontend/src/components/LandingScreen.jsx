@@ -242,8 +242,8 @@ function HeroDemo() {
 
         {/* memo card slides up, then fills itself */}
         {t >= 172 && (
-          <div className="hero-in absolute bottom-6 left-6 right-6 sm:left-9 sm:right-auto w-full max-w-[400px]">
-            <div className="rounded-2xl bg-white/95 backdrop-blur shadow-2xl overflow-hidden">
+          <div className="hero-in absolute inset-0 flex items-center justify-center px-6 pb-16">
+            <div className="w-full max-w-[400px] rounded-2xl bg-white/75 backdrop-blur-xl border border-white/40 shadow-2xl overflow-hidden">
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200/80">
                 <span className="text-[10.5px] font-bold text-slate-800">Transcript Memorandum</span>
                 <span className="flex items-center gap-2 text-[8.5px] font-semibold text-slate-400">
