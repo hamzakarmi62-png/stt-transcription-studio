@@ -41,6 +41,72 @@ def on_startup():
         print("Startup recovery failed:", exc)
     _load_bucket_secrets()
     _start_keepalive()
+    _start_janitor()
+
+
+def _start_janitor() -> None:
+    """Self-healing: a session stuck in processing/diarizing/downloading for
+    over 90 minutes gets ONE automatic retry; if it stalls again the user
+    sees a clear error instead of an eternal spinner."""
+    import time as _time
+
+    from . import db
+
+    def _loop() -> None:
+        seen: dict[str, float] = {}
+        retried: set[str] = set()
+        while True:
+            _time.sleep(600)
+            try:
+                stuck = {
+                    s["id"]: s
+                    for s in db.list_local_sessions_by_status(
+                        ["processing", "diarizing", "downloading"]
+                    )
+                }
+                now = _time.time()
+                for sid in list(seen):
+                    if sid not in stuck:
+                        seen.pop(sid, None)
+                for sid, sess in stuck.items():
+                    first = seen.setdefault(sid, now)
+                    if now - first < 90 * 60:
+                        continue
+                    if sess.get("status") == "downloading":
+                        # a hung import cannot be fixed by re-running the
+                        # transcription — fail it with a clear message
+                        seen.pop(sid, None)
+                        db.update_session(
+                            sid,
+                            status="error",
+                            error="تعذّر تنزيل الملف من الرابط — جرّب رابطاً آخر أو ارفع الملف مباشرة. (Download stalled — try another link or upload the file.)",
+                        )
+                        print(f"[janitor] failed stuck download {sid}")
+                        continue
+                    if sid not in retried:
+                        retried.add(sid)
+                        seen.pop(sid, None)
+                        print(f"[janitor] retrying stuck session {sid}")
+                        try:
+                            from .routers.transcription import _run_transcription
+                            db.update_session(sid, status="processing", error=None)
+                            threading.Thread(
+                                target=_run_transcription, args=(sid, None), daemon=True
+                            ).start()
+                        except Exception as exc:
+                            print(f"[janitor] retry failed for {sid}:", exc)
+                    else:
+                        seen.pop(sid, None)
+                        db.update_session(
+                            sid,
+                            status="error",
+                            error="توقفت المعالجة أكثر من اللازم — أعد المحاولة من الأرشيف. (Processing stalled — please retry.)",
+                        )
+                        print(f"[janitor] gave up on {sid} after retry")
+            except Exception as exc:
+                print("[janitor] loop error:", exc)
+
+    threading.Thread(target=_loop, daemon=True, name="stuck-janitor").start()
 
 
 def _start_keepalive() -> None:

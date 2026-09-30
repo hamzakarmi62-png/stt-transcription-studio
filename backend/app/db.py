@@ -317,6 +317,24 @@ def _local_profile(row: sqlite3.Row) -> dict:
         return {}
 
 
+def list_local_sessions_by_status(statuses) -> list[dict]:
+    """Raw local rows in the given statuses — the stuck-job janitor's feed."""
+    if not statuses:
+        return []
+    q = ",".join("?" for _ in statuses)
+    with _lock:
+        conn = _local_conn()
+        try:
+            rows = conn.execute(
+                f"SELECT * FROM sessions WHERE status IN ({q})", tuple(statuses)
+            ).fetchall()
+        except Exception:
+            rows = []
+        finally:
+            conn.close()
+    return [_format_session(dict(r)) for r in rows]
+
+
 def get_user_by_username_or_email(identifier: str) -> dict | None:
     init_db()
     identifier_lower = identifier.strip().lower()

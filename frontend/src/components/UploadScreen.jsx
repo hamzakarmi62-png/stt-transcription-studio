@@ -668,15 +668,32 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const selectedBlob = file || recBlob;
 
   const pollStatus = async (id, target) => {
+    // Never abandon a working transcription: poll for up to 2 hours. At 30
+    // and 60 minutes a soft note appears (the server keeps working even if
+    // this page is closed — the archive always holds the final state).
     let consecutiveErrors = 0;
     const startedAt = Date.now();
-    const POLL_TIMEOUT_MS = 30 * 60 * 1000; // 30 min ceiling for very long audio
+    const HARD_LIMIT_MS = 120 * 60 * 1000;
+    const note = (ar, en) => setMessage(uiLang === "ar" ? ar : en);
+    let noted30 = false;
+    let noted60 = false;
     for (;;) {
       await sleep(2000);
-      if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+      const elapsed = Date.now() - startedAt;
+      if (elapsed > 30 * 60 * 1000 && !noted30) {
+        noted30 = true;
+        note("المعالجة ما زالت مستمرة — الملفات الطويلة تأخذ وقتاً. الصفحة تتابع حتى تكتمل.",
+             "Still processing — long files take a while. This page keeps following until it completes.");
+      }
+      if (elapsed > 60 * 60 * 1000 && !noted60) {
+        noted60 = true;
+        note("ما زلنا نتابع المعالجة — لن يتوقف التفريغ بسبب طول الملف.",
+             "Still following the processing — a long file will not stop your transcription.");
+      }
+      if (elapsed > HARD_LIMIT_MS) {
         throw new Error(uiLang === "ar"
-          ? "المعالجة تأخّرت أكثر من 30 دقيقة — قد تُكمل في الخلفية. حدّث الأرشيف بعد قليل للتحقق، أو أعد المحاولة بملف أصغر."
-          : "Processing passed 30 minutes — it may still finish in the background. Check your archive shortly, or retry with a smaller file.");
+          ? "المعالجة تجاوزت ساعتين — تحقق من الأرشيف بعد قليل؛ إن بقيت عالقة أعد المحاولة."
+          : "Processing passed two hours — check your archive shortly; if it is still stuck, retry.");
       }
       try {
         const s = await api.getSession(id);
@@ -684,11 +701,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
         if (s.status === "error") throw new Error(s.error || "فشلت معالجة الملف الصوتي بالذكاء الاصطناعي");
         if (s.status === target) return s;
       } catch (err) {
-        if (err.message && (err.message.includes("فشلت") || err.message.includes("failed") || err.message.includes("خطأ"))) {
+        if (err.message && (err.message.includes("فشلت") || err.message.includes("failed") || err.message.includes("خطأ") || err.message.includes("تالف"))) {
           throw err;
         }
         consecutiveErrors++;
-        if (consecutiveErrors > 20) {
+        if (consecutiveErrors > 30) {
           throw err;
         }
       }
