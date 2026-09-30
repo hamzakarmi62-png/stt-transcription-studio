@@ -674,7 +674,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     for (;;) {
       await sleep(2000);
       if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
-        throw new Error(uiLang === "ar" ? "استغرقت المعالجة وقتاً طويلاً جداً، توقفت الانتظار. تحقق من الجلسة لاحقاً أو أعد المحاولة." : "Processing timed out after 30 minutes.");
+        throw new Error(uiLang === "ar"
+          ? "المعالجة تأخّرت أكثر من 30 دقيقة — قد تُكمل في الخلفية. حدّث الأرشيف بعد قليل للتحقق، أو أعد المحاولة بملف أصغر."
+          : "Processing passed 30 minutes — it may still finish in the background. Check your archive shortly, or retry with a smaller file.");
       }
       try {
         const s = await api.getSession(id);

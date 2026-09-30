@@ -107,6 +107,46 @@ def detect_speech_turns(path: str, min_silence: float = 0.4) -> list[tuple[float
     return [(round(a, 3), round(b, 3)) for a, b in merged]
 
 
+def _extract_with_ffmpeg_cli(src, dst, sample_rate: int, bitrate: int,
+                             start: float | None, end: float | None) -> float:
+    """Forgiving fallback: the bundled ffmpeg CLI re-decodes files PyAV chokes
+    on (partial downloads, odd headers). Raises a clear user-facing error when
+    even ffmpeg cannot read the file."""
+    import subprocess
+    import shutil
+    from ..config import settings  # noqa: F401  (kept for parity)
+    ff = None
+    try:
+        import imageio_ffmpeg
+        ff = imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        ff = shutil.which("ffmpeg")
+    if not ff:
+        raise RuntimeError("ffmpeg unavailable")
+    cmd = [ff, "-y", "-err_detect", "ignore_err", "-i", str(src), "-vn",
+           "-ac", "1", "-ar", str(sample_rate), "-b:a", str(bitrate)]
+    if start is not None:
+        cmd += ["-ss", f"{max(0.0, start):.3f}"]
+    if end is not None:
+        cmd += ["-t", f"{max(0.0, end - (start or 0.0)):.3f}"]
+    cmd += [str(dst)]
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=3600)
+    import av as _av
+    dur = 0.0
+    if proc.returncode == 0:
+        try:
+            with _av.open(str(dst)) as probe:
+                dur = float(probe.duration or 0) / 1_000_000
+        except Exception:
+            dur = 0.0
+    if proc.returncode != 0 or dur <= 0:
+        raise RuntimeError(
+            "الملف تالف أو غير قابل للقراءة — أعد تصديره أو جرّب ملفاً آخر. "
+            "(The file appears corrupted or incomplete.)"
+        )
+    return dur
+
+
 def extract_audio_track(
     src,
     dst,
@@ -119,8 +159,38 @@ def extract_audio_track(
 
     Returns the seconds written. Raises IndexError when the source has no audio
     stream at all. Decoding is incremental, so a multi-gigabyte video costs a
-    constant amount of RAM.
+    constant amount of RAM. Files PyAV cannot fully decode fall back to the
+    bundled ffmpeg CLI; what survives is kept (partial audio beats failure).
     """
+    try:
+        return _extract_pyav(src, dst, sample_rate, bitrate, start, end)
+    except Exception:
+        # partial output from the PyAV attempt still counts
+        try:
+            import os as _os
+            if _os.path.exists(dst) and _os.path.getsize(dst) > 4096:
+                with av.open(str(dst)) as probe:
+                    if float(probe.duration or 0) > 0:
+                        return float(probe.duration) / 1_000_000
+        except Exception:
+            pass
+        dst_path = None if dst is None else str(dst)
+        try:
+            if dst_path and __import__("os").path.exists(dst_path):
+                __import__("os").unlink(dst_path)
+        except Exception:
+            pass
+        return _extract_with_ffmpeg_cli(src, dst, sample_rate, bitrate, start, end)
+
+
+def _extract_pyav(
+    src,
+    dst,
+    sample_rate: int = SAMPLE_RATE,
+    bitrate: int = AUDIO_BITRATE,
+    start: float | None = None,
+    end: float | None = None,
+) -> float:
     resampler = av.AudioResampler(format="s16", layout="mono", rate=sample_rate)
     samples_written = 0
     inp = av.open(str(src), metadata_errors="ignore")
@@ -138,18 +208,25 @@ def extract_audio_track(
                 for packet in ostream.encode(frame):
                     out.mux(packet)
 
-        for frame in inp.decode(istream):
-            position = float(frame.pts * istream.time_base) if frame.pts is not None else None
-            if position is not None:
-                if start is not None and position + float(frame.duration * istream.time_base) <= start:
-                    continue
-                if end is not None and position >= end:
-                    break
-            frame.pts = None
-            encode(resampler.resample(frame))
+        try:
+            for frame in inp.decode(istream):
+                position = float(frame.pts * istream.time_base) if frame.pts is not None else None
+                if position is not None:
+                    if start is not None and position + float(frame.duration * istream.time_base) <= start:
+                        continue
+                    if end is not None and position >= end:
+                        break
+                frame.pts = None
+                encode(resampler.resample(frame))
+        except av.error.InvalidDataError:
+            # corrupt tail/middle packets: keep whatever decoded cleanly —
+            # a usable partial transcript beats a hard failure
+            pass
         encode(resampler.resample(None))
         for packet in ostream.encode(None):
             out.mux(packet)
+        if samples_written <= 0:
+            raise RuntimeError("no decodable audio")
     finally:
         out.close()
         inp.close()
