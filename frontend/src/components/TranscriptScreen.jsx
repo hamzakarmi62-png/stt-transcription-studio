@@ -1267,6 +1267,25 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <Highlighter className="w-4 h-4" />
               </button>
 
+              {/* 7a-bis. Sync nudge — align the highlight with the voice */}
+              <div className="flex items-center gap-0.5 px-1 rounded-xl bg-[#18123b]/[0.04]" title="Fine-tune highlight sync: if the highlight runs ahead, click −; if it lags, click +">
+                <button
+                  onClick={() => setHighlightOffset((v) => Math.round((v - 0.25) * 100) / 100)}
+                  className="px-1.5 py-1 rounded-lg hover:bg-[#18123b]/[0.08] text-[#4b4763] text-xs font-bold transition-colors"
+                >
+                  −
+                </button>
+                <span className="text-[10px] font-semibold text-[#4b4763] tabular-nums w-9 text-center" dir="ltr">
+                  {highlightOffset >= 0 ? "+" : ""}{highlightOffset.toFixed(2)}s
+                </span>
+                <button
+                  onClick={() => setHighlightOffset((v) => Math.round((v + 0.25) * 100) / 100)}
+                  className="px-1.5 py-1 rounded-lg hover:bg-[#18123b]/[0.08] text-[#4b4763] text-xs font-bold transition-colors"
+                >
+                  +
+                </button>
+              </div>
+
               {/* 7b. Insights — translation / summary / stats */}
               <button
                 onClick={() => openInsights("translate")}

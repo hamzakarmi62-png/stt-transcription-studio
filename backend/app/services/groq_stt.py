@@ -113,6 +113,19 @@ def _clean_segments(raw_segments: list[dict], offset: float, duration: float, sr
         words = _shift_words(raw.get("words"), offset)
         if not words:
             words = _synthesize_words(text, start, end)
+        # Word timestamps from the turbo model jitter by whole seconds in both
+        # directions; segment boundaries are far more trustworthy. Redistribute
+        # the words across the segment's true span, weighted by word length,
+        # so the karaoke highlight tracks the voice instead of drifting.
+        if len(words) > 1 and end > start:
+            total = sum(max(1, len(w.get("word", ""))) for w in words)
+            acc = 0.0
+            span = end - start
+            for w in words:
+                wlen = max(1, len(w.get("word", "")))
+                w["start"] = round(start + span * (acc / total), 3)
+                acc += wlen
+                w["end"] = round(min(start + span * (acc / total), end), 3)
         tokens = {t.strip(".,!?…—-").lower() for t in text.split()}
         is_fillers = bool(tokens) and tokens.issubset(_HALLUCINATION_TOKENS)
         if is_fillers and _is_silent(src, start, end):
