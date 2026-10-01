@@ -76,6 +76,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   // new paragraph its own speaker).
   const [editingCaret, setEditingCaret] = useState(null);
   const [activeWordKey, setActiveWordKey] = useState(null);
+  const [pendingWordKey, setPendingWordKey] = useState(null);
   const [editingWordKey, setEditingWordKey] = useState(null);
 
   // useCallback with a ref-based mutate: the identity is stable across
@@ -336,9 +337,11 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   useEffect(() => {
     if (segments.length === 0) {
       setActiveWordKey(null);
+      setPendingWordKey(null);
       return;
     }
     let foundKey = null;
+    let pendingKey = null;
     const speechTime = currentTime + highlightOffset;
 
     let allWords = [];
@@ -364,15 +367,17 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
       if (activeWord) {
         foundKey = activeWord.key;
-      } else if (lastPastWord) {
-        const nextWord = allWords.find(w => w.start > lastPastWord.end);
-        if (!nextWord || speechTime < nextWord.start) {
-          foundKey = lastPastWord.key;
-        }
+      } else {
+        // Inside a gap (music / silence): the strong highlight would freeze,
+        // so the NEXT spoken word carries a soft pulsing marker instead —
+        // the marker keeps moving as the playhead approaches real speech.
+        const nextWord = allWords.find(w => w.start > speechTime);
+        pendingKey = nextWord ? nextWord.key : (lastPastWord ? lastPastWord.key : null);
       }
     }
 
     setActiveWordKey(foundKey);
+    setPendingWordKey(pendingKey);
   }, [currentTime, segments, highlightOffset]);
 
   const seekTo = useCallback((t) => {
@@ -1436,6 +1441,7 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       showMark={index === 0 || filteredSegments[index - 1]?.speaker !== seg.speaker}
                       isActive={activeSegment?.id === seg.id}
                       activeWordKey={activeWordKey}
+                      pendingWordKey={pendingWordKey}
                       editingWordKey={editingWordKey}
                       onSetEditingWordKey={setEditingWordKey}
                       onUpdateWord={updateWordText}

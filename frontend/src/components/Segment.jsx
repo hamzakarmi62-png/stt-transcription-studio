@@ -14,6 +14,7 @@ function Segment({
   showMark = true,
   isActive,
   activeWordKey,
+  pendingWordKey,
   editingWordKey,
   onSetEditingWordKey,
   onUpdateWord,
@@ -452,11 +453,16 @@ function Segment({
           segment.words.map((w, i) => {
             const wKey = `${segment.id}-w${i}`;
             const isHighlighted = activeWordKey === wKey;
+            const isPending = !isHighlighted && pendingWordKey === wKey;
             return (
               <Fragment key={wKey}>
                 <span
-                  className={`rounded px-0.5 -mx-0.5 ${
-                    isHighlighted ? "bg-amber-300 text-slate-900" : ""
+                  className={`rounded px-0.5 -mx-0.5 transition-colors ${
+                    isHighlighted
+                      ? "bg-[#6415f5]/25 text-[#6415f5] font-semibold"
+                      : isPending
+                        ? "bg-[#6415f5]/[0.08] text-[#6415f5]/80 animate-pulse"
+                        : ""
                   }`}
                 >
                   {w.word}
