@@ -368,11 +368,16 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
       if (activeWord) {
         foundKey = activeWord.key;
       } else {
-        // Inside a gap (music / silence): the strong highlight would freeze,
-        // so the NEXT spoken word carries a soft pulsing marker instead —
-        // the marker keeps moving as the playhead approaches real speech.
+        // Gap handling: a LONG pause (music / silence) pulses the upcoming
+        // word so tracking never freezes; a normal inter-word gap stays on
+        // the last spoken word — the marker must never outrun the speaker.
         const nextWord = allWords.find(w => w.start > speechTime);
-        pendingKey = nextWord ? nextWord.key : (lastPastWord ? lastPastWord.key : null);
+        const gap = nextWord ? nextWord.start - speechTime : Infinity;
+        if (nextWord && gap >= 1.5) {
+          pendingKey = nextWord.key;
+        } else if (lastPastWord) {
+          foundKey = lastPastWord.key;
+        }
       }
     }
 
