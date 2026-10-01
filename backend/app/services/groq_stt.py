@@ -114,18 +114,18 @@ def _clean_segments(raw_segments: list[dict], offset: float, duration: float, sr
         if not words:
             words = _synthesize_words(text, start, end)
         # Word timestamps from the turbo model jitter by whole seconds in both
-        # directions; segment boundaries are far more trustworthy. Redistribute
-        # the words across the segment's true span, weighted by word length,
-        # so the karaoke highlight tracks the voice instead of drifting.
+        # directions; segment boundaries are far more trustworthy. Re-map the
+        # raw word rhythm INTO the segment's true span: relative pauses and
+        # pacing between words are preserved (the highlight holds a word as
+        # long as it is really spoken), while the absolute drift disappears.
         if len(words) > 1 and end > start:
-            total = sum(max(1, len(w.get("word", ""))) for w in words)
-            acc = 0.0
-            span = end - start
-            for w in words:
-                wlen = max(1, len(w.get("word", "")))
-                w["start"] = round(start + span * (acc / total), 3)
-                acc += wlen
-                w["end"] = round(min(start + span * (acc / total), end), 3)
+            r0 = min(float(w.get("start", start)) for w in words)
+            r1 = max(float(w.get("end", start)) for w in words)
+            if r1 - r0 > 0.05:
+                scale = (end - start) / (r1 - r0)
+                for w in words:
+                    w["start"] = round(start + (float(w.get("start", start)) - r0) * scale, 3)
+                    w["end"] = round(start + (float(w.get("end", start)) - r0) * scale, 3)
         tokens = {t.strip(".,!?…—-").lower() for t in text.split()}
         is_fillers = bool(tokens) and tokens.issubset(_HALLUCINATION_TOKENS)
         if is_fillers and _is_silent(src, start, end):
