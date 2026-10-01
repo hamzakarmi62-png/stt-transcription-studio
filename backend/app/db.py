@@ -73,11 +73,20 @@ def _catalog_enabled() -> bool:
 _catalog_memory: dict[str, bytes] = {}
 
 
+_catalog_read_degraded = False
+
+
 def _catalog_read(name: str) -> bytes | None:
+    global _catalog_read_degraded
     raw = storage.get_bytes(name) if storage.enabled() else None
     if raw is not None:
         _catalog_memory[name] = raw
+        _catalog_read_degraded = False
         return raw
+    # Degraded read: whatever we serve now (memory / legacy fallback) must
+    # NEVER be rewritten back over the healthy catalog on the bucket — a
+    # stale fallback copy merging into a write regressed the whole archive.
+    _catalog_read_degraded = True
     # Active bucket read failed (cap/outage): serve the last good copy, then
     # the Supabase copy that predates the B2 migration — auth and the
     # session lists must never hard-fail on a bucket hiccup.
@@ -452,6 +461,10 @@ def _save_session_cloud_meta(session_dict: dict):
         # files, the catalog carries only listable metadata.
         def lean(s: dict) -> dict:
             return {k: v for k, v in s.items() if k not in ("segments", "speakers")}
+
+        if _catalog_read_degraded:
+            print("Cloud meta: skipping catalog rewrite — bucket read is degraded (anti-regression guard)")
+            return
 
         catalog = _list_session_cloud_meta()
         catalog_dict = {}
