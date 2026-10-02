@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
+import { AboutPage, PricingPage, ContactPage } from "./LandingPages.jsx";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
   Lock, EyeOff,
@@ -42,6 +43,7 @@ const NAV = [
             { label: "Upload & Record", desc: "Files or your microphone", target: "produit" },
             { label: "Share Links", desc: "Read-only, with playback", target: "produit" },
             { label: "Export", desc: "TXT · SRT · DOCX · PDF", target: "fonctionnalites" },
+            { label: "Pricing", desc: "One simple price: free", page: "pricing" },
           ],
         },
       ],
@@ -68,8 +70,8 @@ const NAV = [
         {
           title: "Get started",
           items: [
-            { label: "Pricing", desc: "One simple price: free", target: "tarifs" },
-            { label: "Create an account", desc: "Free forever, no card", target: "tarifs" },
+            { label: "Pricing page", desc: "Plans, comparison and FAQ", page: "pricing" },
+            { label: "Contact the team", desc: "Talk to the founder directly", page: "contact" },
           ],
         },
       ],
@@ -360,12 +362,27 @@ function HeroDemo() {
 export default function LandingScreen({ onStart }) {
   const [activeNav, setActiveNav] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
+  const [page, setPage] = useState("home"); // home | about | pricing | contact
   const closeTimer = useRef(null);
 
   const goToSection = (id) => {
-    setActiveNav(id);
     setOpenMenu(null);
+    if (page !== "home") {
+      setPage("home");
+      setTimeout(() => {
+        setActiveNav(id);
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+      return;
+    }
+    setActiveNav(id);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const goToPage = (pg) => {
+    setOpenMenu(null);
+    setPage(pg);
+    window.scrollTo({ top: 0, behavior: "instant" });
   };
 
   // Desktop mega-menu: opens on hover, closes on leaving the header area
@@ -409,9 +426,9 @@ export default function LandingScreen({ onStart }) {
             {NAV.map((item) => (
               <div key={item.label} className="relative" onMouseEnter={() => item.menu && openWith(item.label)}>
                 <button
-                  onClick={() => goToSection(item.id)}
+                  onClick={() => (item.label === "About" ? goToPage("about") : item.label === "Pricing" ? goToPage("pricing") : goToSection(item.id))}
                   className={`text-[15px] font-medium transition-colors flex items-center gap-1 ${
-                    activeNav === item.id || openMenu === item.label
+                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || activeNav === item.id || openMenu === item.label
                       ? "text-[#6415f5]"
                       : "text-[#18123b]/75 hover:text-[#18123b]"
                   }`}
@@ -466,7 +483,7 @@ export default function LandingScreen({ onStart }) {
                               {col.items.map((it) => (
                                 <button
                                   key={it.label}
-                                  onClick={() => goToSection(it.target)}
+                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : goToSection(it.target))}
                                   className="block text-start group/link"
                                 >
                                   <span className="block text-[13.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
@@ -507,6 +524,11 @@ export default function LandingScreen({ onStart }) {
         </div>
       </header>
 
+      {page === "about" && <AboutPage onStart={onStart} />}
+      {page === "pricing" && <PricingPage onStart={onStart} />}
+      {page === "contact" && <ContactPage />}
+      {page === "home" && (
+      <>
       {/* ── Hero ────────────────────────────────────────────────────────── */}
       <section id="produit" className="relative scroll-mt-4">
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 lg:pt-14 pb-14 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 items-center">
@@ -709,6 +731,9 @@ export default function LandingScreen({ onStart }) {
           </button>
         </div>
       </section>
+
+      </>
+      )}
 
       {/* ── Footer ──────────────────────────────────────────────────────── */}
       <footer className="border-t border-[#18123b]/10">
