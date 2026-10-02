@@ -804,13 +804,18 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   // a small box under the status filter for cleaning a crowded archive.
   const [bulkDeleting, setBulkDeleting] = useState(false);
   const deleteAllFiltered = () => {
-    const targets = filteredSessions.map((s) => s.id);
+    // My Files items are protected: the archive sweep never touches
+    // sessions the user explicitly saved there — they can only be
+    // deleted from My Files itself.
+    const targets = filteredSessions
+      .map((s) => s.id)
+      .filter((id) => !customWorkIds.includes(id) && !customFileNames[id]);
     if (targets.length === 0) return;
     setAsk({
       type: "confirm",
       danger: true,
       title: `Delete all ${targets.length} sessions?`,
-      message: "Every visible session will be permanently removed together with its transcript and archived file. This cannot be undone.",
+      message: "Every visible session will be permanently removed together with its transcript and archived file. This cannot be undone. Sessions saved in My Files are protected and will stay.",
       okText: "Delete all",
       onOk: async () => {
         setBulkDeleting(true);
@@ -1503,7 +1508,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               <div className="flex justify-end mt-2">
                 <button
                   onClick={deleteAllFiltered}
-                  disabled={bulkDeleting || filteredSessions.length === 0}
+                  disabled={bulkDeleting || filteredSessions.filter((s) => !customWorkIds.includes(s.id) && !customFileNames[s.id]).length === 0}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition disabled:opacity-40 ${
                     isDark
                       ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
@@ -1512,7 +1517,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   title="Delete every session matching the current filters"
                 >
                   {bulkDeleting ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Trash className="w-3.5 h-3.5" />}
-                  {bulkDeleting ? "Deleting…" : `Delete all (${filteredSessions.length})`}
+                  {bulkDeleting ? "Deleting…" : `Delete all (${filteredSessions.filter((s) => !customWorkIds.includes(s.id) && !customFileNames[s.id]).length})`}
                 </button>
               </div>
 
