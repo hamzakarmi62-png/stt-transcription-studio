@@ -1015,9 +1015,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 onChange={(e) => setUiLang(e.target.value)}
                 className={`hidden xl:block text-xs rounded-xl px-2.5 py-2 border focus:outline-none ${inputBg} cursor-pointer`}
               >
-                <option value="ar">ع</option>
                 <option value="en">EN</option>
                 <option value="fr">FR</option>
+                <option value="ar">ع</option>
               </select>
               <button
                 onClick={() => setTheme(isDark ? "light" : "dark")}
@@ -1346,7 +1346,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             );
                           })}
                           <p className={`px-3 pt-1.5 pb-1 text-[10px] ${textSub}`}>
-                            اختر لغة واحدة أو عدة لغات كما تحب — كل لغة تُفرَّغ على حدة ويُحتفظ بأفضل جزء من كل مقطع.
+                            Choose one or more languages as you like — each is transcribed separately and the best part of every passage is kept.
                           </p>
                         </div>
                       </>
