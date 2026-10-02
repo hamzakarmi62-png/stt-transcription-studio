@@ -10,7 +10,7 @@ from typing import Optional
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 import requests
 
@@ -441,6 +441,20 @@ def get_audio(session_id: str, request: Request):
     )
 
 
+def _delete_session_core(session: dict) -> None:
+    """The actual removal work shared by the single and bulk endpoints."""
+    local = _local_path_for(session)
+    key = _cloud_key(session)
+    # An audio-only archive is cached under its own name beside the original.
+    cache = local.parent / key if key and key != local.name else None
+    local.unlink(missing_ok=True)
+    if cache is not None:
+        cache.unlink(missing_ok=True)
+    if storage.enabled() and key:
+        storage.delete(key)
+    db.delete_session(session["id"])
+
+
 @router.delete("/sessions/{session_id}")
 def delete_session(session_id: str, request: Request = None):
     session = db.get_session(session_id)
@@ -449,19 +463,40 @@ def delete_session(session_id: str, request: Request = None):
 
     ensure_session_owner(session, user_id_from_request(request) if request else None)
 
-    local = _local_path_for(session)
-    key = _cloud_key(session)
-    # An audio-only archive is cached under its own name beside the original.
-    cache = local.parent / key if key and key != local.name else None
-
-    local.unlink(missing_ok=True)
-    if cache is not None:
-        cache.unlink(missing_ok=True)
-    if storage.enabled() and key:
-        storage.delete(key)
-
-    db.delete_session(session_id)
+    _delete_session_core(session)
     return {"ok": True}
+
+
+class BulkDeleteRequest(BaseModel):
+    ids: list[str] = Field(default_factory=list)
+
+
+@router.post("/sessions/bulk-delete")
+def bulk_delete_sessions(payload: BulkDeleteRequest, request: Request = None):
+    """Respond instantly; the sweep runs in a background thread so deleting
+    a crowded archive never makes the user wait."""
+    user_id = user_id_from_request(request) if request else None
+    if not user_id:
+        raise HTTPException(401, "Authentification requise.")
+    ids = [i for i in (payload.ids or []) if isinstance(i, str)][:500]
+
+    def _sweep() -> None:
+        for sid in ids:
+            try:
+                sess = db.get_session(sid)
+                if not sess:
+                    continue
+                try:
+                    ensure_session_owner(sess, user_id)
+                except Exception:
+                    continue
+                _delete_session_core(sess)
+                print(f"[bulk-delete] removed {sid}")
+            except Exception as exc:
+                print(f"[bulk-delete] {sid} failed: {exc}")
+
+    threading.Thread(target=_sweep, daemon=True, name="bulk-delete").start()
+    return {"ok": True, "queued": len(ids)}
 
 
 @router.post("/jobs/refresh")

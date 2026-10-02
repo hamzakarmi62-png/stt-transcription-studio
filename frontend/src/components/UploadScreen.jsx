@@ -819,7 +819,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       okText: "Delete all",
       onOk: async () => {
         setBulkDeleting(true);
-        // optimistic local wipe first — the UI clears instantly
+        // optimistic local wipe — the UI clears in the same instant; the
+        // server sweeps the files and transcripts in the background.
         setSessions((prev) => prev.filter((s) => !targets.includes(s.id)));
         if (_sessionsCache && _sessionsCache.uid === (user?.id || null)) {
           _sessionsCache = {
@@ -828,25 +829,18 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
           };
         }
         try {
-          for (const id of targets) {
-            try {
-              await api.deleteSession(id);
-            } catch {
-              /* keep going: one failure must not stop the sweep */
-            }
-            setCustomWorkIds((prev) => prev.filter((i) => i !== id));
-            setCustomFileNames((prev) => {
-              const next = { ...prev };
-              delete next[id];
-              return next;
-            });
-            setSessionFolderMap((prev) => {
-              const next = { ...prev };
-              delete next[id];
-              return next;
-            });
-          }
-          await loadSessions();
+          await api.bulkDeleteSessions(targets);
+          setCustomWorkIds((prev) => prev.filter((i) => !targets.includes(i)));
+          setCustomFileNames((prev) => {
+            const next = { ...prev };
+            for (const id of targets) delete next[id];
+            return next;
+          });
+          setSessionFolderMap((prev) => {
+            const next = { ...prev };
+            for (const id of targets) delete next[id];
+            return next;
+          });
         } finally {
           setBulkDeleting(false);
         }

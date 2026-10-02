@@ -205,6 +205,13 @@ export const api = {
   deleteSession: (id) =>
     request(`${BASE}/sessions/${id}`, { method: "DELETE" }),
 
+  bulkDeleteSessions: (ids) =>
+    request(`${BASE}/sessions/bulk-delete`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    }),
+
   startTranscribe: (id, language, languages) =>
     request(`${BASE}/sessions/${id}/transcribe`, {
       method: "POST",
