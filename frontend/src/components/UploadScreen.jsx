@@ -933,7 +933,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     {
       id: "archive",
       label: t.navArchive,
-      badge: sessions.length,
+      // the badge mirrors the archive list: sessions moved to My Files no
+      // longer count here, so an emptied archive shows no number at all
+      badge: sessions.filter((s) => !customWorkIds.includes(s.id)).length,
       Icon: Box,
     },
     {
