@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: aud-studio
+    name: audstudio
     env: python
     region: frankfurt
     plan: free
