@@ -343,6 +343,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [file, setFile] = useState(null);
   const [linkUrl, setLinkUrl] = useState("");
   const [language, setLanguage] = useState("");
+  const [languages, setLanguages] = useState([]); // multi-select: up to 3
   const [detectSpeakers, setDetectSpeakers] = useState(true);
   const [numSpeakers, setNumSpeakers] = useState(2);
   const [phase, setPhase] = useState("idle");
@@ -643,7 +644,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
       setPhase("transcribing");
       setMessage(t.transcribingMsg);
-      await api.startTranscribe(sid, language);
+      await api.startTranscribe(sid, languages.length > 1 ? null : language, languages);
       await pollStatus(sid, "transcribed");
 
       setPhase("diarizing");
@@ -734,7 +735,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
       setPhase("transcribing");
       setMessage(t.transcribingMsg);
-      await api.startTranscribe(session.id, language);
+      await api.startTranscribe(session.id, languages.length > 1 ? null : language, languages);
       await pollStatus(session.id, "transcribed");
 
       setPhase("diarizing");
@@ -1250,33 +1251,76 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
                 <div>
                   <label className={`block text-[11px] font-bold ${textSub} mb-2 uppercase tracking-wide`}>{t.audioLang}</label>
-                  <select
-                    value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
-                    className={`w-full rounded-2xl border px-3.5 py-3 text-sm focus:outline-none focus:ring-2 ${inputBg}`}
-                  >
-                    {LANGUAGES.map((l) => (
-                      <option key={l.value} value={l.value}>
-                        {l.label}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => { setLanguages([]); setLanguage(""); }}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
+                        languages.length === 0
+                          ? "bg-[#6415f5] text-white border-[#6415f5]"
+                          : `${inputBg} ${isDark ? "text-slate-300" : "text-[#4b4763]"}`
+                      }`}
+                    >
+                      Auto
+                    </button>
+                    {LANGUAGES.filter((l) => l.value).map((l) => {
+                      const sel = languages.includes(l.value);
+                      return (
+                        <button
+                          key={l.value}
+                          type="button"
+                          disabled={!sel && languages.length >= 3}
+                          onClick={() => {
+                            setLanguages((prev) => prev.includes(l.value) ? prev.filter((x) => x !== l.value) : [...prev, l.value]);
+                            setLanguage("");
+                          }}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition disabled:opacity-40 ${
+                            sel
+                              ? "bg-[#6415f5] text-white border-[#6415f5]"
+                              : `${inputBg} ${isDark ? "text-slate-300" : "text-[#4b4763]"}`
+                          }`}
+                        >
+                          {l.value === "ar" ? "العربية" : l.value.toUpperCase()}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {languages.length > 1 && (
+                    <p className={`text-[10px] mt-1.5 ${textSub}`}>
+                      {languages.length} languages — each pass is transcribed and the best part of every passage is kept.
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className={`block text-[11px] font-bold ${textSub} mb-2 uppercase tracking-wide`}>{t.expectedSpeakers}</label>
                   <select
-                    value={numSpeakers}
-                    onChange={(e) => setNumSpeakers(Number(e.target.value))}
+                    value={numSpeakers <= 6 ? numSpeakers : "more"}
+                    onChange={(e) => {
+                      if (e.target.value === "more") { setNumSpeakers(7); return; }
+                      setNumSpeakers(Number(e.target.value));
+                    }}
                     disabled={!detectSpeakers}
                     className={`w-full rounded-2xl border px-3.5 py-3 text-sm disabled:opacity-40 focus:outline-none focus:ring-2 ${inputBg}`}
                   >
                     {[1, 2, 3, 4, 5, 6].map((n) => (
                       <option key={n} value={n}>
-                        {n}
+                        {n} Speaker{n > 1 ? "s" : ""}
                       </option>
                     ))}
+                    <option value="more">More…</option>
                   </select>
+                  {numSpeakers > 6 && (
+                    <input
+                      type="number"
+                      min={7}
+                      max={12}
+                      value={numSpeakers}
+                      onChange={(e) => setNumSpeakers(Math.max(7, Math.min(12, Number(e.target.value) || 7)))}
+                      className={`w-full mt-2 rounded-2xl border px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 ${inputBg}`}
+                      placeholder="7 - 12"
+                    />
+                  )}
                 </div>
 
                 <label className="flex items-center gap-3 text-sm font-bold cursor-pointer">

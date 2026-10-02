@@ -24,14 +24,18 @@ def _engine():
     return transcription
 
 
-def _run_transcription(session_id: str, language: str | None) -> None:
+def _run_transcription(session_id: str, language: str | None, languages=None) -> None:
     try:
         session = db.get_session(session_id)
         if not session:
             return
         db.update_session(session_id, status="processing", error=None)
         audio_file = ensure_local_audio(session)
-        result = _engine().transcribe(str(audio_file), language=language)
+        engine = _engine()
+        if languages and len(languages) > 1 and hasattr(engine, "transcribe_multi"):
+            result = engine.transcribe_multi(str(audio_file), languages)
+        else:
+            result = engine.transcribe(str(audio_file), language=language)
         db.update_session(
             session_id,
             status="transcribed",
@@ -54,7 +58,7 @@ def start_transcription(session_id: str, req: TranscribeRequest, request: Reques
         return {"ok": True, "status": "processing"}
     db.update_session(session_id, status="processing", error=None)
     thread = threading.Thread(
-        target=_run_transcription, args=(session_id, req.language), daemon=True
+        target=_run_transcription, args=(session_id, req.language, req.languages), daemon=True
     )
     thread.start()
     return {"ok": True, "status": "processing"}

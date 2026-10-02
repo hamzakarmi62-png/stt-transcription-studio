@@ -141,6 +141,7 @@ def _clean_segments(raw_segments: list[dict], offset: float, duration: float, sr
                 "text": text,
                 "speaker": None,
                 "words": words,
+                "_conf": float(raw.get("avg_logprob", -99.0)),
             }
         )
     return out
@@ -218,6 +219,42 @@ def _shift_words(words: list[dict], offset: float) -> list[dict]:
             }
         )
     return shifted
+
+
+def transcribe_multi(audio_path: str, languages: list[str]) -> dict:
+    """Mixed-language recordings: run one pass per chosen language, then keep
+    the most confident segment wherever passes overlap — the bilingual
+    transcript Whisper's single-pass auto-detect usually mangles."""
+    passes = []
+    for lang in languages:
+        try:
+            res = transcribe(audio_path, language=lang)
+            passes.append((lang, res))
+        except Exception as exc:
+            logger.warning("language pass %s failed: %s", lang, exc)
+    if not passes:
+        raise RuntimeError("كل مرورات اللغات فشلت — جرّب لغة واحدة أو التلقائي.")
+    if len(passes) == 1:
+        return passes[0][1]
+
+    allsegs = []
+    for lang, res in passes:
+        for seg in res["segments"]:
+            seg["_lang"] = lang
+            allsegs.append(seg)
+    allsegs.sort(key=lambda s: (s["start"], -s.get("_conf", -99.0)))
+
+    merged, cur_end = [], -1.0
+    for seg in allsegs:
+        if seg["start"] >= cur_end - 0.05:
+            merged.append(seg)
+            cur_end = max(cur_end, seg["end"])
+
+    return {
+        "segments": merged,
+        "duration": max(r["duration"] for _, r in passes),
+        "language": "+".join(l for l, _ in passes),
+    }
 
 
 def transcribe(audio_path: str, language: str | None = None) -> dict:

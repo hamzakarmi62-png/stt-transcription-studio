@@ -205,11 +205,11 @@ export const api = {
   deleteSession: (id) =>
     request(`${BASE}/sessions/${id}`, { method: "DELETE" }),
 
-  startTranscribe: (id, language) =>
+  startTranscribe: (id, language, languages) =>
     request(`${BASE}/sessions/${id}/transcribe`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ language: language || null }),
+      body: JSON.stringify({ language: language || null, languages: languages && languages.length > 1 ? languages : null }),
     }),
 
   startDiarize: (id, numSpeakers) =>

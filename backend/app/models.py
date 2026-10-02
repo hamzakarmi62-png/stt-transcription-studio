@@ -26,10 +26,11 @@ class Speaker(BaseModel):
 
 class TranscribeRequest(BaseModel):
     language: Optional[str] = None
+    languages: Optional[list[str]] = None
 
 
 class DiarizeRequest(BaseModel):
-    num_speakers: int = Field(default=2, ge=1, le=6)
+    num_speakers: int = Field(default=2, ge=1, le=12)
 
 
 class SessionUpdate(BaseModel):
