@@ -1013,7 +1013,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               <select
                 value={uiLang}
                 onChange={(e) => setUiLang(e.target.value)}
-                className={`hidden xl:block text-sm rounded-xl px-2.5 py-2 border focus:outline-none ${inputBg} cursor-pointer`}
+                className={`hidden xl:block text-xs rounded-xl px-2.5 py-2 border focus:outline-none ${inputBg} cursor-pointer`}
               >
                 <option value="ar">ع</option>
                 <option value="en">EN</option>
