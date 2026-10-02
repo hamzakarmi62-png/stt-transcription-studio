@@ -856,6 +856,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const totalSegmentsCount = sessions.reduce((acc, s) => acc + (s.segments?.length || 0), 0);
 
   const filteredSessions = sessions.filter((s) => {
+    // Sessions moved into My Files live there now — the archive shows only
+    // what has not been moved. Removing them from My Files brings them back.
+    if (customWorkIds.includes(s.id)) return false;
     const matchesSearch = (customFileNames[s.id] || s.filename || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || s.status === statusFilter;
     return matchesSearch && matchesStatus;
