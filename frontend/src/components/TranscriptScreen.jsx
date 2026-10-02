@@ -337,11 +337,9 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
   useEffect(() => {
     if (segments.length === 0) {
       setActiveWordKey(null);
-      setPendingWordKey(null);
       return;
     }
     let foundKey = null;
-    let pendingKey = null;
     const speechTime = currentTime + highlightOffset;
 
     let allWords = [];
@@ -367,22 +365,15 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
 
       if (activeWord) {
         foundKey = activeWord.key;
-      } else {
-        // Gap handling: a LONG pause (music / silence) pulses the upcoming
-        // word so tracking never freezes; a normal inter-word gap stays on
-        // the last spoken word — the marker must never outrun the speaker.
-        const nextWord = allWords.find(w => w.start > speechTime);
-        const gap = nextWord ? nextWord.start - speechTime : Infinity;
-        if (nextWord && gap >= 1.5) {
-          pendingKey = nextWord.key;
-        } else if (lastPastWord) {
-          foundKey = lastPastWord.key;
-        }
+      } else if (lastPastWord) {
+        // Music, silence, a stretched "aaah": the highlight HOLDS the last
+        // word actually spoken and only advances when the next word really
+        // begins — it never walks ahead of the speaker.
+        foundKey = lastPastWord.key;
       }
     }
 
     setActiveWordKey(foundKey);
-    setPendingWordKey(pendingKey);
   }, [currentTime, segments, highlightOffset]);
 
   const seekTo = useCallback((t) => {
@@ -1267,24 +1258,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                 <Highlighter className="w-4 h-4" />
               </button>
 
-              {/* 7a-bis. Sync nudge — align the highlight with the voice */}
-              <div className="flex items-center gap-0.5 px-1 rounded-xl bg-[#18123b]/[0.04]" title="Fine-tune highlight sync: if the highlight runs ahead, click −; if it lags, click +">
-                <button
-                  onClick={() => setHighlightOffset((v) => Math.round((v - 0.25) * 100) / 100)}
-                  className="px-1.5 py-1 rounded-lg hover:bg-[#18123b]/[0.08] text-[#4b4763] text-xs font-bold transition-colors"
-                >
-                  −
-                </button>
-                <span className="text-[10px] font-semibold text-[#4b4763] tabular-nums w-9 text-center" dir="ltr">
-                  {highlightOffset >= 0 ? "+" : ""}{highlightOffset.toFixed(2)}s
-                </span>
-                <button
-                  onClick={() => setHighlightOffset((v) => Math.round((v + 0.25) * 100) / 100)}
-                  className="px-1.5 py-1 rounded-lg hover:bg-[#18123b]/[0.08] text-[#4b4763] text-xs font-bold transition-colors"
-                >
-                  +
-                </button>
-              </div>
 
               {/* 7b. Insights — translation / summary / stats */}
               <button
@@ -1465,7 +1438,6 @@ export default function TranscriptScreen({ initialSession, onBack, user, onLogou
                       showMark={index === 0 || filteredSegments[index - 1]?.speaker !== seg.speaker}
                       isActive={activeSegment?.id === seg.id}
                       activeWordKey={activeWordKey}
-                      pendingWordKey={pendingWordKey}
                       editingWordKey={editingWordKey}
                       onSetEditingWordKey={setEditingWordKey}
                       onUpdateWord={updateWordText}
