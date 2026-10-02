@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: stt-transcription-studio
+    name: aud-studio
     env: python
     region: frankfurt
     plan: free
