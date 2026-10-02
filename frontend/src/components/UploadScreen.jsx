@@ -1284,7 +1284,6 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                               <button
                                 key={l.value}
                                 type="button"
-                                disabled={!sel && languages.length >= 3}
                                 onClick={() => setLanguages((prev) => prev.includes(l.value) ? prev.filter((x) => x !== l.value) : [...prev, l.value])}
                                 className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition disabled:opacity-40 ${sel ? "bg-[#6415f5]/[0.08] text-[#6415f5] font-bold" : "hover:bg-[#18123b]/[0.05] text-[#18123b]"}`}
                               >
@@ -1294,7 +1293,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             );
                           })}
                           <p className={`px-3 pt-1.5 pb-1 text-[10px] ${textSub}`}>
-                            Choose up to 3 languages — every language is transcribed and the best part of each passage is kept.
+                            اختر لغة واحدة أو عدة لغات كما تحب — كل لغة تُفرَّغ على حدة ويُحتفظ بأفضل جزء من كل مقطع.
                           </p>
                         </div>
                       </>
@@ -1302,7 +1301,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   </div>
                   {languages.length > 1 && (
                     <p className={`text-[10px] mt-1.5 ${textSub}`}>
-                      {languages.length} languages — each pass is transcribed and the best part of every passage is kept.
+                      {languages.length} languages selected — each is transcribed and the best part of every passage is kept.
                     </p>
                   )}
                 </div>
