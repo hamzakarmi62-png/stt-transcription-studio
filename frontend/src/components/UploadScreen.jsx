@@ -563,6 +563,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   // ── Rev-style files table state ──
   const [folderMenuOpen, setFolderMenuOpen] = useState(false);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [filesSortDesc, setFilesSortDesc] = useState(true);
   const [ask, setAsk] = useState(null);
 
@@ -1251,39 +1252,53 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
                 <div>
                   <label className={`block text-[11px] font-bold ${textSub} mb-2 uppercase tracking-wide`}>{t.audioLang}</label>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="relative">
                     <button
                       type="button"
-                      onClick={() => { setLanguages([]); setLanguage(""); }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition ${
-                        languages.length === 0
-                          ? "bg-[#6415f5] text-white border-[#6415f5]"
-                          : `${inputBg} ${isDark ? "text-slate-300" : "text-[#4b4763]"}`
-                      }`}
+                      onClick={() => setLangMenuOpen((o) => !o)}
+                      className={`w-full rounded-2xl border px-3.5 py-3 text-sm text-start flex items-center justify-between gap-2 focus:outline-none focus:ring-2 ${inputBg}`}
                     >
-                      Auto
+                      <span className="truncate">
+                        {languages.length === 0
+                          ? "Auto-detect / Détection auto"
+                          : languages.map((v) => LANGUAGES.find((l) => l.value === v)?.label || v).join(" + ")}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 shrink-0 transition-transform ${langMenuOpen ? "rotate-180" : ""}`} />
                     </button>
-                    {LANGUAGES.filter((l) => l.value).map((l) => {
-                      const sel = languages.includes(l.value);
-                      return (
-                        <button
-                          key={l.value}
-                          type="button"
-                          disabled={!sel && languages.length >= 3}
-                          onClick={() => {
-                            setLanguages((prev) => prev.includes(l.value) ? prev.filter((x) => x !== l.value) : [...prev, l.value]);
-                            setLanguage("");
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition disabled:opacity-40 ${
-                            sel
-                              ? "bg-[#6415f5] text-white border-[#6415f5]"
-                              : `${inputBg} ${isDark ? "text-slate-300" : "text-[#4b4763]"}`
-                          }`}
-                        >
-                          {l.value === "ar" ? "العربية" : l.value.toUpperCase()}
-                        </button>
-                      );
-                    })}
+
+                    {langMenuOpen && (
+                      <>
+                        <div className="fixed inset-0 z-30" onClick={() => setLangMenuOpen(false)} />
+                        <div className={`absolute top-full left-0 right-0 mt-2 z-40 rounded-2xl shadow-xl border p-1.5 ${isDark ? "bg-[#181430] border-white/10" : "bg-white border-slate-200"}`}>
+                          <button
+                            type="button"
+                            onClick={() => { setLanguages([]); setLangMenuOpen(false); }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition ${languages.length === 0 ? "bg-[#6415f5]/[0.08] text-[#6415f5] font-bold" : "hover:bg-[#18123b]/[0.05] text-[#18123b]"}`}
+                          >
+                            <span className="w-4 flex justify-center">{languages.length === 0 && <Check className="w-4 h-4" />}</span>
+                            Auto-detect / Détection auto
+                          </button>
+                          {LANGUAGES.filter((l) => l.value).map((l) => {
+                            const sel = languages.includes(l.value);
+                            return (
+                              <button
+                                key={l.value}
+                                type="button"
+                                disabled={!sel && languages.length >= 3}
+                                onClick={() => setLanguages((prev) => prev.includes(l.value) ? prev.filter((x) => x !== l.value) : [...prev, l.value])}
+                                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm transition disabled:opacity-40 ${sel ? "bg-[#6415f5]/[0.08] text-[#6415f5] font-bold" : "hover:bg-[#18123b]/[0.05] text-[#18123b]"}`}
+                              >
+                                <span className="w-4 flex justify-center">{sel && <Check className="w-4 h-4" />}</span>
+                                {l.label}
+                              </button>
+                            );
+                          })}
+                          <p className={`px-3 pt-1.5 pb-1 text-[10px] ${textSub}`}>
+                            Choose up to 3 languages — every language is transcribed and the best part of each passage is kept.
+                          </p>
+                        </div>
+                      </>
+                    )}
                   </div>
                   {languages.length > 1 && (
                     <p className={`text-[10px] mt-1.5 ${textSub}`}>
