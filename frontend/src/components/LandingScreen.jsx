@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
@@ -13,9 +13,73 @@ const PURPLE = "#6415f5";
 const CONTACT_EMAIL = "hamzakarmi62@gmail.com";
 
 const NAV = [
-  { label: "Product", id: "produit" },
+  {
+    label: "Product", id: "produit",
+    menu: {
+      cols: [
+        {
+          title: "Transcription",
+          items: [
+            { label: "AI Transcription", desc: "Audio & video to precise text", target: "fonctionnalites" },
+            { label: "Speaker Detection", desc: "Know who said what, when", target: "fonctionnalites" },
+            { label: "Multi-language", desc: "99 languages + translation", target: "fonctionnalites" },
+            { label: "Real-time Editor", desc: "Fix while you listen", target: "produit" },
+          ],
+        },
+        {
+          title: "AI Tools",
+          items: [
+            { label: "AI Translation", desc: "Your transcript, any language", target: "fonctionnalites" },
+            { label: "Smart Summary", desc: "Key points, auto-generated", target: "fonctionnalites" },
+            { label: "Ask Your Transcript", desc: "Answers with timestamps", target: "produit" },
+            { label: "Speaking Statistics", desc: "Time, pace, participation", target: "fonctionnalites" },
+          ],
+        },
+        {
+          title: "Import & Share",
+          items: [
+            { label: "Link Import", desc: "YouTube, MP4, MP3 and more", target: "produit" },
+            { label: "Upload & Record", desc: "Files or your microphone", target: "produit" },
+            { label: "Share Links", desc: "Read-only, with playback", target: "produit" },
+            { label: "Export", desc: "TXT · SRT · DOCX · PDF", target: "fonctionnalites" },
+          ],
+        },
+      ],
+      promo: {
+        title: "The #1 AI Transcription Studio",
+        text: "Upload a file or paste a link — your transcript starts in minutes.",
+        cta: "Try free",
+      },
+    },
+  },
   { label: "Features", id: "fonctionnalites" },
-  { label: "Resources", id: "ressources" },
+  {
+    label: "Resources", id: "ressources",
+    menu: {
+      cols: [
+        {
+          title: "Learn",
+          items: [
+            { label: "How it works", desc: "Three steps to your transcript", target: "ressources" },
+            { label: "FAQ", desc: "Formats, languages, sharing", target: "ressources" },
+            { label: "Export formats", desc: "TXT · SRT · DOCX · PDF", target: "fonctionnalites" },
+          ],
+        },
+        {
+          title: "Get started",
+          items: [
+            { label: "Pricing", desc: "One simple price: free", target: "tarifs" },
+            { label: "Create an account", desc: "Free forever, no card", target: "tarifs" },
+          ],
+        },
+      ],
+      promo: {
+        title: "Free forever",
+        text: "All features, no credit card — transcribe from your first try.",
+        cta: "Start now",
+      },
+    },
+  },
   { label: "About", id: "apropos" },
   { label: "Pricing", id: "tarifs" },
 ];
@@ -295,10 +359,23 @@ function HeroDemo() {
 
 export default function LandingScreen({ onStart }) {
   const [activeNav, setActiveNav] = useState(null);
+  const [openMenu, setOpenMenu] = useState(null);
+  const closeTimer = useRef(null);
 
   const goToSection = (id) => {
     setActiveNav(id);
+    setOpenMenu(null);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  // Desktop mega-menu: opens on hover, closes on leaving the header area
+  const openWith = (label) => {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+    setOpenMenu(label);
+  };
+  const scheduleClose = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 180);
   };
 
   return (
@@ -322,23 +399,31 @@ export default function LandingScreen({ onStart }) {
       `}</style>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <header className="relative z-20">
+      <header className="relative z-40">
         <div className="max-w-[1400px] mx-auto flex items-center gap-8 px-5 sm:px-8 h-[76px]">
           <button onClick={onStart} className="shrink-0" aria-label="Aud — home">
             <img src={audLogo} alt="Aud" className="h-10 w-auto" draggable={false} />
           </button>
 
-          <nav className="hidden lg:flex items-center gap-7">
+          <nav className="hidden lg:flex items-center gap-7" onMouseLeave={scheduleClose}>
             {NAV.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => goToSection(item.id)}
-                className={`text-[15px] font-medium transition-colors ${
-                  activeNav === item.id ? "text-[#6415f5]" : "text-[#18123b]/75 hover:text-[#18123b]"
-                }`}
-              >
-                {item.label}
-              </button>
+              <div key={item.label} className="relative" onMouseEnter={() => item.menu && openWith(item.label)}>
+                <button
+                  onClick={() => goToSection(item.id)}
+                  className={`text-[15px] font-medium transition-colors flex items-center gap-1 ${
+                    activeNav === item.id || openMenu === item.label
+                      ? "text-[#6415f5]"
+                      : "text-[#18123b]/75 hover:text-[#18123b]"
+                  }`}
+                >
+                  {item.label}
+                  {item.menu && (
+                    <svg viewBox="0 0 24 24" className={`w-3 h-3 transition-transform ${openMenu === item.label ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             ))}
           </nav>
 
@@ -359,6 +444,66 @@ export default function LandingScreen({ onStart }) {
               Try Aud for free
             </button>
           </div>
+
+          {/* ── Mega-menu panel ── */}
+          {openMenu && (
+            <div
+              className="absolute left-0 right-0 top-full z-30 hidden lg:block"
+              onMouseEnter={() => openWith(openMenu)}
+              onMouseLeave={scheduleClose}
+            >
+              <div className="max-w-[1400px] mx-auto px-5 sm:px-8">
+                <div className="mt-2 rounded-3xl bg-white border border-[#18123b]/10 shadow-2xl shadow-[#18123b]/15 overflow-hidden">
+                  {(() => {
+                    const item = NAV.find((n) => n.label === openMenu);
+                    if (!item || !item.menu) return null;
+                    return (
+                      <div className="grid grid-cols-[1fr_1fr_1fr_320px]">
+                        {item.menu.cols.map((col) => (
+                          <div key={col.title} className="p-7 border-r border-[#18123b]/[0.07]">
+                            <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-4">{col.title}</p>
+                            <div className="space-y-4">
+                              {col.items.map((it) => (
+                                <button
+                                  key={it.label}
+                                  onClick={() => goToSection(it.target)}
+                                  className="block text-start group/link"
+                                >
+                                  <span className="block text-[13.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
+                                    {it.label}
+                                  </span>
+                                  <span className="block text-[11.5px] text-[#4b4763] mt-0.5">{it.desc}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                        <div className="relative p-0">
+                          <img
+                            src="/videos/hero-woman.jpg"
+                            alt="Aud Studio"
+                            className="absolute inset-0 w-full h-full object-cover"
+                            draggable={false}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/95 via-[#12101f]/55 to-transparent" />
+                          <div className="relative h-full flex flex-col justify-end p-6 text-white">
+                            <p className="text-[15px] font-bold leading-snug">{item.menu.promo.title}</p>
+                            <p className="text-[11.5px] text-white/80 mt-1.5 leading-relaxed">{item.menu.promo.text}</p>
+                            <button
+                              onClick={onStart}
+                              className="mt-4 self-start px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12px] font-semibold hover:bg-[#5311cf] transition"
+                            >
+                              {item.menu.promo.cta}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
