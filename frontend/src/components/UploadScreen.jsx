@@ -800,6 +800,55 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     });
   };
 
+  // Bulk delete: removes every session that passes the current filters —
+  // a small box under the status filter for cleaning a crowded archive.
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const deleteAllFiltered = () => {
+    const targets = filteredSessions.map((s) => s.id);
+    if (targets.length === 0) return;
+    setAsk({
+      type: "confirm",
+      danger: true,
+      title: `Delete all ${targets.length} sessions?`,
+      message: "Every visible session will be permanently removed together with its transcript and archived file. This cannot be undone.",
+      okText: "Delete all",
+      onOk: async () => {
+        setBulkDeleting(true);
+        // optimistic local wipe first — the UI clears instantly
+        setSessions((prev) => prev.filter((s) => !targets.includes(s.id)));
+        if (_sessionsCache && _sessionsCache.uid === (user?.id || null)) {
+          _sessionsCache = {
+            uid: user?.id || null,
+            list: _sessionsCache.list.filter((s) => !targets.includes(s.id)),
+          };
+        }
+        try {
+          for (const id of targets) {
+            try {
+              await api.deleteSession(id);
+            } catch {
+              /* keep going: one failure must not stop the sweep */
+            }
+            setCustomWorkIds((prev) => prev.filter((i) => i !== id));
+            setCustomFileNames((prev) => {
+              const next = { ...prev };
+              delete next[id];
+              return next;
+            });
+            setSessionFolderMap((prev) => {
+              const next = { ...prev };
+              delete next[id];
+              return next;
+            });
+          }
+          await loadSessions();
+        } finally {
+          setBulkDeleting(false);
+        }
+      },
+    });
+  };
+
   const busy = phase === "uploading" || phase === "downloading" || phase === "transcribing" || phase === "diarizing";
   const hasAudio = !!selectedBlob;
 
@@ -1449,6 +1498,22 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     <option value="processing">{t.processingStatus}</option>
                   </select>
                 </div>
+              </div>
+
+              <div className="flex justify-end mt-2">
+                <button
+                  onClick={deleteAllFiltered}
+                  disabled={bulkDeleting || filteredSessions.length === 0}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold border transition disabled:opacity-40 ${
+                    isDark
+                      ? "border-red-500/30 text-red-400 hover:bg-red-500/10"
+                      : "border-red-300 text-red-500 hover:bg-red-50"
+                  }`}
+                  title="Delete every session matching the current filters"
+                >
+                  {bulkDeleting ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Trash className="w-3.5 h-3.5" />}
+                  {bulkDeleting ? "Deleting…" : `Delete all (${filteredSessions.length})`}
+                </button>
               </div>
 
               {filteredSessions.length === 0 ? (
