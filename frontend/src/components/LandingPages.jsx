@@ -369,7 +369,9 @@ export const FEATURES = {
       ["AI listens and writes", "Whisper-grade speech recognition writes every word with word-level timestamps."],
       ["Review and keep", "Fix anything in the editor, then export or share your transcript forever."],
     ],
-    benefits: ["Word-level timestamps you can verify", "Automatic language detection", "Handles hour-long recordings", "Speaker names, colors and turns", "Works on the free plan — forever"],
+    whyTitle: "What makes it different",
+    why: [["Whisper-grade accuracy", "Built on speech-recognition models trained on millions of hours — Arabic, French, English and 96 more languages."], ["Word-level timestamps", "Every word knows exactly when it was spoken, so the text and the playback stay locked together."], ["Built for real-world audio", "Accents, crosstalk and background hum are its daily bread — imperfect recordings are the norm, not the exception."], ["AI drafts, you decide", "The transcript is a first draft, not a verdict — correct any word in place and the correction saves itself."]],
+    facts: [["99", "languages"], ["10+", "export formats"], ["±0.2s", "word sync"], ["$0", "forever"]],
   },
   "speaker-detection": {
     kicker: "Speaker Detection",
@@ -382,7 +384,9 @@ export const FEATURES = {
       ["Every line is labeled", "Each paragraph carries the name of the person speaking it."],
       ["You stay in control", "Rename speakers, merge turns, pick any color — the whole transcript follows."],
     ],
-    benefits: ["Up to 12 speakers in one file", "Speaker menu with free color choice", "Turn-based paragraphs, Word-style flow", "Diarization tuned for real conversations"],
+    whyTitle: "Voices, untangled",
+    why: [["Voice-print clustering", "Speakers are separated by how they actually sound — no training recordings, no setup, no guesswork."], ["Rename once, apply everywhere", "Turn “Speaker 2” into “Sarah” and every line, export and share page updates instantly."], ["Turns, not walls of text", "The transcript reads like a script — one turn per speaker, automatically merged when they continue."], ["Colors as identity", "Pick any color per speaker and the whole document color-codes itself around your choice."]],
+    facts: [["12", "max speakers"], ["0.5s", "turn sensitivity"], ["∞", "color choice"], ["1", "click rename"]],
   },
   "multi-language": {
     kicker: "Multi-language",
@@ -395,7 +399,9 @@ export const FEATURES = {
       ["Every pass is transcribed", "Each chosen language gets its own full pass through the AI."],
       ["The best parts win", "Aud keeps the most confident segment of every passage — bilingual recordings finally work."],
     ],
-    benefits: ["99 supported languages", "Code-switching friendly", "One-click translation afterwards", "Auto-detect when you are unsure"],
+    whyTitle: "One studio, every language",
+    why: [["99 languages, native scripts", "From Arabic to Zulu — each language is transcribed in its own script, not transliterated."], ["Mix languages in one recording", "French-Arabic conversations, English-Spanish meetings: multiple passes plus a confidence merge keep the best of each."], ["Code-switching friendly", "Speakers who flip languages mid-sentence finally get a transcript that follows them."], ["Translate after transcribing", "Turn the finished transcript into another language in one click — speakers and timestamps survive."]],
+    facts: [["99", "languages"], ["3+", "at once"], ["Auto", "detection"], ["1-click", "translation"]],
   },
   "editor": {
     kicker: "Real-time Editor",
@@ -408,7 +414,9 @@ export const FEATURES = {
       ["Enter splits with its own time", "Everything after the caret becomes a new paragraph with its own timestamp."],
       ["Everything saves itself", "No save button — your corrections are stored as you type."],
     ],
-    benefits: ["Word-accurate click-to-seek", "Merge, split and reorder paragraphs", "Undo history always available", "Speaker renames apply everywhere"],
+    whyTitle: "An editor that listens with you",
+    why: [["Click becomes caret", "Place the caret anywhere — even mid-word — and the playhead jumps to that exact moment."], ["Enter splits intelligently", "Everything after the caret becomes a new paragraph with its own timestamp. Nothing is lost."], ["Merge without mess", "Pull paragraphs back together and the timeline stitches itself behind the scenes."], ["Autosave always", "Every keystroke is stored as it happens — refresh, close the tab, come back tomorrow."]],
+    facts: [["Word", "caret precision"], ["Auto", "save"], ["∞", "undo history"], ["RTL", "native"]],
   },
   "translation": {
     kicker: "AI Translation",
@@ -421,7 +429,9 @@ export const FEATURES = {
       ["Choose a language", "The AI translation panel rewrites every segment."],
       ["Compare side by side", "The original stays intact — switch back at any moment."],
     ],
-    benefits: ["Speaker labels preserved", "Timestamps kept intact", "Switch between original and translation instantly", "Works after diarization too"],
+    whyTitle: "Translate without losing anything",
+    why: [["Line-by-line fidelity", "Speakers, paragraph order and timestamps survive the translation — it stays a transcript."], ["The original is sacred", "Nothing is overwritten — flip between original and translation in one click, any time."], ["99 directions", "Translate into any language the studio understands, in both directions."], ["Translations are shareable", "Export or share-link a translated version exactly like the original."]],
+    facts: [["99", "directions"], ["1", "click"], ["100%", "labels kept"], ["Instant", "switching"]],
   },
   "summary": {
     kicker: "Smart Summary",
@@ -434,7 +444,9 @@ export const FEATURES = {
       ["Structured output", "Key points, then decisions and actions — ready to share."],
       ["Download it", "Take the summary with you as a .txt file."],
     ],
-    benefits: ["Grounded in your transcript", "Structured: points, then actions", "Regenerate any time", "Free — like everything in Aud"],
+    whyTitle: "The gist, written for you",
+    why: [["No prompts to write", "The summary builds itself from the transcript — there is nothing to configure."], ["Structured output", "Key points first, then the decisions and actions that follow from them."], ["Regenerate any time", "Not the angle you wanted? One click rewrites it from the same transcript."], ["Take it with you", "Download the summary as a .txt file and paste it anywhere."]],
+    facts: [["1", "click"], ["Whole", "transcript"], ["∞", "regenerations"], [".txt", "export"]],
   },
   "ask": {
     kicker: "Ask Your Transcript",
@@ -447,7 +459,9 @@ export const FEATURES = {
       ["Answers with citations", "Every answer carries clickable timestamps into the audio."],
       ["Verify in one click", "Play the cited moment and confirm with your own ears."],
     ],
-    benefits: ["Answers grounded in the transcript", "Clickable timestamp citations", "Works in every language", "Unlimited questions"],
+    whyTitle: "Ask your recording anything",
+    why: [["Natural questions", "No keywords or special syntax — ask exactly like you would ask a person."], ["Answers with citations", "Every answer carries clickable timestamps that play the exact moment."], ["Grounded, never creative", "The AI answers only from your transcript — it cannot invent what was never said."], ["Unlimited questions", "Ask ten questions or a hundred — the feature is free like everything else."]],
+    facts: [["1-click", "citations"], ["Grounded", "answers"], ["∞", "questions"], ["Any", "language"]],
   },
   "statistics": {
     kicker: "Speaking Statistics",
@@ -460,7 +474,9 @@ export const FEATURES = {
       ["See the balance", "Talking time per speaker, pace and participation at a glance."],
       ["Spot what matters", "Who is missing from the conversation — and who never stops."],
     ],
-    benefits: ["Per-speaker talking time", "Words and pace per speaker", "Great for meetings and interviews", "Free with every transcript"],
+    whyTitle: "The anatomy of your conversation",
+    why: [["Talking time per speaker", "Who dominated the room, measured in seconds — not impressions."], ["Pace and volume of words", "How fast each person speaks and how much they actually said."], ["Participation balance", "See who is missing from the conversation before the meeting ends."], ["Built automatically", "Zero configuration — the statistics appear after every transcription."]],
+    facts: [["Per", "speaker"], ["Auto", "built"], ["1", "glance"], ["Diarized", "files"]],
   },
   "link-import": {
     kicker: "Link Import",
@@ -473,7 +489,9 @@ export const FEATURES = {
       ["Aud fetches the media", "The studio downloads it to your account, even from the cloud."],
       ["The normal pipeline runs", "Transcription, speakers and export — exactly like an uploaded file."],
     ],
-    benefits: ["YouTube supported", "Direct MP4 / MP3 links", "Runs in your own account", "No extra tools ever"],
+    whyTitle: "Your link is the upload",
+    why: [["YouTube supported", "Paste a video URL and the studio fetches the media itself — no downloader on your side."], ["Direct media links too", "Any MP4 or MP3 URL on the web works as an upload."], ["It lands in YOUR account", "The file is stored in your own archive — never on a third-party site."], ["Then everything follows", "Transcription, speakers, summary and export — exactly like a normal upload."]],
+    facts: [["YouTube", "supported"], ["MP4+MP3", "links"], ["Background", "fetch"], ["Per", "account"]],
   },
   "share": {
     kicker: "Share & Export",
@@ -486,7 +504,9 @@ export const FEATURES = {
       ["Export in your format", "Six formats for every workflow, with full timestamps."],
       ["Keep it organized", "Folders, custom names and a searchable archive."],
     ],
-    benefits: ["Read-only share pages", "Six export formats", "Folders and custom names", "Everything searchable"],
+    whyTitle: "Your transcript, ready for the world",
+    why: [["Read-only share pages", "A link with built-in playback — your audience reads and listens without touching your account."], ["Six export formats", "TXT for notes, SRT for subtitles, DOCX for documents, PDF for records, JSON and XML for developers."], ["Folders and custom names", "Keep dozens of transcripts organized like real files in real folders."], ["Everything searchable", "Find any word across your entire archive in one search."]],
+    facts: [["6", "formats"], ["Read", "only"], ["Folders", "+ names"], ["Full", "search"]],
   },
 };
 
@@ -528,12 +548,20 @@ export function FeaturePage({ slug, onStart, goFeature }) {
 
       <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
         <div className="rounded-[26px] bg-[#18123b] p-8 sm:p-10">
-          <h2 className="text-2xl font-semibold text-white mb-6">Why people use it</h2>
-          <div className="grid sm:grid-cols-2 gap-4">
-            {f.benefits.map((b) => (
-              <div key={b} className="flex items-start gap-3 text-white/90">
-                <span className="mt-0.5 w-5 h-5 rounded-full bg-white/10 border border-white/30 text-white flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-                <span className="text-sm leading-relaxed">{b}</span>
+          <h2 className="text-2xl font-semibold text-white">{f.whyTitle}</h2>
+          <div className="mt-7 grid sm:grid-cols-2 gap-4">
+            {f.why.map(([t, d]) => (
+              <div key={t} className="rounded-2xl bg-white/[0.06] border border-white/10 p-5">
+                <p className="font-semibold text-white text-[15px]">{t}</p>
+                <p className="mt-1.5 text-[13px] text-white/70 leading-relaxed">{d}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {f.facts.map(([n, label]) => (
+              <div key={label} className="rounded-xl bg-white/[0.06] border border-white/10 px-4 py-3 text-center">
+                <p className="text-lg font-extrabold text-white leading-tight">{n}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-white/60">{label}</p>
               </div>
             ))}
           </div>
