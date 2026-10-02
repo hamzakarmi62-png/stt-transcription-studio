@@ -354,3 +354,207 @@ export function ContactPage({ goHome }) {
     </div>
   );
 }
+
+/* ─────────────────── FEATURE PAGES (one per feature) ─────────────────── */
+
+export const FEATURES = {
+  "ai-transcription": {
+    kicker: "AI Transcription",
+    title: "From Sound To Text, In Minutes",
+    video: "/videos/hero-woman.mp4",
+    poster: "/videos/hero-woman.jpg",
+    lead: "Upload any audio or video and watch it become a precise, timestamped transcript — Arabic, French, English and 96 more languages.",
+    steps: [
+      ["Upload or paste a link", "Drop a file, record your microphone, or paste a YouTube URL — Aud handles the rest."],
+      ["AI listens and writes", "Whisper-grade speech recognition writes every word with word-level timestamps."],
+      ["Review and keep", "Fix anything in the editor, then export or share your transcript forever."],
+    ],
+    benefits: ["Word-level timestamps you can verify", "Automatic language detection", "Handles hour-long recordings", "Speaker names, colors and turns", "Works on the free plan — forever"],
+  },
+  "speaker-detection": {
+    kicker: "Speaker Detection",
+    title: "Know Who Said What, When",
+    video: "/videos/feat-speakers.mp4",
+    poster: "/videos/feat-speakers.jpg",
+    lead: "Aud separates the voices in your recording, labels every line with its speaker, and lets you rename them — even pick their color.",
+    steps: [
+      ["Voices are separated", "Voice-print clustering tells the speakers apart — no training needed."],
+      ["Every line is labeled", "Each paragraph carries the name of the person speaking it."],
+      ["You stay in control", "Rename speakers, merge turns, pick any color — the whole transcript follows."],
+    ],
+    benefits: ["Up to 12 speakers in one file", "Speaker menu with free color choice", "Turn-based paragraphs, Word-style flow", "Diarization tuned for real conversations"],
+  },
+  "multi-language": {
+    kicker: "Multi-language",
+    title: "99 Languages. One Studio.",
+    video: "/videos/feat-multilang.mp4",
+    poster: "/videos/feat-multilang.jpg",
+    lead: "From Arabic to Zulu — transcribe in 99 languages, pick several at once for mixed recordings, and translate the result in one click.",
+    steps: [
+      ["Pick your languages", "One language for precision — or up to as many as you like for mixed recordings."],
+      ["Every pass is transcribed", "Each chosen language gets its own full pass through the AI."],
+      ["The best parts win", "Aud keeps the most confident segment of every passage — bilingual recordings finally work."],
+    ],
+    benefits: ["99 supported languages", "Code-switching friendly", "One-click translation afterwards", "Auto-detect when you are unsure"],
+  },
+  "editor": {
+    kicker: "Real-time Editor",
+    title: "Fix While You Listen",
+    video: "/videos/feat-editor.mp4",
+    poster: "/videos/feat-editor.jpg",
+    lead: "The editor works like a word processor: click between words, type, split paragraphs — and the audio follows you the whole way.",
+    steps: [
+      ["Click anywhere to type", "The caret lands exactly where you clicked — even mid-word."],
+      ["Enter splits with its own time", "Everything after the caret becomes a new paragraph with its own timestamp."],
+      ["Everything saves itself", "No save button — your corrections are stored as you type."],
+    ],
+    benefits: ["Word-accurate click-to-seek", "Merge, split and reorder paragraphs", "Undo history always available", "Speaker renames apply everywhere"],
+  },
+  "translation": {
+    kicker: "AI Translation",
+    title: "Your Transcript, Any Language",
+    video: "/videos/hero-man.mp4",
+    poster: "/videos/hero-man.jpg",
+    lead: "One click turns your transcript into Arabic, English, French and more — line by line, keeping the speaker labels and timestamps.",
+    steps: [
+      ["Finish your transcript", "Correct it until it is exactly right."],
+      ["Choose a language", "The AI translation panel rewrites every segment."],
+      ["Compare side by side", "The original stays intact — switch back at any moment."],
+    ],
+    benefits: ["Speaker labels preserved", "Timestamps kept intact", "Switch between original and translation instantly", "Works after diarization too"],
+  },
+  "summary": {
+    kicker: "Smart Summary",
+    title: "Key Points, Auto-Generated",
+    video: "/videos/feat-summary.mp4",
+    poster: "/videos/feat-summary.jpg",
+    lead: "The AI reads your whole transcript and writes a clean summary: the key points first, then the actions that follow.",
+    steps: [
+      ["One click", "No prompts to write — Aud reads the transcript and summarizes it."],
+      ["Structured output", "Key points, then decisions and actions — ready to share."],
+      ["Download it", "Take the summary with you as a .txt file."],
+    ],
+    benefits: ["Grounded in your transcript", "Structured: points, then actions", "Regenerate any time", "Free — like everything in Aud"],
+  },
+  "ask": {
+    kicker: "Ask Your Transcript",
+    title: "Ask. Get Answers With Timestamps.",
+    video: "/videos/feat-ask.mp4",
+    poster: "/videos/feat-ask.jpg",
+    lead: "Type a question about your recording — Aud answers from its content and cites the exact moments it drew from.",
+    steps: [
+      ["Ask in your own words", "No special syntax — the AI understands natural questions."],
+      ["Answers with citations", "Every answer carries clickable timestamps into the audio."],
+      ["Verify in one click", "Play the cited moment and confirm with your own ears."],
+    ],
+    benefits: ["Answers grounded in the transcript", "Clickable timestamp citations", "Works in every language", "Unlimited questions"],
+  },
+  "statistics": {
+    kicker: "Speaking Statistics",
+    title: "Time, Pace, Participation",
+    video: "/videos/feat-stats.mp4",
+    poster: "/videos/feat-stats.mp4.jpg".replace(".mp4.jpg", ".mp4"),
+    lead: "See how long each speaker talked, how fast, and who dominated the room — one glance after every transcription.",
+    steps: [
+      ["Transcribe as usual", "The statistics build themselves from the words and speakers."],
+      ["See the balance", "Talking time per speaker, pace and participation at a glance."],
+      ["Spot what matters", "Who is missing from the conversation — and who never stops."],
+    ],
+    benefits: ["Per-speaker talking time", "Words and pace per speaker", "Great for meetings and interviews", "Free with every transcript"],
+  },
+  "link-import": {
+    kicker: "Link Import",
+    title: "Paste A Link. Get A Transcript.",
+    video: "/videos/feat-linkimport.mp4",
+    poster: "/videos/feat-linkimport.jpg",
+    lead: "YouTube, direct MP4 or MP3 links — paste the URL and Aud fetches the media itself, then transcribes it like any upload.",
+    steps: [
+      ["Paste the link", "A YouTube video or a direct media URL — nothing to download on your side."],
+      ["Aud fetches the media", "The studio downloads it to your account, even from the cloud."],
+      ["The normal pipeline runs", "Transcription, speakers and export — exactly like an uploaded file."],
+    ],
+    benefits: ["YouTube supported", "Direct MP4 / MP3 links", "Runs in your own account", "No extra tools ever"],
+  },
+  "share": {
+    kicker: "Share & Export",
+    title: "Share Links. Export Everything.",
+    video: "/videos/feat-share.mp4",
+    poster: "/videos/feat-share.jpg",
+    lead: "Create a read-only share link with built-in playback — or export your transcript to TXT, SRT, DOCX, PDF, JSON and XML.",
+    steps: [
+      ["Create a share link", "Read-only, with playback — your audience never touches your account."],
+      ["Export in your format", "Six formats for every workflow, with full timestamps."],
+      ["Keep it organized", "Folders, custom names and a searchable archive."],
+    ],
+    benefits: ["Read-only share pages", "Six export formats", "Folders and custom names", "Everything searchable"],
+  },
+};
+
+export function FeaturePage({ slug, onStart, goFeature }) {
+  const f = FEATURES[slug];
+  if (!f) return null;
+  const others = Object.keys(FEATURES).filter((k) => k !== slug).slice(0, 4);
+  return (
+    <div>
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-10 lg:pt-14 pb-12 grid lg:grid-cols-[1.05fr_1fr] gap-10 items-center">
+        <div>
+          <p className="text-[11px] font-black tracking-[0.18em] text-[#6415f5] uppercase">{f.kicker}</p>
+          <h1 className="mt-3 text-[clamp(32px,3.2vw,52px)] leading-[1.15] font-semibold tracking-[-0.015em] text-[#18123b]">{f.title}</h1>
+          <p className="mt-5 text-[17px] leading-[1.65] text-[#4b4763] max-w-[580px]">{f.lead}</p>
+          <button onClick={onStart} className="mt-8 inline-flex items-center px-7 py-3.5 rounded-xl bg-[#6415f5] text-white text-[16px] font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+            Try it free
+          </button>
+        </div>
+        <div className="relative rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/25 bg-[#12101f] h-[320px] sm:h-[420px]">
+          <video src={f.video} poster={f.poster} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/40 to-transparent" />
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold text-[#18123b]">How it works</h2>
+          <div className="mt-6 grid sm:grid-cols-3 gap-5">
+            {f.steps.map(([t, d], i) => (
+              <div key={t} className="relative rounded-2xl border border-[#18123b]/[0.08] p-6">
+                <span className="absolute -top-4 left-5 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">{i + 1}</span>
+                <h3 className="mt-3 font-semibold text-[#18123b]">{t}</h3>
+                <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="rounded-[26px] bg-[#18123b] p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold text-white mb-6">Why people use it</h2>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {f.benefits.map((b) => (
+              <div key={b} className="flex items-start gap-3 text-white/90">
+                <span className="mt-0.5 w-5 h-5 rounded-full bg-white/10 border border-white/30 text-white flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                <span className="text-sm leading-relaxed">{b}</span>
+              </div>
+            ))}
+          </div>
+          <button onClick={onStart} className="mt-8 px-6 py-3 rounded-xl bg-white text-[#18123b] font-semibold hover:bg-slate-100 transition shadow-xl">
+            Start transcribing free
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <h2 className="text-xl font-semibold text-[#18123b] mb-5">Explore more of Aud</h2>
+        <div className="grid sm:grid-cols-4 gap-4">
+          {others.map((k) => (
+            <button key={k} onClick={() => goFeature(k)} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-5 text-start hover:border-[#6415f5]/40 transition shadow-sm group">
+              <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{FEATURES[k].kicker}</p>
+              <p className="mt-1 font-semibold text-[#18123b] group-hover:text-[#6415f5] transition-colors">{FEATURES[k].title}</p>
+              <img src={FEATURES[k].poster} alt="" className="mt-3 w-full h-24 object-cover rounded-xl" draggable={false} />
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

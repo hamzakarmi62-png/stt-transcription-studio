@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
-import { AboutPage, PricingPage, ContactPage } from "./LandingPages.jsx";
+import { AboutPage, PricingPage, ContactPage, FeaturePage, FEATURES } from "./LandingPages.jsx";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
   Lock, EyeOff,
@@ -21,28 +21,28 @@ const NAV = [
         {
           title: "Transcription",
           items: [
-            { label: "AI Transcription", desc: "Audio & video to precise text", target: "fonctionnalites" },
-            { label: "Speaker Detection", desc: "Know who said what, when", target: "fonctionnalites" },
-            { label: "Multi-language", desc: "99 languages + translation", target: "fonctionnalites" },
-            { label: "Real-time Editor", desc: "Fix while you listen", target: "produit" },
+            { label: "AI Transcription", slug: "ai-transcription", desc: "Audio & video to precise text", target: "fonctionnalites" },
+            { label: "Speaker Detection", slug: "speaker-detection", desc: "Know who said what, when", target: "fonctionnalites" },
+            { label: "Multi-language", slug: "multi-language", desc: "99 languages + translation", target: "fonctionnalites" },
+            { label: "Real-time Editor", slug: "editor", desc: "Fix while you listen", target: "produit" },
           ],
         },
         {
           title: "AI Tools",
           items: [
-            { label: "AI Translation", desc: "Your transcript, any language", target: "fonctionnalites" },
-            { label: "Smart Summary", desc: "Key points, auto-generated", target: "fonctionnalites" },
-            { label: "Ask Your Transcript", desc: "Answers with timestamps", target: "produit" },
-            { label: "Speaking Statistics", desc: "Time, pace, participation", target: "fonctionnalites" },
+            { label: "AI Translation", slug: "translation", desc: "Your transcript, any language", target: "fonctionnalites" },
+            { label: "Smart Summary", slug: "summary", desc: "Key points, auto-generated", target: "fonctionnalites" },
+            { label: "Ask Your Transcript", slug: "ask", desc: "Answers with timestamps", target: "produit" },
+            { label: "Speaking Statistics", slug: "statistics", desc: "Time, pace, participation", target: "fonctionnalites" },
           ],
         },
         {
           title: "Import & Share",
           items: [
-            { label: "Link Import", desc: "YouTube, MP4, MP3 and more", target: "produit" },
+            { label: "Link Import", slug: "link-import", desc: "YouTube, MP4, MP3 and more", target: "produit" },
             { label: "Upload & Record", desc: "Files or your microphone", target: "produit" },
-            { label: "Share Links", desc: "Read-only, with playback", target: "produit" },
-            { label: "Export", desc: "TXT · SRT · DOCX · PDF", target: "fonctionnalites" },
+            { label: "Share Links", slug: "share", desc: "Read-only, with playback", target: "produit" },
+            { label: "Export", slug: "share", desc: "TXT · SRT · DOCX · PDF", target: "fonctionnalites" },
             { label: "Pricing", desc: "One simple price: free", page: "pricing" },
           ],
         },
@@ -114,13 +114,13 @@ const PLAN_FEATURES = [
   "Full editor with version history",
 ];
 
-const FEATURES = [
-  { icon: Mic, title: "AI transcription", text: "Audio and video converted to text with remarkable accuracy, in many languages." },
-  { icon: Users, title: "Speaker detection", text: "The AI automatically tells speakers apart and labels every line." },
-  { icon: Languages, title: "Built-in translation", text: "Translate your transcript to Arabic, French, English and more." },
-  { icon: Sparkles, title: "Smart summary", text: "A clear summary of your meetings and interviews, generated automatically." },
-  { icon: Chart, title: "Speaking statistics", text: "Talking time, pace and participation for every speaker at a glance." },
-  { icon: Download, title: "Multi-format export", text: "TXT, SRT subtitles, Word and PDF — ready to share with your team." },
+const HOME_FEATURES = [
+  { icon: Mic, title: "AI transcription", slug: "ai-transcription", text: "Audio and video converted to text with remarkable accuracy, in many languages." },
+  { icon: Users, title: "Speaker detection", slug: "speaker-detection", text: "The AI automatically tells speakers apart and labels every line." },
+  { icon: Languages, title: "Built-in translation", slug: "translation", text: "Translate your transcript to Arabic, French, English and more." },
+  { icon: Sparkles, title: "Smart summary", slug: "summary", text: "A clear summary of your meetings and interviews, generated automatically." },
+  { icon: Chart, title: "Speaking statistics", slug: "statistics", text: "Talking time, pace and participation for every speaker at a glance." },
+  { icon: Download, title: "Multi-format export", slug: "share", text: "TXT, SRT subtitles, Word and PDF — ready to share with your team." },
 ];
 
 const STEPS = [
@@ -385,6 +385,12 @@ export default function LandingScreen({ onStart }) {
     window.scrollTo({ top: 0, behavior: "instant" });
   };
 
+  const goFeature = (slug) => {
+    setOpenMenu(null);
+    setPage("feat:" + slug);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
   // Desktop mega-menu: opens on hover, closes on leaving the header area
   const openWith = (label) => {
     if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
@@ -428,7 +434,7 @@ export default function LandingScreen({ onStart }) {
                 <button
                   onClick={() => (item.label === "About" ? goToPage("about") : item.label === "Pricing" ? goToPage("pricing") : goToSection(item.id))}
                   className={`text-[15px] font-medium transition-colors flex items-center gap-1 ${
-                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || activeNav === item.id || openMenu === item.label
+                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || activeNav === item.id || openMenu === item.label
                       ? "text-[#6415f5]"
                       : "text-[#18123b]/75 hover:text-[#18123b]"
                   }`}
@@ -483,7 +489,7 @@ export default function LandingScreen({ onStart }) {
                               {col.items.map((it) => (
                                 <button
                                   key={it.label}
-                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : goToSection(it.target))}
+                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
                                   className="block text-start group/link"
                                 >
                                   <span className="block text-[13.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
@@ -527,6 +533,7 @@ export default function LandingScreen({ onStart }) {
       {page === "about" && <AboutPage onStart={onStart} />}
       {page === "pricing" && <PricingPage onStart={onStart} />}
       {page === "contact" && <ContactPage />}
+      {page.startsWith("feat:") && <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />}
       {page === "home" && (
       <>
       {/* ── Hero ────────────────────────────────────────────────────────── */}
@@ -594,14 +601,18 @@ export default function LandingScreen({ onStart }) {
             Everything you need for your <span className="text-[#6415f5]">meeting minutes</span>
           </h2>
           <div className="mt-11 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-6 shadow-sm hover:shadow-md hover:border-[#6415f5]/30 transition">
+            {HOME_FEATURES.map((f) => (
+              <button
+                key={f.title}
+                onClick={() => goFeature(f.slug)}
+                className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-6 shadow-sm hover:shadow-md hover:border-[#6415f5]/30 transition text-start group"
+              >
                 <div className="w-11 h-11 rounded-xl bg-[#6415f5]/[0.08] border border-[#6415f5]/20 flex items-center justify-center text-[#6415f5]">
                   <f.icon className="w-5 h-5" />
                 </div>
-                <h3 className="mt-4 font-semibold text-[#18123b]">{f.title}</h3>
+                <h3 className="mt-4 font-semibold text-[#18123b] group-hover:text-[#6415f5] transition-colors">{f.title}</h3>
                 <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{f.text}</p>
-              </div>
+              </button>
             ))}
           </div>
         </div>
