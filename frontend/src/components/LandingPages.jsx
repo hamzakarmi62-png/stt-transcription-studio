@@ -61,7 +61,7 @@ const TIMELINE = [
   { year: "Next", text: "Your voice, everywhere — new tools shaped by the people who use Aud daily." },
 ];
 
-export function AboutPage({ goHome, onStart }) {
+export function AboutPage({ goHome, onStart, goTeam, goSecurity }) {
   return (
     <div>
       <PageHero
@@ -110,6 +110,18 @@ export function AboutPage({ goHome, onStart }) {
               <p className="text-sm text-[#4b4763] mt-1">Aud is built and maintained by Hamza Karmi — founder, engineer and first user.</p>
             </div>
             <span className="w-14 h-14 rounded-2xl border-[1.5px] border-[#18123b]/30 bg-white flex items-center justify-center text-[#18123b] text-sm font-black shrink-0">HK</span>
+          </div>
+          <div className="mt-6 grid sm:grid-cols-2 gap-4">
+            <a href="#" onClick={(e) => { e.preventDefault(); window.__goTeam && window.__goTeam(); }} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-6 shadow-sm hover:border-[#6415f5]/40 transition block">
+              <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">Meet the team</p>
+              <p className="mt-1 font-semibold text-[#18123b]">AI engineering, applied linguistics, architecture & UX</p>
+              <p className="mt-1.5 text-sm text-[#4b4763]">The four disciplines behind every transcription.</p>
+            </a>
+            <a href="#" onClick={(e) => { e.preventDefault(); window.__goSecurity && window.__goSecurity(); }} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-6 shadow-sm hover:border-[#6415f5]/40 transition block">
+              <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">Security & privacy</p>
+              <p className="mt-1 font-semibold text-[#18123b]">SSL/TLS in transit · AES-256 at rest</p>
+              <p className="mt-1.5 text-sm text-[#4b4763]">Your files are never used beyond your transcription purpose.</p>
+            </a>
           </div>
           <div className="mt-8 flex flex-wrap gap-3 justify-center">
             <button onClick={onStart} className="px-6 py-3 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
@@ -363,7 +375,13 @@ export const FEATURES = {
     title: "From Sound To Text, In Minutes",
     video: "/videos/hero-woman.mp4",
     poster: "/videos/hero-woman.jpg",
-    lead: "Upload any audio or video and watch it become a precise, timestamped transcript — Arabic, French, English and 96 more languages.",
+    lead: "Acoustic models optimized for Modern Standard Arabic, Maghrebi dialects and Algerian local phrasing — with smooth code-switching between Arabic, French and English, even in noisy field recordings.",
+    sections: [
+      { h: "Dialect-aware acoustic models", p: "The engine was tuned on Maghrebi and Levantine speech patterns alongside Modern Standard Arabic — Algerian local phrasing is understood as speech, not mangled into textbook Arabic." },
+      { h: "Code-switching, handled", p: "Real conversations flip between Arabic and French or English mid-sentence. The models track the switches and write each language in its native script." },
+      { h: "Deep-learning noise filters", p: "Low-quality recordings pass through learned filtering layers before recognition — background hum, distant chatter and phone-line artifacts are reduced, not transcribed." },
+      { h: "Word-level verification", p: "Every word carries its own timestamp and confidence, so you can verify any claim against the audio in one click." },
+    ],
     steps: [
       ["Upload or paste a link", "Drop a file, record your microphone, or paste a YouTube URL — Aud handles the rest."],
       ["AI listens and writes", "Whisper-grade speech recognition writes every word with word-level timestamps."],
@@ -378,7 +396,12 @@ export const FEATURES = {
     title: "Know Who Said What, When",
     video: "/videos/feat-speakers.mp4",
     poster: "/videos/feat-speakers.jpg",
-    lead: "Aud separates the voices in your recording, labels every line with its speaker, and lets you rename them — even pick their color.",
+    lead: "An automated voice-separation algorithm built for multi-speaker interviews and focus groups — custom labeling, color coding and timeline distribution for every speaker.",
+    sections: [
+      { h: "Voice-separation algorithm", p: "Voice-print clustering isolates each speaker from the raw waveform — interviews, focus groups and panel discussions become clean, labeled turns without manual work." },
+      { h: "Custom labels & colors", p: "Rename speakers to real names, assign any color, and the entire transcript, exports and share pages adopt your choices instantly." },
+      { h: "Timeline distribution", p: "See the speaking timeline distributed across the conversation — who opened, who answered, who dominated the room." },
+    ],
     steps: [
       ["Voices are separated", "Voice-print clustering tells the speakers apart — no training needed."],
       ["Every line is labeled", "Each paragraph carries the name of the person speaking it."],
@@ -393,7 +416,7 @@ export const FEATURES = {
     title: "99 Languages. One Studio.",
     video: "/videos/feat-multilang.mp4",
     poster: "/videos/feat-multilang.jpg",
-    lead: "From Arabic to Zulu — transcribe in 99 languages, pick several at once for mixed recordings, and translate the result in one click.",
+    lead: "99 languages in one studio — pick several at once for mixed recordings, translate the result in one click, and let auto-detect do the guessing for you.",
     steps: [
       ["Pick your languages", "One language for precision — or up to as many as you like for mixed recordings."],
       ["Every pass is transcribed", "Each chosen language gets its own full pass through the AI."],
@@ -408,7 +431,12 @@ export const FEATURES = {
     title: "Fix While You Listen",
     video: "/videos/feat-editor.mp4",
     poster: "/videos/feat-editor.jpg",
-    lead: "The editor works like a word processor: click between words, type, split paragraphs — and the audio follows you the whole way.",
+    lead: "A synchronized audio-text playback player with click-to-play timeline adjustment, inline text correction and instant search — edit any word and the change syncs to the exact timestamp.",
+    sections: [
+      { h: "Synchronized playback player", p: "The audio player and the transcript are one surface: the highlight follows the voice, and clicking any word repositions the audio to that exact moment." },
+      { h: "Click-to-play timeline", p: "Adjust the playhead by clicking the text or scrubbing the player — the mapping between text and audio is word-accurate." },
+      { h: "Inline correction & instant search", p: "Correct any word inline while listening, then search the whole transcript instantly — results jump straight into context." },
+    ],
     steps: [
       ["Click anywhere to type", "The caret lands exactly where you clicked — even mid-word."],
       ["Enter splits with its own time", "Everything after the caret becomes a new paragraph with its own timestamp."],
@@ -423,7 +451,12 @@ export const FEATURES = {
     title: "Your Transcript, Any Language",
     video: "/videos/hero-man.mp4",
     poster: "/videos/hero-man.jpg",
-    lead: "One click turns your transcript into Arabic, English, French and more — line by line, keeping the speaker labels and timestamps.",
+    lead: "A multilingual neural cross-translation engine: Arabic ↔ French ↔ English with context-aware vocabulary that adapts to academic, legal and media terminology.",
+    sections: [
+      { h: "Neural cross-translation", p: "The engine translates between Arabic, French and English with full awareness of direction and register — the output reads like it was written in the target language, not machine-mapped." },
+      { h: "Context-aware vocabulary", p: "Academic, legal and media terminology is preserved: technical terms keep their established translations instead of being paraphrased away." },
+      { h: "Nothing is lost in the switch", p: "Speaker labels, paragraph order and timestamps survive the translation. The original stays intact — flip between versions at any moment." },
+    ],
     steps: [
       ["Finish your transcript", "Correct it until it is exactly right."],
       ["Choose a language", "The AI translation panel rewrites every segment."],
@@ -438,7 +471,7 @@ export const FEATURES = {
     title: "Key Points, Auto-Generated",
     video: "/videos/feat-summary.mp4",
     poster: "/videos/feat-summary.jpg",
-    lead: "The AI reads your whole transcript and writes a clean summary: the key points first, then the actions that follow.",
+    lead: "The AI reads your whole transcript and writes a clean, structured summary: the key points first, then the decisions and actions that follow.",
     steps: [
       ["One click", "No prompts to write — Aud reads the transcript and summarizes it."],
       ["Structured output", "Key points, then decisions and actions — ready to share."],
@@ -453,7 +486,7 @@ export const FEATURES = {
     title: "Ask. Get Answers With Timestamps.",
     video: "/videos/feat-ask.mp4",
     poster: "/videos/feat-ask.jpg",
-    lead: "Type a question about your recording — Aud answers from its content and cites the exact moments it drew from.",
+    lead: "Type a natural-language question about your recording — Aud answers from its content alone, citing the exact moments every claim came from.",
     steps: [
       ["Ask in your own words", "No special syntax — the AI understands natural questions."],
       ["Answers with citations", "Every answer carries clickable timestamps into the audio."],
@@ -468,7 +501,7 @@ export const FEATURES = {
     title: "Time, Pace, Participation",
     video: "/videos/feat-stats.mp4",
     poster: "/videos/feat-stats.mp4.jpg".replace(".mp4.jpg", ".mp4"),
-    lead: "See how long each speaker talked, how fast, and who dominated the room — one glance after every transcription.",
+    lead: "Talking time, pace and participation per speaker — the anatomy of any meeting or interview, generated automatically after every transcription.",
     steps: [
       ["Transcribe as usual", "The statistics build themselves from the words and speakers."],
       ["See the balance", "Talking time per speaker, pace and participation at a glance."],
@@ -483,7 +516,7 @@ export const FEATURES = {
     title: "Paste A Link. Get A Transcript.",
     video: "/videos/feat-linkimport.mp4",
     poster: "/videos/feat-linkimport.jpg",
-    lead: "YouTube, direct MP4 or MP3 links — paste the URL and Aud fetches the media itself, then transcribes it like any upload.",
+    lead: "YouTube videos and direct MP4 or MP3 links — paste the URL and Aud fetches the media into your own account, then runs the full transcription pipeline.",
     steps: [
       ["Paste the link", "A YouTube video or a direct media URL — nothing to download on your side."],
       ["Aud fetches the media", "The studio downloads it to your account, even from the cloud."],
@@ -498,7 +531,12 @@ export const FEATURES = {
     title: "Share Links. Export Everything.",
     video: "/videos/feat-share.mp4",
     poster: "/videos/feat-share.jpg",
-    lead: "Create a read-only share link with built-in playback — or export your transcript to TXT, SRT, DOCX, PDF, JSON and XML.",
+    lead: "A complete export suite: Microsoft Word (.docx) documents, PDF reports, plain text (.txt) and SubRip subtitle files (.srt) with precise timecodes — plus read-only share links with built-in playback.",
+    sections: [
+      { h: "Document exports", p: "Word (.docx) and PDF reports carry speaker labels and formatting — ready for archives, theses and legal files." },
+      { h: "Text & subtitle exports", p: "Plain .txt for any workflow, and .srt subtitle files with precise timecodes that drop straight into your video editor." },
+      { h: "Developer exports", p: "JSON and XML structures with full word-level timing for pipelines, search indexes and integrations." },
+    ],
     steps: [
       ["Create a share link", "Read-only, with playback — your audience never touches your account."],
       ["Export in your format", "Six formats for every workflow, with full timestamps."],
@@ -734,6 +772,42 @@ export const INFO_PAGES = {
       ["Your deletion rules", "Single or bulk — honored completely."],
     ],
     facts: [["TLS", "in transit"], ["Encrypted", "at rest"], ["0", "third-party use"], ["You", "control deletion"]],
+  },
+  "team": {
+    kicker: "Meet the Team",
+    title: "The People Behind Aud",
+    lead: "Experts in artificial intelligence engineering, applied linguistics, software architecture and user experience — building the studio they use themselves.",
+    video: "/videos/feat-team.mp4",
+    poster: "/videos/feat-team.jpg",
+    sections: [
+      { h: "AI engineering", p: "Speech-recognition pipelines, model selection and the word-timing engine — engineered for North-African dialects first, then the world." },
+      { h: "Applied linguistics", p: "How people actually speak — code-switching, dialect mixing and regional phrasing — informs every correction and model choice." },
+      { h: "Software architecture & UX", p: "A free-tier cloud service that survives restarts, scales to hour-long files and still feels like a word processor." },
+    ],
+    steps: [
+      ["Founder-led", "Hamza Karmi — founder, engineer and the studio's first user."],
+      ["Four disciplines", "AI, linguistics, architecture and UX in one loop."],
+      ["User-shaped", "Every feature starts from a real transcription need."],
+    ],
+    facts: [["4", "disciplines"], ["1", "mission"], ["99", "languages"], ["Free", "for all"]],
+  },
+  "security": {
+    kicker: "Security, Compliance & Privacy",
+    title: "End-To-End, Locked Down",
+    lead: "SSL/TLS encryption in transit, AES-256 at rest, and strict data-governance policies: your audio files are never used for third-party model training without consent.",
+    video: "/videos/hero-man.mp4",
+    poster: "/videos/hero-man.jpg",
+    sections: [
+      { h: "Encryption protocols", p: "Every request travels over SSL/TLS, and stored audio plus transcripts are protected by AES-256 encryption at rest — the same standard used by financial institutions." },
+      { h: "Strict data governance", p: "User audio files are processed solely for the transcription you requested. No resale, no advertising use, and no third-party model training without explicit consent." },
+      { h: "Authenticated access only", p: "Accounts are token-protected and isolated per user — one account can never read another's transcripts, and share links are read-only by design." },
+    ],
+    steps: [
+      ["In transit", "SSL/TLS on every request, no exceptions."],
+      ["At rest", "AES-256 encrypted storage."],
+      ["Governed", "Your data, your deletion, your control."],
+    ],
+    facts: [["SSL/TLS", "in transit"], ["AES-256", "at rest"], ["0", "third-party training"], ["Isolated", "per account"]],
   },
 };
 

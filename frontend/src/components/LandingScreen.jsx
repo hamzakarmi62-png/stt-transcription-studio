@@ -518,7 +518,7 @@ export default function LandingScreen({ onStart }) {
                               {item.menu.items.map((it) => (
                                 <button
                                   key={it.label}
-                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
+                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), it.anchor ? setTimeout(() => document.getElementById(it.anchor)?.scrollIntoView({ behavior: "smooth" }), 150) : window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
                                   className="w-full flex items-center gap-3.5 text-start rounded-xl p-2.5 hover:bg-[#6415f5]/[0.06] transition group/link"
                                 >
                                   {it.img && (
@@ -582,7 +582,7 @@ export default function LandingScreen({ onStart }) {
         </div>
       </header>
 
-      {page === "about" && <AboutPage onStart={onStart} />}
+      {page === "about" && <AboutPage onStart={onStart} goTeam={() => goToPage("team")} goSecurity={() => goToPage("security")} />}
       {page === "pricing" && <PricingPage onStart={onStart} />}
       {page === "contact" && <ContactPage />}
       {page.startsWith("feat:") && <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />}
