@@ -586,3 +586,225 @@ export function FeaturePage({ slug, onStart, goFeature }) {
     </div>
   );
 }
+
+
+/* ─────────────────── INFO PAGES (Resources & Features deep-dives) ─────────────────── */
+
+export const INFO_PAGES = {
+  "apps": {
+    kicker: "Supported Applications",
+    title: "One Platform, Every Screen",
+    lead: "Aud meets you wherever you work: a full web application, mobile recording on the go, and an API that brings transcription into your own products.",
+    video: "/videos/feat-linkimport.mp4",
+    poster: "/videos/feat-linkimport.jpg",
+    sections: [
+      { h: "The web application", p: "The complete studio in your browser — upload, transcribe, edit with word-level precision, organize into folders, translate, summarize and export. Nothing to install; it runs on any modern browser on Windows, macOS, Linux, Android and iOS." },
+      { h: "Mobile recording", p: "Record lectures, interviews and meetings directly from your phone. The recording uploads to your account the moment you stop, and the transcription pipeline starts by itself — your phone never needs the heavy tools." },
+      { h: "API for developers & companies", p: "An Application Programming Interface lets developers and organizations plug Aud's transcription engine into their own products: send audio, receive structured, timestamped, speaker-labeled text. Ideal for newsrooms, research platforms and legal software." },
+    ],
+    steps: [
+      ["Open the web app", "Everything runs in the browser — the full studio, no installation."],
+      ["Record from mobile", "Your phone becomes a professional recorder wired to your account."],
+      ["Integrate via API", "Developers connect their own apps to the same engine."],
+    ],
+    facts: [["Web", "app"], ["Mobile", "recording"], ["API", "access"], ["5", "platforms"]],
+  },
+  "accuracy": {
+    kicker: "High Accuracy & Speed",
+    title: "An Hour Of Audio, Under Three Minutes",
+    lead: "Numbers first: Aud processes a full one-hour recording in under 3 minutes at over 98% accuracy — powered by state-of-the-art deep-learning speech models.",
+    video: "/videos/hero-woman.mp4",
+    poster: "/videos/hero-woman.jpg",
+    sections: [
+      { h: "98%+ accuracy", p: "The underlying models are trained on millions of hours of real speech — including noisy, overlapping and accented audio. Word-level confidence scores let you see exactly which words the AI is sure about." },
+      { h: "40× real-time speed", p: "The GPU-backed engine processes an hour-long file in under three minutes. Chunked processing means the first text appears while the rest is still being transcribed." },
+      { h: "Speed without shortcuts", p: "Chunking preserves timestamps across the whole file, so fast output never breaks the word-to-audio alignment you rely on when editing." },
+    ],
+    steps: [
+      ["Upload", "Any size, any length — up to 2 GB per file."],
+      ["Process", "40× faster than real time on GPU infrastructure."],
+      ["Verify", "Word-level confidence and instant playback checking."],
+    ],
+    facts: [["<3 min", "per hour"], ["98%+", "accuracy"], ["40×", "real-time"], ["2 GB", "max file"]],
+  },
+  "dialects": {
+    kicker: "Difficult Dialects & Noise",
+    title: "Built For Imperfect Audio",
+    lead: "Real recordings are messy: street noise, echoey rooms, people talking over each other. Aud's audio-enhancement technologies are designed for exactly that.",
+    video: "/videos/feat-multilang.mp4",
+    poster: "/videos/feat-multilang.jpg",
+    sections: [
+      { h: "Dialects & regional speech", p: "The models were exposed to Maghrebi and Levantine dialects alongside Modern Standard Arabic — Algerian, Tunisian, Moroccan, Syrian and Levantine speech patterns are understood, not mangled into textbook Arabic." },
+      { h: "Noise, echo & overlap", p: "Audio-enhancement preprocessing reduces background hum, room echo and steady noise before recognition. Overlapping speakers are handled by the diarization layer, which splits simultaneous voices into separate labeled tracks." },
+      { h: "Imperfect is the default", p: "Field recordings, phone calls, lecture halls with reverb — these are the recordings researchers and journalists actually have. Aud treats them as the normal case, not the exception." },
+    ],
+    steps: [
+      ["Enhance", "Noise and echo reduction run before recognition."],
+      ["Separate", "Overlapping speakers are split into labeled tracks."],
+      ["Recognize", "Dialect-aware models write what was actually said."],
+    ],
+    facts: [["MSA+3", "dialect families"], ["Noise", "reduction"], ["Overlap", "separation"], ["Field", "ready"]],
+  },
+  "help": {
+    kicker: "Help Center & User Guide",
+    title: "Every Step, Illustrated",
+    lead: "Step-by-step guides covering the whole journey: creating your account, uploading files of any size, transcribing, correcting, translating, exporting and sharing.",
+    video: "/videos/feat-ask.mp4",
+    poster: "/videos/feat-ask.jpg",
+    sections: [
+      { h: "Getting started", p: "Create your account with just a name, email and password. The first transcription takes under a minute: pick a file, choose a language or leave auto-detect, and press start." },
+      { h: "Uploading files of any size", p: "Drag and drop or browse — files up to 2 GB. Large files upload in 5 MB chunks with automatic resume, and the archive keeps every version organized in folders you name." },
+      { h: "Exporting and sharing", p: "When the transcript is ready: export to Word, PDF, TXT or SRT subtitles — or create a read-only share link with built-in playback for your audience." },
+    ],
+    steps: [
+      ["Create", "Name, email, password — done in 30 seconds."],
+      ["Upload & transcribe", "Files, links or live recording."],
+      ["Export & share", "Six formats and read-only links."],
+    ],
+    facts: [["3", "quick steps"], ["2 GB", "per file"], ["6", "formats"], ["24/7", "guides"]],
+  },
+  "blog": {
+    kicker: "Platform Blog",
+    title: "Words About Words",
+    lead: "Periodic articles and specialized topics covering linguistics, artificial intelligence, speech-recognition technology and the latest developments in Natural Language Processing.",
+    video: "/videos/feat-summary.mp4",
+    poster: "/videos/feat-summary.jpg",
+    sections: [
+      { h: "Linguistics & dialects", p: "Why Maghrebi Arabic breaks standard models, how code-switching actually works in the brain, and what that means for speech technology in North Africa." },
+      { h: "AI & speech recognition", p: "How Whisper-class models are trained, what word-level timestamps really measure, and where the next accuracy jump will come from." },
+      { h: "NLP developments", p: "From summarization to translation quality — what large language models can and cannot do for the written word, explained without hype." },
+    ],
+    steps: [
+      ["Read", "Deep dives written in plain language."],
+      ["Learn", "The technology behind every feature."],
+      ["Stay current", "New articles as the field moves."],
+    ],
+    facts: [["3", "topic pillars"], ["Plain", "language"], ["No", "hype"], ["Free", "reading"]],
+  },
+  "tutorials": {
+    kicker: "Tutorial Video Lessons",
+    title: "Watch. Learn. Master.",
+    lead: "A visual library of short, focused videos explaining the advanced platform features and how to leverage every control-panel tool efficiently.",
+    video: "/videos/feat-stats.mp4",
+    poster: "/videos/feat-stats.mp4.jpg".replace(".mp4.jpg", ".mp4"),
+    sections: [
+      { h: "Feature walkthroughs", p: "Two-minute videos on single features: speaker renaming, paragraph splitting, folder organization, share links — each one focused and complete." },
+      { h: "Advanced workflows", p: "Combining tools: multi-language passes for mixed interviews, translation for bilingual publishing, statistics for meeting facilitation." },
+      { h: "Control panel mastery", p: "The archive, folders, custom names and the sync nudge — the small tools that turn a good transcript into a perfect one." },
+    ],
+    steps: [
+      ["Watch", "Short, focused, no filler."],
+      ["Practice", "Follow along in your own studio."],
+      ["Master", "Every tool, explained."],
+    ],
+    facts: [["2 min", "per lesson"], ["Every", "feature"], ["Free", "access"], ["More", "coming"]],
+  },
+  "cases": {
+    kicker: "Case Studies & Examples",
+    title: "How People Use Aud",
+    lead: "Practical examples and success stories showing the platform at work in scientific research, journalism and content creation.",
+    video: "/videos/feat-speakers.mp4",
+    poster: "/videos/feat-speakers.jpg",
+    sections: [
+      { h: "Scientific research", p: "Field interviews transcribed and speaker-labeled in minutes — qualitative researchers code their data directly in the editor instead of paying for manual transcription or losing weeks to it." },
+      { h: "Journalism", p: "Broadcast and TV interviews become searchable text with exact timestamps — every quote verifiable by playing the cited second, every deadline met." },
+      { h: "Content creation", p: "Podcasters and YouTubers turn episodes into articles, subtitles and social snippets from one transcript — one recording, five outputs." },
+    ],
+    steps: [
+      ["Researchers", "Interviews coded in the editor, not on paper."],
+      ["Journalists", "Quotes verified to the second."],
+      ["Creators", "One episode, many formats."],
+    ],
+    facts: [["Research", "coded faster"], ["Press", "on deadline"], ["Creators", "5 outputs"], ["All", "free"]],
+  },
+  "security": {
+    kicker: "Security & Privacy",
+    title: "Your Words, Locked Down",
+    lead: "Clear legal and technical commitments about your data: confidentiality, encryption in transit and at rest, and strict non-usage of files outside your transcription purpose.",
+    video: "/videos/hero-man.mp4",
+    poster: "/videos/hero-man.jpg",
+    sections: [
+      { h: "Encrypted everywhere", p: "Audio files and transcripts are encrypted in transit (HTTPS/TLS) and at rest in storage. Access requires authenticated tokens — nothing is public unless you create a share link." },
+      { h: "Never used against you", p: "Your recordings and transcripts are processed solely for your transcription purpose. They are never sold, never shared, and never used to train third-party models." },
+      { h: "You control deletion", p: "Delete a session and its audio, transcript and metadata are removed from the active storage. Bulk deletion works the same way — your archive is yours to erase." },
+    ],
+    steps: [
+      ["Encrypted transit", "HTTPS/TLS on every request."],
+      ["Encrypted storage", "Authenticated access only."],
+      ["Your deletion rules", "Single or bulk — honored completely."],
+    ],
+    facts: [["TLS", "in transit"], ["Encrypted", "at rest"], ["0", "third-party use"], ["You", "control deletion"]],
+  },
+};
+
+export function InfoPage({ slug, onStart }) {
+  const f = INFO_PAGES[slug];
+  if (!f) return null;
+  const keys = Object.keys(INFO_PAGES).filter((k) => k !== slug).slice(0, 4);
+  return (
+    <div>
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-10 lg:pt-14 pb-12 grid lg:grid-cols-[1.05fr_1fr] gap-10 items-center">
+        <div>
+          <p className="text-[11px] font-black tracking-[0.18em] text-[#6415f5] uppercase">{f.kicker}</p>
+          <h1 className="mt-3 text-[clamp(32px,3.2vw,52px)] leading-[1.15] font-semibold tracking-[-0.015em] text-[#18123b]">{f.title}</h1>
+          <p className="mt-5 text-[17px] leading-[1.65] text-[#4b4763] max-w-[580px]">{f.lead}</p>
+          <button onClick={onStart} className="mt-8 inline-flex items-center px-7 py-3.5 rounded-xl bg-[#6415f5] text-white text-[16px] font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+            Try it free
+          </button>
+        </div>
+        <div className="relative rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/25 bg-[#12101f] h-[320px] sm:h-[420px]">
+          <video src={f.video} poster={f.poster} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/40 to-transparent" />
+        </div>
+      </div>
+
+      <div className="max-w-[1100px] mx-auto px-5 sm:px-8 pb-10 space-y-5">
+        {f.sections.map((sec) => (
+          <div key={sec.h} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
+            <h2 className="text-xl font-semibold text-[#18123b]">{sec.h}</h2>
+            <p className="mt-3 text-[15px] text-[#4b4763] leading-[1.75]">{sec.p}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="rounded-[26px] bg-[#18123b] p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold text-white">The essentials</h2>
+          <div className="mt-7 grid sm:grid-cols-3 gap-5">
+            {f.steps.map(([t, d], i) => (
+              <div key={t} className="relative rounded-2xl bg-white/[0.06] border border-white/10 p-6">
+                <span className="absolute -top-4 left-5 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">{i + 1}</span>
+                <h3 className="mt-3 font-semibold text-white">{t}</h3>
+                <p className="mt-2 text-sm text-white/70 leading-relaxed">{d}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {f.facts.map(([n, label]) => (
+              <div key={label} className="rounded-xl bg-white/[0.06] border border-white/10 px-4 py-3 text-center">
+                <p className="text-lg font-extrabold text-white leading-tight">{n}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-white/60">{label}</p>
+              </div>
+            ))}
+          </div>
+          <button onClick={onStart} className="mt-8 px-6 py-3 rounded-xl bg-white text-[#18123b] font-semibold hover:bg-slate-100 transition shadow-xl">
+            Start transcribing free
+          </button>
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <h2 className="text-xl font-semibold text-[#18123b] mb-5">Keep exploring</h2>
+        <div className="grid sm:grid-cols-4 gap-4">
+          {keys.map((k) => (
+            <div key={k} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-5 shadow-sm">
+              <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{INFO_PAGES[k].kicker}</p>
+              <p className="mt-1 font-semibold text-[#18123b]">{INFO_PAGES[k].title}</p>
+              <img src={INFO_PAGES[k].poster} alt="" className="mt-3 w-full h-24 object-cover rounded-xl" draggable={false} />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

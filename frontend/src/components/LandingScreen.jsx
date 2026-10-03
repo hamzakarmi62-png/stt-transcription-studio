@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
-import { AboutPage, PricingPage, ContactPage, FeaturePage, FEATURES } from "./LandingPages.jsx";
+import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage } from "./LandingPages.jsx";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
   Lock, EyeOff,
@@ -17,76 +17,103 @@ const NAV = [
   {
     label: "Product", id: "produit",
     menu: {
-      cols: [
-        {
-          title: "Transcription",
-          items: [
-            { label: "AI Transcription", desc: "Audio & video to precise text", target: "produit", img: "/videos/feat-editor.jpg" },
-            { label: "Speaker Detection", desc: "Know who said what, when", target: "fonctionnalites", img: "/videos/feat-speakers.jpg" },
-            { label: "Real-time Editor", desc: "Fix while you listen", target: "produit", img: "/videos/feat-editor.jpg" },
-            { label: "Link Import", desc: "YouTube, MP4, MP3 and more", target: "produit", img: "/videos/feat-linkimport.jpg" },
-          ],
-        },
-        {
-          title: "AI Tools",
-          items: [
-            { label: "AI Translation", desc: "99 directions, one click", target: "fonctionnalites", img: "/videos/hero-man.jpg" },
-            { label: "Smart Summary", desc: "Key points, auto-generated", target: "fonctionnalites", img: "/videos/feat-summary.jpg" },
-            { label: "Ask Your Transcript", desc: "Answers with timestamps", target: "produit", img: "/videos/feat-ask.jpg" },
-            { label: "Speaking Statistics", desc: "Time, pace, participation", target: "fonctionnalites", img: "/videos/feat-stats.jpg" },
-          ],
-        },
-        {
-          title: "Share & Organize",
-          items: [
-            { label: "Share Links", desc: "Read-only, with playback", target: "produit", img: "/videos/feat-share.jpg" },
-            { label: "Export", desc: "TXT · SRT · DOCX · PDF · JSON · XML", target: "fonctionnalites", img: "/videos/hero-woman.jpg" },
-            { label: "Folders & Names", desc: "Organize dozens of files", target: "produit", img: "/videos/hero-woman.jpg" },
-            { label: "Privacy", desc: "Encrypted, never resold", target: "produit", img: "/videos/hero-man.jpg" },
-          ],
-        },
+      items: [
+        { label: "Overview", desc: "The integrated cloud platform: AI + NLP transcription with a live one-click demo — no software to install.", target: "produit" },
+        { label: "AI Transcription", desc: "Acoustic models built for local dialects — Algerian, Maghrebi, Levantine — plus Modern Standard Arabic, English and French, with smooth code-switching.", slug: "ai-transcription" },
+        { label: "Advanced Translation", desc: "An instant translation engine linking transcribed texts across Arabic, French and English — preserving technical and academic terminology.", slug: "translation" },
+        { label: "Supported Applications", desc: "A direct web app, mobile apps for on-the-go recording, and an API that brings transcription into your own products.", page: "info:apps" },
       ],
       promo: {
         video: "/videos/feat-multilang.mp4",
         poster: "/videos/feat-multilang.jpg",
-        kicker: "TRANSLATE",
-        title: "Translate into 99 languages",
-        text: "One click turns your finished transcript into another language — speakers and timestamps stay intact.",
-        cta: "Try translation free",
+        kicker: "LIVE DEMO",
+        title: "One click. Formatted text.",
+        text: "Watch audio become readable, timestamped text — right on the home page.",
+        cta: "Try it now",
       },
-      stats: [["99", "languages"], ["10", "formats"], ["12", "speakers"], ["$0", "forever"]],
+      stats: [["98%+", "accuracy"], ["<3 min", "per hour"], ["99", "languages"], ["$0", "forever"]],
     },
   },
-  { label: "Features", id: "fonctionnalites" },
+  {
+    label: "Features", id: "fonctionnalites",
+    menu: {
+      items: [
+        { label: "High Accuracy & Speed", desc: "A full hour of audio processed in under 3 minutes, at over 98% accuracy — powered by state-of-the-art deep learning.", page: "info:accuracy" },
+        { label: "Speaker Diarization", desc: "Automatic voice separation for meetings and seminars: each speaker isolated, identified and labeled for easy dialogue tracking.", slug: "speaker-detection" },
+        { label: "Difficult Dialects & Noise", desc: "Audio-enhancement technologies for heavy background noise, echoing rooms and overlapping multi-speaker recordings.", page: "info:dialects" },
+        { label: "Flexible Export Options", desc: "Word and PDF documents, plain TXT, and SRT subtitle files with precise timestamps for video.", slug: "share" },
+        { label: "Interactive Editing", desc: "Listen and read simultaneously — edit any word and the change syncs to the exact timestamp in the audio.", slug: "editor" },
+      ],
+      promo: {
+        video: "/videos/feat-editor.mp4",
+        poster: "/videos/feat-editor.jpg",
+        kicker: "PRECISION",
+        title: "Every word, exactly on time",
+        text: "98%+ accuracy at 40× real-time speed — verified word by word.",
+        cta: "See it in action",
+      },
+      stats: [["98%+", "accuracy"], ["40×", "faster"], ["12", "speakers"], ["6", "formats"]],
+    },
+  },
   {
     label: "Resources", id: "ressources",
     menu: {
-      cols: [
-        {
-          title: "Learn",
-          items: [
-            { label: "How it works", desc: "Three steps to your transcript", target: "ressources" },
-            { label: "FAQ", desc: "Formats, languages, sharing", target: "ressources" },
-            { label: "Export formats", desc: "TXT · SRT · DOCX · PDF", target: "fonctionnalites" },
-          ],
-        },
-        {
-          title: "Get started",
-          items: [
-            { label: "Pricing page", desc: "Plans, comparison and FAQ", page: "pricing" },
-            { label: "Contact the team", desc: "Talk to the founder directly", page: "contact" },
-          ],
-        },
+      items: [
+        { label: "Help Center & User Guide", desc: "Step-by-step illustrated guides — from creating an account to exporting and sharing your transcripts.", page: "info:help" },
+        { label: "Platform Blog", desc: "Periodic articles on linguistics, AI, speech-recognition technology and the latest in NLP.", page: "info:blog" },
+        { label: "Tutorial Video Lessons", desc: "A visual library of short, focused videos on every advanced feature and control-panel tool.", page: "info:tutorials" },
+        { label: "Case Studies & Examples", desc: "Real uses: field interviews in research, broadcast and TV journalism, and content creation.", page: "info:cases" },
       ],
       promo: {
-        title: "Free forever",
-        text: "All features, no credit card — transcribe from your first try.",
-        cta: "Start now",
+        video: "/videos/feat-ask.mp4",
+        poster: "/videos/feat-ask.jpg",
+        kicker: "LEARN",
+        title: "Master every feature",
+        text: "Guides, articles and videos that turn first-time users into power users.",
+        cta: "Explore resources",
       },
+      stats: [["4", "learning hubs"], ["24/7", "available"], ["Free", "always"], ["EN/FR/AR", "guides"]],
     },
   },
-  { label: "About", id: "apropos" },
-  { label: "Pricing", id: "tarifs" },
+  {
+    label: "About", id: "apropos",
+    menu: {
+      items: [
+        { label: "Our Story & Vision", desc: "Born to solve the challenges of researchers, journalists and creators across the Arab world and North Africa — tools that understand local dialects.", target: "apropos" },
+        { label: "Team", desc: "Experts in AI engineering, applied linguistics, software development and user experience.", page: "about" },
+        { label: "Security & Privacy", desc: "Clear commitments: encrypted audio and text in transit and at rest, never used beyond your transcription purpose.", page: "info:security" },
+        { label: "Contact Us", desc: "Direct support channels, a dedicated email, and round-the-clock issue tracking.", page: "contact" },
+      ],
+      promo: {
+        video: "/videos/hero-woman.mp4",
+        poster: "/videos/hero-woman.jpg",
+        kicker: "OUR MISSION",
+        title: "Every voice deserves to be heard",
+        text: "North-African roots, world-class speech AI.",
+        cta: "Read our story",
+      },
+      stats: [["2010s", "languages era"], ["4", "expertise areas"], ["24/7", "support"], ["100%", "private"]],
+    },
+  },
+  {
+    label: "Pricing", id: "tarifs",
+    menu: {
+      items: [
+        { label: "Free Trial", desc: "Free transcription minutes granted on registration — test transcription and translation quality on your own files first.", page: "pricing" },
+        { label: "Pro Plan (Individual)", desc: "For freelancers, researchers and journalists: monthly hour quotas, processing priority and advanced exports at a flexible price.", page: "pricing" },
+        { label: "Enterprise Plan", desc: "For corporations, universities and major media: unlimited capacity, multi-user team accounts and dedicated VIP support.", page: "contact" },
+      ],
+      promo: {
+        video: "/videos/feat-share.mp4",
+        poster: "/videos/feat-share.jpg",
+        kicker: "PRICING",
+        title: "Start free. Scale when ready.",
+        text: "Test everything on your own files — then pick the plan that fits your workload.",
+        cta: "See plans",
+      },
+      stats: [["Free", "trial minutes"], ["3", "plans"], ["VIP", "support"], ["0", "surprises"]],
+    },
+  },
 ];
 
 const FAQ = [
@@ -437,7 +464,7 @@ export default function LandingScreen({ onStart }) {
                 <button
                   onClick={() => (item.label === "About" ? goToPage("about") : item.label === "Pricing" ? goToPage("pricing") : goToSection(item.id))}
                   className={`text-[15px] font-medium transition-colors flex items-center gap-1 ${
-                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || activeNav === item.id || openMenu === item.label
+                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || (page.startsWith('info:accuracy') && item.label === 'Features') || (page.startsWith('info:') && !page.startsWith('info:accuracy') && item.label === 'Resources') || activeNav === item.id || openMenu === item.label
                       ? "text-[#6415f5]"
                       : "text-[#18123b]/75 hover:text-[#18123b]"
                   }`}
@@ -485,31 +512,29 @@ export default function LandingScreen({ onStart }) {
                     if (!item || !item.menu) return null;
                     return (
                       <div>
-                        <div className="grid grid-cols-[1fr_1fr_1fr_340px]">
-                          {item.menu.cols.map((col) => (
-                            <div key={col.title} className="p-6 border-r border-[#18123b]/[0.07]">
-                              <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-4">{col.title}</p>
-                              <div className="space-y-3.5">
-                                {col.items.map((it) => (
-                                  <button
-                                    key={it.label}
-                                    onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
-                                    className="w-full flex items-center gap-3 text-start rounded-xl p-1.5 -m-1.5 hover:bg-[#6415f5]/[0.06] transition group/link"
-                                  >
-                                    {it.img && (
-                                      <img src={it.img} alt="" className="w-16 h-11 rounded-lg object-cover shrink-0 border border-[#18123b]/10" draggable={false} />
-                                    )}
-                                    <span className="min-w-0">
-                                      <span className="block text-[13px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors truncate">
-                                        {it.label}
-                                      </span>
-                                      <span className="block text-[11px] text-[#4b4763] truncate">{it.desc}</span>
+                        <div className="grid grid-cols-[1.25fr_340px]">
+                          <div className="p-6 border-r border-[#18123b]/[0.07]">
+                            <div className="space-y-1">
+                              {item.menu.items.map((it) => (
+                                <button
+                                  key={it.label}
+                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
+                                  className="w-full flex items-center gap-3.5 text-start rounded-xl p-2.5 hover:bg-[#6415f5]/[0.06] transition group/link"
+                                >
+                                  {it.img && (
+                                    <img src={it.img} alt="" className="w-14 h-10 rounded-lg object-cover shrink-0 border border-[#18123b]/10" draggable={false} />
+                                  )}
+                                  <span className="min-w-0">
+                                    <span className="block text-[13.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
+                                      {it.label}
                                     </span>
-                                  </button>
-                                ))}
-                              </div>
+                                    <span className="block text-[11.5px] text-[#4b4763] leading-snug">{it.desc}</span>
+                                  </span>
+                                  <span className="ms-auto text-[#18123b]/30 group-hover/link:text-[#6415f5] transition-colors">→</span>
+                                </button>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                           <div className="relative p-0 min-h-[300px]">
                             {item.menu.promo.video ? (
                               <video
@@ -561,6 +586,7 @@ export default function LandingScreen({ onStart }) {
       {page === "pricing" && <PricingPage onStart={onStart} />}
       {page === "contact" && <ContactPage />}
       {page.startsWith("feat:") && <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />}
+      {page.startsWith("info:") && <InfoPage slug={page.slice(5)} onStart={onStart} />}
       {page === "home" && (
       <>
       {/* ── Hero ────────────────────────────────────────────────────────── */}
