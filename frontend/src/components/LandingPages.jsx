@@ -569,6 +569,17 @@ export function FeaturePage({ slug, onStart, goFeature }) {
         </div>
       </div>
 
+      {f.sections && (
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10 space-y-5">
+          {f.sections.map((sec) => (
+            <div key={sec.h} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
+              <h2 className="text-xl font-semibold text-[#18123b]">{sec.h}</h2>
+              <p className="mt-3 text-[15px] text-[#4b4763] leading-[1.75]">{sec.p}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
         <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8 sm:p-10">
           <h2 className="text-2xl font-semibold text-[#18123b]">How it works</h2>
