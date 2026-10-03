@@ -21,37 +21,40 @@ const NAV = [
         {
           title: "Transcription",
           items: [
-            { label: "AI Transcription", slug: "ai-transcription", desc: "Audio & video to precise text", target: "fonctionnalites" },
-            { label: "Speaker Detection", slug: "speaker-detection", desc: "Know who said what, when", target: "fonctionnalites" },
-            { label: "Multi-language", slug: "multi-language", desc: "99 languages + translation", target: "fonctionnalites" },
-            { label: "Real-time Editor", slug: "editor", desc: "Fix while you listen", target: "produit" },
+            { label: "AI Transcription", desc: "Audio & video to precise text", target: "produit", img: "/videos/feat-editor.jpg" },
+            { label: "Speaker Detection", desc: "Know who said what, when", target: "fonctionnalites", img: "/videos/feat-speakers.jpg" },
+            { label: "Real-time Editor", desc: "Fix while you listen", target: "produit", img: "/videos/feat-editor.jpg" },
+            { label: "Link Import", desc: "YouTube, MP4, MP3 and more", target: "produit", img: "/videos/feat-linkimport.jpg" },
           ],
         },
         {
           title: "AI Tools",
           items: [
-            { label: "AI Translation", slug: "translation", desc: "Your transcript, any language", target: "fonctionnalites" },
-            { label: "Smart Summary", slug: "summary", desc: "Key points, auto-generated", target: "fonctionnalites" },
-            { label: "Ask Your Transcript", slug: "ask", desc: "Answers with timestamps", target: "produit" },
-            { label: "Speaking Statistics", slug: "statistics", desc: "Time, pace, participation", target: "fonctionnalites" },
+            { label: "AI Translation", desc: "99 directions, one click", target: "fonctionnalites", img: "/videos/hero-man.jpg" },
+            { label: "Smart Summary", desc: "Key points, auto-generated", target: "fonctionnalites", img: "/videos/feat-summary.jpg" },
+            { label: "Ask Your Transcript", desc: "Answers with timestamps", target: "produit", img: "/videos/feat-ask.jpg" },
+            { label: "Speaking Statistics", desc: "Time, pace, participation", target: "fonctionnalites", img: "/videos/feat-stats.jpg" },
           ],
         },
         {
-          title: "Import & Share",
+          title: "Share & Organize",
           items: [
-            { label: "Link Import", slug: "link-import", desc: "YouTube, MP4, MP3 and more", target: "produit" },
-            { label: "Upload & Record", desc: "Files or your microphone", target: "produit" },
-            { label: "Share Links", slug: "share", desc: "Read-only, with playback", target: "produit" },
-            { label: "Export", slug: "share", desc: "TXT · SRT · DOCX · PDF", target: "fonctionnalites" },
-            { label: "Pricing", desc: "One simple price: free", page: "pricing" },
+            { label: "Share Links", desc: "Read-only, with playback", target: "produit", img: "/videos/feat-share.jpg" },
+            { label: "Export", desc: "TXT · SRT · DOCX · PDF · JSON · XML", target: "fonctionnalites", img: "/videos/hero-woman.jpg" },
+            { label: "Folders & Names", desc: "Organize dozens of files", target: "produit", img: "/videos/hero-woman.jpg" },
+            { label: "Privacy", desc: "Encrypted, never resold", target: "produit", img: "/videos/hero-man.jpg" },
           ],
         },
       ],
       promo: {
-        title: "The #1 AI Transcription Studio",
-        text: "Upload a file or paste a link — your transcript starts in minutes.",
-        cta: "Try free",
+        video: "/videos/feat-multilang.mp4",
+        poster: "/videos/feat-multilang.jpg",
+        kicker: "TRANSLATE",
+        title: "Translate into 99 languages",
+        text: "One click turns your finished transcript into another language — speakers and timestamps stay intact.",
+        cta: "Try translation free",
       },
+      stats: [["99", "languages"], ["10", "formats"], ["12", "speakers"], ["$0", "forever"]],
     },
   },
   { label: "Features", id: "fonctionnalites" },
@@ -481,45 +484,69 @@ export default function LandingScreen({ onStart }) {
                     const item = NAV.find((n) => n.label === openMenu);
                     if (!item || !item.menu) return null;
                     return (
-                      <div className="grid grid-cols-[1fr_1fr_1fr_320px]">
-                        {item.menu.cols.map((col) => (
-                          <div key={col.title} className="p-7 border-r border-[#18123b]/[0.07]">
-                            <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-4">{col.title}</p>
-                            <div className="space-y-4">
-                              {col.items.map((it) => (
-                                <button
-                                  key={it.label}
-                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
-                                  className="block text-start group/link"
-                                >
-                                  <span className="block text-[13.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
-                                    {it.label}
-                                  </span>
-                                  <span className="block text-[11.5px] text-[#4b4763] mt-0.5">{it.desc}</span>
-                                </button>
-                              ))}
+                      <div>
+                        <div className="grid grid-cols-[1fr_1fr_1fr_340px]">
+                          {item.menu.cols.map((col) => (
+                            <div key={col.title} className="p-6 border-r border-[#18123b]/[0.07]">
+                              <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-4">{col.title}</p>
+                              <div className="space-y-3.5">
+                                {col.items.map((it) => (
+                                  <button
+                                    key={it.label}
+                                    onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
+                                    className="w-full flex items-center gap-3 text-start rounded-xl p-1.5 -m-1.5 hover:bg-[#6415f5]/[0.06] transition group/link"
+                                  >
+                                    {it.img && (
+                                      <img src={it.img} alt="" className="w-16 h-11 rounded-lg object-cover shrink-0 border border-[#18123b]/10" draggable={false} />
+                                    )}
+                                    <span className="min-w-0">
+                                      <span className="block text-[13px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors truncate">
+                                        {it.label}
+                                      </span>
+                                      <span className="block text-[11px] text-[#4b4763] truncate">{it.desc}</span>
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                          <div className="relative p-0 min-h-[300px]">
+                            {item.menu.promo.video ? (
+                              <video
+                                src={item.menu.promo.video}
+                                poster={item.menu.promo.poster}
+                                autoPlay muted loop playsInline
+                                className="absolute inset-0 w-full h-full object-cover"
+                              />
+                            ) : (
+                              <img src="/videos/hero-woman.jpg" alt="Aud Studio" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+                            )}
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/95 via-[#12101f]/55 to-transparent" />
+                            <div className="relative h-full flex flex-col justify-end p-6 text-white">
+                              {item.menu.promo.kicker && (
+                                <p className="text-[9px] font-black tracking-[0.16em] text-[#c4b5fd] uppercase">{item.menu.promo.kicker}</p>
+                              )}
+                              <p className="text-[15px] font-bold leading-snug mt-1">{item.menu.promo.title}</p>
+                              <p className="text-[11.5px] text-white/80 mt-1.5 leading-relaxed">{item.menu.promo.text}</p>
+                              <button
+                                onClick={onStart}
+                                className="mt-4 self-start px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12px] font-semibold hover:bg-[#5311cf] transition"
+                              >
+                                {item.menu.promo.cta}
+                              </button>
                             </div>
                           </div>
-                        ))}
-                        <div className="relative p-0">
-                          <img
-                            src="/videos/hero-woman.jpg"
-                            alt="Aud Studio"
-                            className="absolute inset-0 w-full h-full object-cover"
-                            draggable={false}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/95 via-[#12101f]/55 to-transparent" />
-                          <div className="relative h-full flex flex-col justify-end p-6 text-white">
-                            <p className="text-[15px] font-bold leading-snug">{item.menu.promo.title}</p>
-                            <p className="text-[11.5px] text-white/80 mt-1.5 leading-relaxed">{item.menu.promo.text}</p>
-                            <button
-                              onClick={onStart}
-                              className="mt-4 self-start px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12px] font-semibold hover:bg-[#5311cf] transition"
-                            >
-                              {item.menu.promo.cta}
-                            </button>
-                          </div>
                         </div>
+                        {item.menu.stats && (
+                          <div className="grid grid-cols-4 border-t border-[#18123b]/[0.07] bg-[#f6f3ed]">
+                            {item.menu.stats.map(([n, label]) => (
+                              <div key={label} className="py-3.5 text-center border-r border-[#18123b]/[0.05] last:border-r-0">
+                                <span className="text-lg font-extrabold text-[#18123b]">{n}</span>
+                                <span className="ms-1.5 text-[11px] font-semibold text-[#4b4763]">{label}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     );
                   })()}
