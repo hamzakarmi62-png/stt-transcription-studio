@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
-import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServicesPage, LanguagesPage, CalculatorPage, ChangelogPage, LegalPage, CareersPage } from "./LandingPages.jsx";
+import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServicesPage, LanguagesPage, CalculatorPage, ChangelogPage, LegalPage, CareersPage, ServicePage, AudiencePage, ListingPage, TeamPage, PressPage, FreelancersPage, PartnersPage, LocationsPage } from "./LandingPages.jsx";
 import { NAV_MENUS, BRAND } from "../siteData.js";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
@@ -352,7 +352,7 @@ export default function LandingScreen({ onStart }) {
       `}</style>
 
       {/* ── Nav ─────────────────────────────────────────────────────────── */}
-      <header className="relative z-40">
+      <header className="sticky top-0 z-40 bg-[#f6f3ed]/95 backdrop-blur border-b border-[#18123b]/[0.06]">
         <div className="max-w-[1400px] mx-auto flex items-center gap-8 px-5 sm:px-8 h-[76px]">
           <button onClick={onStart} className="shrink-0" aria-label="Aud — home">
             <img src={audLogo} alt="Aud" className="h-10 w-auto" draggable={false} />
@@ -362,9 +362,15 @@ export default function LandingScreen({ onStart }) {
             {NAV.map((item) => (
               <div key={item.label} className="relative" onMouseEnter={() => item.menu && openWith(item.label)}>
                 <button
-                  onClick={() => (item.label === "About" ? goToPage("about") : item.label === "Pricing" ? goToPage("pricing") : goToSection(item.id))}
+                  aria-haspopup={item.menu ? "true" : undefined}
+                  aria-expanded={item.menu ? openMenu === item.label : undefined}
+                  onKeyDown={(e) => {
+                    if (e.key === "Escape") { setOpenMenu(null); }
+                    if (e.key === "ArrowDown" && item.menu) { e.preventDefault(); openWith(item.label); }
+                  }}
+                  onClick={() => (item.label === "About" ? goToPage("about") : item.label === "Pricing" ? goToPage("pricing") : item.menu ? openWith(item.label) : goToSection(item.id))}
                   className={`text-[15px] font-medium transition-colors flex items-center gap-1 ${
-                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || (page.startsWith('info:accuracy') && item.label === 'Features') || (page.startsWith('info:') && !page.startsWith('info:accuracy') && item.label === 'Resources') || ((page === 'human' || page === 'languages' || page === 'calculator' || page === 'changelog' || page === 'legal' || page === 'careers') && item.label === 'Resources') || activeNav === item.id || openMenu === item.label
+                    ((page === 'about' || page === 'team' || page === 'press' || page === 'freelancers' || page === 'partners' || page === 'security') && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || (page.startsWith('svc:') && item.label === 'Product') || (page.startsWith('info:accuracy') && item.label === 'Features') || (page.startsWith('info:') && !page.startsWith('info:accuracy') && item.label === 'Resources') || ((page === 'human' || page === 'languages' || page === 'calculator' || page === 'changelog' || page === 'legal' || page === 'careers' || page.startsWith('res:')) && item.label === 'Resources') || activeNav === item.id || openMenu === item.label
                       ? "text-[#6415f5]"
                       : "text-[#18123b]/75 hover:text-[#18123b]"
                   }`}
@@ -382,7 +388,7 @@ export default function LandingScreen({ onStart }) {
 
           <div className="ml-auto flex items-center gap-2.5 sm:gap-4">
             <button onClick={onStart} className="hidden sm:block text-[15px] font-medium text-[#18123b]/85 hover:text-[#18123b] transition-colors px-2">
-              Sign in
+              Log in
             </button>
             <a
               href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
@@ -490,6 +496,14 @@ export default function LandingScreen({ onStart }) {
       {page === "contact" && <ContactPage />}
       {page.startsWith("feat:") && <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />}
       {page.startsWith("info:") && <InfoPage slug={page.slice(5)} onStart={onStart} />}
+      {page.startsWith("svc:") && <ServicePage slug={page.slice(4)} onStart={onStart} />}
+      {page.startsWith("aud:") && <AudiencePage slug={page.slice(4)} />}
+      {page.startsWith("res:") && <ListingPage slug={page.slice(4)} onStart={onStart} />}
+      {page === "team" && <TeamPage onStart={onStart} />}
+      {page === "press" && <PressPage />}
+      {page === "freelancers" && <FreelancersPage />}
+      {page === "partners" && <PartnersPage />}
+      {page === "locations" && <LocationsPage />}
       {page === "human" && <HumanServicesPage onStart={onStart} />}
       {page === "languages" && <LanguagesPage />}
       {page === "calculator" && <CalculatorPage onStart={onStart} />}

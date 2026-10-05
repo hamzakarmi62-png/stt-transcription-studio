@@ -1211,3 +1211,388 @@ export function CareersPage() {
     </div>
   );
 }
+
+
+/* ─────────────────── GENERIC TEMPLATE PAGES (driven by siteData) ─────────────────── */
+
+export function ServicePage({ slug, onStart }) {
+  const f = SERVICE_PAGES[slug];
+  if (!f) return null;
+  const others = Object.keys(SERVICE_PAGES).filter((k) => k !== slug).slice(0, 3);
+  return (
+    <div>
+      {/* Hero */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-10 lg:pt-14 pb-12 grid lg:grid-cols-[1.05fr_1fr] gap-10 items-center">
+        <div>
+          {f.badge && (
+            <span className="inline-block px-2.5 py-1 rounded-md bg-[#6415f5] text-white text-[10px] font-black tracking-wide uppercase mb-3">
+              {f.badge}
+            </span>
+          )}
+          <p className="text-[11px] font-black tracking-[0.18em] text-[#6415f5] uppercase">{f.kicker}</p>
+          <h1 className="mt-3 text-[clamp(32px,3.2vw,52px)] leading-[1.15] font-semibold tracking-[-0.015em] text-[#18123b]">{f.title}</h1>
+          <p className="mt-5 text-[17px] leading-[1.65] text-[#4b4763] max-w-[580px]">{f.lead}</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <button onClick={onStart} className="px-6 py-3 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+              Try Aud Free
+            </button>
+            <a href={"mailto:" + BRAND.email + "?subject=" + encodeURIComponent("Aud — " + f.title)} className="px-6 py-3 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold hover:bg-[#6415f5]/[0.06] transition">
+              Talk to a Specialist
+            </a>
+          </div>
+        </div>
+        {/* Demo/screenshot placeholder — TODO: owner to add real screenshots */}
+        <div className="relative rounded-[26px] bg-[#18123b] h-[320px] sm:h-[420px] overflow-hidden shadow-2xl shadow-[#18123b]/25 flex items-center justify-center">
+          <div className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "repeating-linear-gradient(45deg, #fff 0 1px, transparent 1px 14px)" }} />
+          <div className="relative text-center text-white/70 px-8">
+            <p className="text-[11px] font-black tracking-[0.16em] uppercase mb-2">Demo placeholder</p>
+            <p className="text-sm">{f.kicker} — screenshot / interactive demo coming here.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold text-[#18123b]">How it works</h2>
+          <div className="mt-6 grid sm:grid-cols-3 gap-5">
+            {f.steps.map(([t, d], i) => (
+              <div key={t} className="relative rounded-2xl border border-[#18123b]/[0.08] p-6">
+                <span className="absolute -top-4 left-5 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">{i + 1}</span>
+                <h3 className="mt-3 font-semibold text-[#18123b]">{t}</h3>
+                <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Key features grid */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="rounded-[26px] bg-[#18123b] p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold text-white mb-6">Key features</h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {f.keyFeatures.map((k) => (
+              <div key={k} className="rounded-2xl bg-white/[0.06] border border-white/10 p-5 text-white/90 text-sm font-medium">
+                {k}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Details block */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8 grid sm:grid-cols-3 gap-x-6 gap-y-4">
+          {Object.entries(f.details).map(([k, v]) => (
+            <div key={k}>
+              <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/70 uppercase">{k}</p>
+              <p className="mt-1 text-sm font-semibold text-[#18123b]">{v}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* See pricing + FAQ */}
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-10 space-y-4">
+        {f.faq.map((item) => (
+          <div key={item.q} className="rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm p-6">
+            <p className="font-semibold text-[#18123b] text-sm">{item.q}</p>
+            <p className="text-sm text-[#4b4763] mt-2 leading-relaxed">{item.a}</p>
+          </div>
+        ))}
+        <button
+          onClick={() => window.__goPricing && window.__goPricing()}
+          className="w-full py-4 rounded-2xl bg-[#6415f5] text-white font-bold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
+        >
+          See pricing
+        </button>
+      </div>
+
+      {/* Related products */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <h2 className="text-xl font-semibold text-[#18123b] mb-5">Related products</h2>
+        <div className="grid sm:grid-cols-3 gap-4">
+          {others.map((k) => (
+            <div key={k} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-5 shadow-sm">
+              <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{SERVICE_PAGES[k].kicker}</p>
+              <p className="mt-1 font-semibold text-[#18123b]">{SERVICE_PAGES[k].title}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AudiencePage({ slug }) {
+  const f = AUDIENCE_PAGES[slug];
+  if (!f) return null;
+  return (
+    <div>
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-10 lg:pt-14 pb-12 grid lg:grid-cols-[1.05fr_1fr] gap-10 items-center">
+        <div>
+          <p className="text-[11px] font-black tracking-[0.18em] text-[#6415f5] uppercase">{f.kicker}</p>
+          <h1 className="mt-3 text-[clamp(32px,3.2vw,52px)] leading-[1.15] font-semibold tracking-[-0.015em] text-[#18123b]">{f.title}</h1>
+          <p className="mt-5 text-[17px] leading-[1.65] text-[#4b4763] max-w-[580px]">{f.problem}</p>
+        </div>
+        <div className="relative rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/25 h-[320px] sm:h-[420px]">
+          <video src={f.video} poster={f.poster} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/40 to-transparent" />
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <h2 className="text-2xl font-semibold text-[#18123b] mb-6">How Aud helps</h2>
+        <div className="grid sm:grid-cols-2 gap-5">
+          {f.help.map(([t, d]) => (
+            <div key={t} className="rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm p-6">
+              <h3 className="font-semibold text-[#18123b]">{t}</h3>
+              <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{d}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
+          <h2 className="text-xl font-semibold text-[#18123b] mb-1">Recommended products</h2>
+          <div className="grid sm:grid-cols-3 gap-4 mt-5">
+            {f.recommended.map((k) => (
+              <div key={k} className="rounded-2xl border border-[#18123b]/[0.08] p-5">
+                <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{SERVICE_PAGES[k] ? SERVICE_PAGES[k].kicker : k}</p>
+                <p className="mt-1 font-semibold text-[#18123b] text-sm">{SERVICE_PAGES[k] ? SERVICE_PAGES[k].title : k}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 rounded-2xl bg-[#f6f3ed] border border-[#18123b]/[0.08] p-6">
+            <p className="text-sm italic text-[#4b4763]">“{f.story.quote}”</p>
+            <p className="mt-2 text-[11px] font-bold text-[#18123b]/60">{f.story.source}</p>
+          </div>
+          <p className="mt-4 text-xs text-[#4b4763]">
+            Your data stays protected — see <button className="font-bold text-[#6415f5]" onClick={() => window.__goSecurity && window.__goSecurity()}>Security & Privacy</button>.
+          </p>
+        </div>
+      </div>
+
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16 space-y-3">
+        {f.faq.map((item) => (
+          <div key={item.q} className="rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm p-6">
+            <p className="font-semibold text-[#18123b] text-sm">{item.q}</p>
+            <p className="text-sm text-[#4b4763] mt-2 leading-relaxed">{item.a}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function ListingPage({ slug, onStart }) {
+  const f = RESOURCE_LISTINGS[slug];
+  if (!f) return null;
+  const [query, setQuery] = useState("");
+  const [cat, setCat] = useState("All");
+  const cats = ["All", ...f.categories];
+  const shown = f.cards.filter(
+    (c) => (cat === "All" || c.cat === cat) && c.title.toLowerCase().includes(query.toLowerCase())
+  );
+  return (
+    <div>
+      <PageHero kicker={f.kicker} title={f.title} sub={f.lead} />
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <div className="flex flex-wrap items-center gap-2 mb-8">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search…"
+            className="rounded-2xl border px-4 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#6415f5]/40 border-[#18123b]/15 bg-white text-[#18123b]"
+          />
+          {cats.map((c) => (
+            <button
+              key={c}
+              onClick={() => setCat(c)}
+              className={`px-3.5 py-2 rounded-xl text-[11px] font-bold border transition ${
+                cat === c ? "bg-[#6415f5] text-white border-[#6415f5]" : "border-[#18123b]/15 text-[#4b4763] hover:border-[#6415f5]/40"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {shown.map((c, i) => (
+            <div key={i} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-6 hover:shadow-md transition">
+              <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{c.cat}</p>
+              <h3 className="mt-2 font-semibold text-[#18123b]">{c.title}</h3>
+              <p className="mt-1 text-[11px] text-[#4b4763]">{c.date}</p>
+            </div>
+          ))}
+          {shown.length === 0 && <p className="text-sm text-[#4b4763] col-span-full py-10 text-center">Nothing matches this filter yet.</p>}
+        </div>
+        <p className="mt-8 text-[10px] text-[#4b4763] text-center">TODO: owner to verify — card contents are placeholders.</p>
+      </div>
+    </div>
+  );
+}
+
+
+/* ─────────────────── SIMPLE PAGES (team / press / freelancers / partners / locations) ─────────────────── */
+
+export function TeamPage({ onStart }) {
+  return (
+    <div>
+      <PageHero
+        kicker="Leadership"
+        title={<>The People Behind <span style={{ color: PURPLE }}>Aud</span></>}
+        sub="A small team across AI engineering, applied linguistics, software architecture and user experience. TODO: owner to verify names and roles."
+      />
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {LEADERSHIP.map((m) => (
+            <div key={m.name} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8 text-center">
+              <span className="w-20 h-20 mx-auto rounded-full border-[1.5px] border-[#18123b]/30 bg-white flex items-center justify-center text-[#18123b] text-xl font-black">{m.initials}</span>
+              <h3 className="mt-4 font-semibold text-[#18123b]">{m.name}</h3>
+              <p className="text-sm text-[#4b4763] mt-1">{m.role}</p>
+            </div>
+          ))}
+        </div>
+        <h2 className="text-xl font-semibold text-[#18123b] mt-12 mb-5 text-center">Our Board</h2>
+        <div className="grid sm:grid-cols-2 gap-4 max-w-[700px] mx-auto">
+          {BOARD.map((m, i) => (
+            <div key={i} className="rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm p-5 text-center">
+              <p className="font-semibold text-[#18123b] text-sm">{m.name}</p>
+              <p className="text-xs text-[#4b4763] mt-0.5">{m.role}</p>
+            </div>
+          ))}
+        </div>
+        <div className="mt-12 text-center">
+          <button onClick={onStart} className="px-6 py-3 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+            Try Aud for free
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PressPage() {
+  return (
+    <div>
+      <PageHero
+        kicker="Press"
+        title={<>Aud In The <span style={{ color: PURPLE }}>News</span></>}
+        sub="Media mentions and press resources. TODO: owner to verify — placeholders below."
+      />
+      <div className="max-w-[1100px] mx-auto px-5 sm:px-8 pb-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {PRESS.map((n, i) => (
+          <div key={i} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-7">
+            <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{n.outlet}</p>
+            <h3 className="mt-2 font-semibold text-[#18123b]">{n.title}</h3>
+            <p className="text-xs text-[#4b4763] mt-1">{n.date}</p>
+          </div>
+        ))}
+        <div className="rounded-[26px] bg-[#18123b] p-7 text-white">
+          <p className="text-[10px] font-black tracking-[0.12em] uppercase text-white/70">Press kit</p>
+          <p className="mt-2 text-sm text-white/90">For interviews and press inquiries, write to <a className="font-bold underline" href={"mailto:" + BRAND.email}>{BRAND.email}</a></p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function FreelancersPage() {
+  const [sent, setSent] = useState(false);
+  const field = "w-full px-4 py-3 rounded-xl border-[1.5px] border-[#18123b]/15 bg-white text-sm text-[#18123b] focus:outline-none focus:border-[#6415f5]";
+  return (
+    <div>
+      <PageHero
+        kicker="Freelancers"
+        title={<>Join The <span style={{ color: PURPLE }}>Reviewers Network</span></>}
+        sub="Aud's human-verified services run on a network of freelance transcriptionists, translators and subtitle professionals. Apply to join."
+      />
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16">
+        {sent ? (
+          <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] p-10 text-center shadow-sm">
+            <span className="w-14 h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 text-emerald-500 flex items-center justify-center text-2xl">✓</span>
+            <h3 className="mt-4 text-xl font-bold text-[#18123b]">Your application is ready to send</h3>
+            <p className="text-sm text-[#4b4763] mt-2">Your email app opened with the application prefilled — press send and we will reply with the next steps.</p>
+          </div>
+        ) : (
+          <form
+            className="rounded-[26px] bg-white border-[1.5px] border-[#6415f5]/30 shadow-xl shadow-[#6415f5]/10 p-8 grid sm:grid-cols-2 gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.target);
+              const body = encodeURIComponent(
+                "Name: " + f.get("name") + "\nEmail: " + f.get("email") + "\nLanguages: " + f.get("langs") + "\nExperience: " + f.get("exp")
+              );
+              window.location.href = "mailto:" + BRAND.email + "?subject=" + encodeURIComponent("Aud — Freelancer application") + "&body=" + body;
+              setSent(true);
+            }}
+          >
+            <input name="name" required placeholder="Full name" className={field} />
+            <input name="email" type="email" required placeholder="Email" className={field} />
+            <input name="langs" required placeholder="Languages (e.g. Arabic, French)" className={"sm:col-span-2 " + field} />
+            <textarea name="exp" rows={4} placeholder="Your transcription / translation experience…" className={"sm:col-span-2 " + field} />
+            <button type="submit" className="sm:col-span-2 w-full py-3.5 rounded-xl bg-[#6415f5] text-white font-bold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+              Apply to join
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function PartnersPage() {
+  return (
+    <div>
+      <PageHero
+        kicker="Partners"
+        title={<>Build With <span style={{ color: PURPLE }}>Aud</span></>}
+        sub="Universities, media organizations and platforms partner with Aud to bring transcription and translation to their audiences."
+      />
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16">
+        <div className="rounded-[26px] bg-white border-[1.5px] border-[#6415f5]/30 shadow-xl shadow-[#6415f5]/10 p-8">
+          <h2 className="text-xl font-semibold text-[#18123b]">Partnership inquiry</h2>
+          <form
+            className="mt-6 grid sm:grid-cols-2 gap-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const f = new FormData(e.target);
+              const body = encodeURIComponent("Organization: " + f.get("org") + "\nEmail: " + f.get("email") + "\n\n" + f.get("msg"));
+              window.location.href = "mailto:" + BRAND.email + "?subject=" + encodeURIComponent("Aud — Partnership inquiry") + "&body=" + body;
+            }}
+          >
+            <input name="org" required placeholder="Organization" className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#18123b]/15 bg-white text-sm focus:outline-none focus:border-[#6415f5]" />
+            <input name="email" type="email" required placeholder="Email" className="w-full px-4 py-3 rounded-xl border-[1.5px] border-[#18123b]/15 bg-white text-sm focus:outline-none focus:border-[#6415f5]" />
+            <textarea name="msg" rows={4} required placeholder="Tell us about your partnership idea…" className="sm:col-span-2 w-full px-4 py-3 rounded-xl border-[1.5px] border-[#18123b]/15 bg-white text-sm focus:outline-none focus:border-[#6415f5]" />
+            <button type="submit" className="sm:col-span-2 w-full py-3.5 rounded-xl bg-[#6415f5] text-white font-bold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+              Send inquiry
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function LocationsPage() {
+  return (
+    <div>
+      <PageHero
+        kicker="Services By Location"
+        title={<>Aud <span style={{ color: PURPLE }}>Around The World</span></>}
+        sub="The same studio, tuned for the languages and dialects of every region we serve."
+      />
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16 space-y-4">
+        {LOCATIONS.map((l) => (
+          <div key={l.region} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-7 flex flex-wrap items-center justify-between gap-4">
+            <h3 className="font-semibold text-[#18123b]">{l.region}</h3>
+            <p className="text-sm text-[#4b4763]">{l.note}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
