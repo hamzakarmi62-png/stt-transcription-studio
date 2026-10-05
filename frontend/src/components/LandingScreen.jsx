@@ -2,6 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
 import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServicesPage, LanguagesPage, CalculatorPage, ChangelogPage, LegalPage, CareersPage, ServicePage, AudiencePage, ListingPage, TeamPage, PressPage, FreelancersPage, PartnersPage, LocationsPage, UseCasesPage, ReviewersPage } from "./LandingPages.jsx";
 import { NAV_MENUS, BRAND, PLANS, USE_CASES } from "../siteData.js";
+import { SPEC_DATA } from "../specData.js";
+import { TFeaturePage, THumanPage, THelpCenter, TTutorials, TUseCases, TLanguages, TChangelog, TApi, TContact, TCareers, TCompany, TReviewers, TTerms } from "./SpecPages.jsx";
+import { MenuIcon, MenuGlyph } from "./MenuIcons.jsx";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
   Lock, EyeOff,
@@ -33,53 +36,6 @@ function StatusBadge({ kind }) {
   return (
     <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-black tracking-wide uppercase ${planned ? "bg-amber-100 text-amber-800" : "bg-[#6415f5] text-white"}`}>
       {kind}
-    </span>
-  );
-}
-
-// Menu icon set — 24×24 stroke SVGs (1.7px, round caps), Rev-style.
-const MENU_ICONS = {
-  mic: <><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0" /><path d="M12 18v3" /><path d="M9 21h6" /></>,
-  users: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.8-3.2 3.4-4.8 6.5-4.8s5.7 1.6 6.5 4.8" /><circle cx="17.5" cy="9.5" r="2.5" /><path d="M16.5 14.6c2.3.4 4.1 1.7 4.8 4.4" /></>,
-  pencil: <><path d="M4 20l1.2-4.2L16.4 4.6a2.1 2.1 0 0 1 3 3L8.2 18.8 4 20z" /><path d="M14.5 6.5l3 3" /></>,
-  chat: <path d="M12 3.5a8.3 8.3 0 0 1 8.5 8.1 8.3 8.3 0 0 1-8.5 8.1c-1.4 0-2.7-.3-3.9-.9L3.5 20l1.2-4a7.9 7.9 0 0 1-1.2-4.4A8.3 8.3 0 0 1 12 3.5z" />,
-  star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9L12 3.5z" />,
-  globe: <><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17" /><path d="M12 3.5c2.5 2.3 3.8 5.2 3.8 8.5s-1.3 6.2-3.8 8.5c-2.5-2.3-3.8-5.2-3.8-8.5s1.3-6.2 3.8-8.5z" /></>,
-  export: <><path d="M12 14V4" /><path d="M7.5 8L12 3.5 16.5 8" /><path d="M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15" /></>,
-  link: <><path d="M10.5 13.5a4 4 0 0 1 0-5.6l2.8-2.8a4 4 0 0 1 5.6 5.6l-1.6 1.6" /><path d="M13.5 10.5a4 4 0 0 1 0 5.6l-2.8 2.8a4 4 0 0 1-5.6-5.6l1.6-1.6" /></>,
-  folder: <path d="M3.5 7A1.5 1.5 0 0 1 5 5.5h4l2 2.5h8a1.5 1.5 0 0 1 1.5 1.5v8A1.5 1.5 0 0 1 19 19H5a1.5 1.5 0 0 1-1.5-1.5V7z" />,
-  userCheck: <><circle cx="9" cy="8" r="3.5" /><path d="M2.8 20c.8-3.2 3.3-4.8 6.2-4.8 1.3 0 2.5.3 3.5.9" /><path d="M14.5 17.5l2 2 4-4.5" /></>,
-  fileText: <><path d="M7 3.5h6.5L19 9v10.5a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z" /><path d="M13.5 3.5V9H19" /><path d="M9.5 13h5.5" /><path d="M9.5 16.5h5.5" /></>,
-  captions: <><rect x="3" y="5.5" width="18" height="13" rx="2.5" /><path d="M7 12h4.5" /><path d="M14.5 12H17" /><path d="M7 15h7" /></>,
-  code: <><path d="M9 8.5L5.5 12 9 15.5" /><path d="M15 8.5l3.5 3.5-3.5 3.5" /></>,
-  list: <><circle cx="4.5" cy="6" r="1" fill="currentColor" stroke="none" /><circle cx="4.5" cy="12" r="1" fill="currentColor" stroke="none" /><circle cx="4.5" cy="18" r="1" fill="currentColor" stroke="none" /><path d="M8.5 6H20" /><path d="M8.5 12H20" /><path d="M8.5 18H20" /></>,
-  briefcase: <><rect x="3.5" y="8" width="17" height="12" rx="2" /><path d="M9.5 8V6.5a2 2 0 0 1 2-2h1a2 2 0 0 1 2 2V8" /><path d="M3.5 13h17" /></>,
-  podcast: <><rect x="9.5" y="3" width="5" height="10" rx="2.5" /><path d="M6.5 11a5.5 5.5 0 0 0 11 0" /><path d="M12 16.5V20" /><path d="M9 20h6" /></>,
-  flask: <><path d="M10 3.5h4" /><path d="M10.5 3.5v5l-5 8.5a1.8 1.8 0 0 0 1.6 2.8h9.8a1.8 1.8 0 0 0 1.6-2.8l-5-8.5v-5" /><path d="M8 14h8" /></>,
-  pen: <><path d="M17 3.5l3.5 3.5L8 19.5l-4.5 1 1-4.5L17 3.5z" /><path d="M14.5 6l3.5 3.5" /></>,
-  help: <><circle cx="12" cy="12" r="8.5" /><path d="M9.6 9.2a2.5 2.5 0 1 1 3.6 2.2c-.8.4-1.2 1-1.2 1.8" /><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none" /></>,
-  cap: <><path d="M2.5 9.5L12 5l9.5 4.5L12 14 2.5 9.5z" /><path d="M6.5 11.8v4c0 1.4 2.5 2.7 5.5 2.7s5.5-1.3 5.5-2.7v-4" /><path d="M21.5 9.5v5" /></>,
-  grid: <><rect x="4" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5" /><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5" /><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5" /></>,
-  mail: <><rect x="3" y="5.5" width="18" height="13" rx="2" /><path d="M3.5 7.5l8.5 5.5 8.5-5.5" /></>,
-  building: <><path d="M5 21V5.5A1.5 1.5 0 0 1 6.5 4h7A1.5 1.5 0 0 1 15 5.5V21" /><path d="M15 9h2.5a1.5 1.5 0 0 1 1.5 1.5V21" /><path d="M3 21h18" /><path d="M8.5 8h3" /><path d="M8.5 12h3" /><path d="M8.5 16h3" /></>,
-  shield: <path d="M12 3l7 2.8v5.7c0 4.4-2.9 7.4-7 9-4.1-1.6-7-4.6-7-9V5.8L12 3z" />,
-  rocket: <><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.5-.5 5-2c.7-.7.7-2 0-2.7-.8-.8-2-.8-3-.3z" /><path d="M12 15l-3-3a22 22 0 0 1 2-4A12.9 12.9 0 0 1 21.5 2.5c0 2.7-.8 7.5-6 11a22 22 0 0 1-3.5 1.5z" /><path d="M9 12H4.5s.5-3 2-4c1.6-1 4.5 0 4.5 0" /><path d="M12 15v4.5s3-.5 4-2c1-1.6 0-4.5 0-4.5" /></>,
-  scale: <><path d="M16 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1z" /><path d="M2 16l3-8 3 8c-.9.7-1.9 1-3 1s-2.1-.3-3-1z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></>,
-};
-
-function MenuIcon({ name, className }) {
-  return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      {MENU_ICONS[name] || <circle cx="12" cy="12" r="8" />}
-    </svg>
-  );
-}
-
-// Icon inside the tinted menu square.
-function MenuGlyph({ icon }) {
-  return (
-    <span className="shrink-0 w-8 h-8 rounded-lg bg-[#6415f5]/[0.07] border border-[#6415f5]/15 flex items-center justify-center text-[#6415f5]">
-      <MenuIcon name={icon} className="w-4 h-4" />
     </span>
   );
 }
@@ -500,12 +456,6 @@ export default function LandingScreen({ onStart }) {
             <button onClick={onStart} className="hidden sm:block text-[14px] font-medium text-[#18123b]/85 hover:text-[#18123b] transition-colors px-2">
               Log in
             </button>
-            <a
-              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
-              className="hidden xl:inline-flex items-center px-5 py-2.5 rounded-[10px] border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white/50 text-[14px] font-semibold hover:bg-white transition"
-            >
-              Talk to a specialist
-            </a>
             <button
               onClick={onStart}
               className="inline-flex items-center px-5 py-2.5 rounded-[10px] bg-[#6415f5] text-white text-[14px] font-semibold hover:bg-[#5311cf] transition shadow-sm"
@@ -738,12 +688,6 @@ export default function LandingScreen({ onStart }) {
                 <button onClick={onStart} className="w-full py-3 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition">
                   Try Aud for free
                 </button>
-                <a
-                  href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
-                  className="w-full py-3 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold text-center"
-                >
-                  Talk to a specialist
-                </a>
                 <button onClick={onStart} className="w-full py-3 rounded-xl text-[#18123b]/85 font-medium">
                   Log in
                 </button>
@@ -753,28 +697,36 @@ export default function LandingScreen({ onStart }) {
         )}
       </header>
 
-      {page === "about" && <AboutPage onStart={onStart} goTeam={() => goToPage("team")} goSecurity={() => goToPage("info:security")} />}
+      {page === "about" && <TCompany />}
       {page === "pricing" && <PricingPage onStart={onStart} />}
-      {page === "contact" && <ContactPage />}
-      {page.startsWith("feat:") && <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />}
-      {page.startsWith("info:") && <InfoPage slug={page.slice(5)} onStart={onStart} />}
-      {page.startsWith("svc:") && <ServicePage slug={page.slice(4)} onStart={onStart} />}
+      {page === "contact" && <TContact goPage={goToPage} />}
+      {page.startsWith("feat:") && (SPEC_DATA.features[page.slice(5)]
+        ? <TFeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />
+        : <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />)}
+      {page.startsWith("info:") && (page === "info:help"
+        ? <THelpCenter goPage={goToPage} />
+        : page === "info:api" ? <TApi />
+        : <InfoPage slug={page.slice(5)} onStart={onStart} />)}
+      {page.startsWith("svc:") && (SPEC_DATA.human.crumbs[page.slice(4)]
+        ? <THumanPage slug={page.slice(4)} />
+        : <ServicePage slug={page.slice(4)} onStart={onStart} />)}
       {page.startsWith("aud:") && <AudiencePage slug={page.slice(4)} />}
       {page.startsWith("res:") && (page === "res:usecases"
-        ? <UseCasesPage goAudience={(a) => goToPage("aud:" + a)} />
+        ? <TUseCases goAudience={(a) => goToPage("aud:" + a)} />
+        : page === "res:tutorials" ? <TTutorials />
         : <ListingPage slug={page.slice(4)} onStart={onStart} />)}
-      {page === "reviewers" && <ReviewersPage goFreelancers={() => goToPage("freelancers")} />}
+      {page === "reviewers" && <TReviewers goFreelancers={() => goToPage("freelancers")} />}
       {page === "team" && <TeamPage onStart={onStart} />}
       {page === "press" && <PressPage />}
       {page === "freelancers" && <FreelancersPage />}
       {page === "partners" && <PartnersPage />}
       {page === "locations" && <LocationsPage />}
       {page === "human" && <HumanServicesPage onStart={onStart} />}
-      {page === "languages" && <LanguagesPage />}
+      {page === "languages" && <TLanguages />}
       {page === "calculator" && <CalculatorPage onStart={onStart} />}
-      {page === "changelog" && <ChangelogPage />}
-      {page === "legal" && <LegalPage />}
-      {page === "careers" && <CareersPage />}
+      {page === "changelog" && <TChangelog />}
+      {page === "legal" && <TTerms />}
+      {page === "careers" && <TCareers />}
       {page === "home" && (
       <>
       {/* ── 1. Hero ─────────────────────────────────────────────────────── */}
@@ -1100,77 +1052,27 @@ export default function LandingScreen({ onStart }) {
       </>
       )}
 
-      {/* ── Footer (blueprint R: dark, 5 columns) ── */}
+      {/* ── Footer (appears at the bottom of every page) ── */}
       <footer className="bg-[#18123b] text-white">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-14 grid sm:grid-cols-2 lg:grid-cols-5 gap-10">
-          {/* Brand column */}
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-14 pb-10 grid sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr_1fr] gap-10">
           <div>
-            <p className="text-2xl font-extrabold tracking-tight text-white">Aud</p>
-            <p className="mt-3 text-xs text-white/60 leading-relaxed max-w-[240px]">{BRAND.tagline}</p>
-            <a href={`mailto:${BRAND.email}`} className="mt-4 inline-block text-xs font-semibold text-[#c4b5fd] hover:text-white transition">
-              {BRAND.email}
-            </a>
-            {/* Social — TODO: owner to verify — add real profile URLs */}
-            <div className="mt-5 flex items-center gap-2.5">
-              {[
-                ["X (Twitter)", <path key="x" d="M17.7 3H21l-7.3 8.3L22 21h-6.7l-5.2-6.3L4.2 21H1l7.8-8.9L2 3h6.9l4.7 5.7L17.7 3zm-1.2 16.1h1.9L6.9 4.8H4.9l11.6 14.3z" />],
-                ["LinkedIn", <path key="li" d="M4.98 3.5a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zM3 9h4v12H3V9zm6 0h3.8v1.7h.1c.5-1 1.8-2 3.7-2 4 0 4.7 2.6 4.7 6V21h-4v-5.5c0-1.3 0-3-1.9-3s-2.2 1.4-2.2 2.9V21H9V9z" />],
-                ["YouTube", <path key="yt" fillRule="evenodd" d="M23 12s0-3.3-.4-4.8a2.3 2.3 0 0 0-1.6-1.6C19.4 5.2 12 5.2 12 5.2s-7.4 0-9 .4A2.3 2.3 0 0 0 1.4 7.2C1 8.7 1 12 1 12s0 3.3.4 4.8c.2.8.8 1.4 1.6 1.6 1.6.4 9 .4 9 .4s7.4 0 9-.4a2.3 2.3 0 0 0 1.6-1.6c.4-1.5.4-4.8.4-4.8zM9.8 15.1V8.9L15.4 12l-5.6 3.1z" />],
-              ].map(([label, svg]) => (
-                <a
-                  key={label}
-                  href="#"
-                  onClick={(e) => e.preventDefault()}
-                  title={`TODO: owner to add the real ${label} profile`}
-                  aria-label={label}
-                  className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/70 hover:text-white hover:border-white/50 transition"
-                >
-                  <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" fill="currentColor" aria-hidden="true">{svg}</svg>
-                </a>
+            <p className="text-[22px] font-extrabold tracking-tight text-[#a78bfa]">{BRAND.name.toUpperCase()}</p>
+            <p className="mt-3 text-[13px] text-white/60 leading-relaxed max-w-[240px]">{SPEC_DATA.footer.tagline}</p>
+            {/* TODO: owner to verify — add the real store links when the apps ship */}
+            <div className="mt-5 flex flex-col items-start gap-2.5">
+              {["App Store", "Google Play"].map((store) => (
+                <button key={store} title={`TODO: owner to add the real ${store} link`} className="px-4 py-2 rounded-lg border border-white/25 text-[13px] font-semibold text-white/80 hover:text-white hover:border-white/50 transition">
+                  {store}
+                </button>
               ))}
             </div>
           </div>
-
-          {[
-            { title: "Product", links: [
-              ["AI Transcription", () => goFeature("ai-transcription")],
-              ["Speaker Detection", () => goFeature("speaker-detection")],
-              ["Transcript Editor", () => goFeature("editor")],
-              ["AI Translation", () => goFeature("translation")],
-              ["Export Center", () => goFeature("share")],
-              ["Pricing", () => goToPage("pricing")],
-            ]},
-            { title: "Features", links: [
-              ["Multi-language", () => goFeature("multi-language")],
-              ["Smart Summary", () => goFeature("summary")],
-              ["Key Moments", () => goFeature("key-moments")],
-              ["Speaking Statistics", () => goFeature("statistics")],
-              ["Link Transcription", () => goFeature("link-import")],
-              ["Files and Folders", () => goFeature("files-folders")],
-            ]},
-            { title: "Resources", links: [
-              ["Blog", () => goToPage("res:blog")],
-              ["Help Center", () => goToPage("info:help")],
-              ["Tutorials", () => goToPage("res:tutorials")],
-              ["Use Cases", () => goToPage("res:usecases")],
-              ["Supported Languages", () => goToPage("languages")],
-              ["Changelog", () => goToPage("changelog")],
-              ["Reports & Guides", () => goToPage("res:guides")],
-            ]},
-            { title: "About", links: [
-              ["Company", () => goToPage("about")],
-              ["Security & Privacy", () => goToPage("info:security")],
-              ["Our Human Reviewers", () => goToPage("reviewers")],
-              ["Contact", () => goToPage("contact")],
-              ["Careers", () => goToPage("careers")],
-              ["Terms and Privacy", () => goToPage("legal")],
-            ]},
-          ].map((col) => (
-            <div key={col.title}>
-              <p className="text-[10px] font-black tracking-[0.14em] text-white/90 uppercase mb-3">{col.title}</p>
-              <div className="space-y-2">
-                {col.links.map(([label, fn]) => (
-                  <button key={label} onClick={fn} className="block text-xs text-white/60 hover:text-white transition-colors">
+          {SPEC_DATA.footer.columns.map(([title, links]) => (
+            <div key={title}>
+              <p className="text-[15px] font-bold text-white mb-4">{title}</p>
+              <div className="space-y-2.5">
+                {links.map(([label, route]) => (
+                  <button key={label} onClick={() => (route.startsWith("feat:") ? goFeature(route.slice(5)) : goToPage(route))} className="block text-[13.5px] text-white/60 hover:text-white transition-colors">
                     {label}
                   </button>
                 ))}
@@ -1178,25 +1080,21 @@ export default function LandingScreen({ onStart }) {
             </div>
           ))}
         </div>
-
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
-          <p className="text-xs text-white/50">
-            © {new Date().getFullYear()} {BRAND.name} — {BRAND.tagline}
+          <p className="text-[13px] text-white/50">
+            © {new Date().getFullYear()} {BRAND.name}.{" "}
+            <button onClick={() => goToPage("legal")} className="hover:text-white transition">Terms</button>
+            {" · "}
+            <button onClick={() => goToPage("legal")} className="hover:text-white transition">Privacy</button>
           </p>
-          <div className="flex items-center gap-4">
-            <button onClick={() => goToPage("legal")} className="text-xs text-white/50 hover:text-white transition">Terms of Service</button>
-            <button onClick={() => goToPage("legal")} className="text-xs text-white/50 hover:text-white transition">Privacy Policy</button>
+          <div className="flex items-center gap-2 text-white/70">
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"><circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17" /><path d="M12 3.5c2.5 2.3 3.8 5.2 3.8 8.5s-1.3 6.2-3.8 8.5c-2.5-2.3-3.8-5.2-3.8-8.5s1.3-6.2 3.8-8.5z" /></svg>
             {/* TODO: owner to verify — language selector is a placeholder until translations ship */}
-            <select
-              aria-label="Language"
-              defaultValue="en"
-              title="TODO: owner to verify — translations coming"
-              onChange={() => {}}
-              className="rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs px-2.5 py-1.5 focus:outline-none"
-            >
-              <option value="en" className="text-[#18123b]">English</option>
-              <option value="fr" className="text-[#18123b]">Français</option>
-              <option value="ar" className="text-[#18123b]">العربية</option>
+            <select aria-label="Language" defaultValue="en" title="TODO: owner to verify — translations coming" onChange={() => {}}
+              className="bg-transparent text-[13px] text-white/80 focus:outline-none [&>option]:text-[#18123b]">
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="ar">العربية</option>
             </select>
           </div>
         </div>
