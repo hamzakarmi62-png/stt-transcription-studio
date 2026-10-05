@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
-import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage } from "./LandingPages.jsx";
+import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServicesPage, LanguagesPage, CalculatorPage, ChangelogPage, LegalPage, CareersPage } from "./LandingPages.jsx";
+import { NAV_MENUS, BRAND } from "../siteData.js";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
   Lock, EyeOff,
@@ -13,108 +14,7 @@ const PURPLE = "#6415f5";
 
 const CONTACT_EMAIL = "hamzakarmi62@gmail.com";
 
-const NAV = [
-  {
-    label: "Product", id: "produit",
-    menu: {
-      items: [
-        { label: "Overview", desc: "The integrated cloud platform: AI + NLP transcription with a live one-click demo — no software to install.", target: "produit" },
-        { label: "AI Transcription", desc: "Acoustic models built for local dialects — Algerian, Maghrebi, Levantine — plus Modern Standard Arabic, English and French, with smooth code-switching.", slug: "ai-transcription" },
-        { label: "Advanced Translation", desc: "An instant translation engine linking transcribed texts across Arabic, French and English — preserving technical and academic terminology.", slug: "translation" },
-        { label: "Supported Applications", desc: "A direct web app, mobile apps for on-the-go recording, and an API that brings transcription into your own products.", page: "info:apps" },
-      ],
-      promo: {
-        video: "/videos/feat-multilang.mp4",
-        poster: "/videos/feat-multilang.jpg",
-        kicker: "LIVE DEMO",
-        title: "One click. Formatted text.",
-        text: "Watch audio become readable, timestamped text — right on the home page.",
-        cta: "Try it now",
-      },
-      stats: [["98%+", "accuracy"], ["<3 min", "per hour"], ["99", "languages"], ["$0", "forever"]],
-    },
-  },
-  {
-    label: "Features", id: "fonctionnalites",
-    menu: {
-      items: [
-        { label: "High Accuracy & Speed", desc: "A full hour of audio processed in under 3 minutes, at over 98% accuracy — powered by state-of-the-art deep learning.", page: "info:accuracy" },
-        { label: "Speaker Diarization", desc: "Automatic voice separation for meetings and seminars: each speaker isolated, identified and labeled for easy dialogue tracking.", slug: "speaker-detection" },
-        { label: "Difficult Dialects & Noise", desc: "Audio-enhancement technologies for heavy background noise, echoing rooms and overlapping multi-speaker recordings.", page: "info:dialects" },
-        { label: "Flexible Export Options", desc: "Word and PDF documents, plain TXT, and SRT subtitle files with precise timestamps for video.", slug: "share" },
-        { label: "Interactive Editing", desc: "Listen and read simultaneously — edit any word and the change syncs to the exact timestamp in the audio.", slug: "editor" },
-      ],
-      promo: {
-        video: "/videos/feat-editor.mp4",
-        poster: "/videos/feat-editor.jpg",
-        kicker: "PRECISION",
-        title: "Every word, exactly on time",
-        text: "98%+ accuracy at 40× real-time speed — verified word by word.",
-        cta: "See it in action",
-      },
-      stats: [["98%+", "accuracy"], ["40×", "faster"], ["12", "speakers"], ["6", "formats"]],
-    },
-  },
-  {
-    label: "Resources", id: "ressources",
-    menu: {
-      items: [
-        { label: "Help Center & User Guide", desc: "Step-by-step illustrated guides — from creating an account to exporting and sharing your transcripts.", page: "info:help" },
-        { label: "Platform Blog", desc: "Periodic articles on linguistics, AI, speech-recognition technology and the latest in NLP.", page: "info:blog" },
-        { label: "Tutorial Video Lessons", desc: "A visual library of short, focused videos on every advanced feature and control-panel tool.", page: "info:tutorials" },
-        { label: "Case Studies & Examples", desc: "Real uses: field interviews in research, broadcast and TV journalism, and content creation.", page: "info:cases" },
-      ],
-      promo: {
-        video: "/videos/feat-ask.mp4",
-        poster: "/videos/feat-ask.jpg",
-        kicker: "LEARN",
-        title: "Master every feature",
-        text: "Guides, articles and videos that turn first-time users into power users.",
-        cta: "Explore resources",
-      },
-      stats: [["4", "learning hubs"], ["24/7", "available"], ["Free", "always"], ["EN/FR/AR", "guides"]],
-    },
-  },
-  {
-    label: "About", id: "apropos",
-    menu: {
-      items: [
-        { label: "Our Story & Vision", desc: "Born to solve the challenges of researchers, journalists and creators across the Arab world and North Africa — tools that understand local dialects.", target: "apropos" },
-        { label: "Team", desc: "Experts in AI engineering, applied linguistics, software development and user experience.", page: "about" },
-        { label: "Security & Privacy", desc: "Clear commitments: encrypted audio and text in transit and at rest, never used beyond your transcription purpose.", page: "info:security" },
-        { label: "Contact Us", desc: "Direct support channels, a dedicated email, and round-the-clock issue tracking.", page: "contact" },
-      ],
-      promo: {
-        video: "/videos/hero-woman.mp4",
-        poster: "/videos/hero-woman.jpg",
-        kicker: "OUR MISSION",
-        title: "Every voice deserves to be heard",
-        text: "North-African roots, world-class speech AI.",
-        cta: "Read our story",
-      },
-      stats: [["2010s", "languages era"], ["4", "expertise areas"], ["24/7", "support"], ["100%", "private"]],
-    },
-  },
-  {
-    label: "Pricing", id: "tarifs",
-    menu: {
-      items: [
-        { label: "Free Trial", desc: "Free transcription minutes granted on registration — test transcription and translation quality on your own files first.", page: "pricing" },
-        { label: "Pro Plan (Individual)", desc: "For freelancers, researchers and journalists: monthly hour quotas, processing priority and advanced exports at a flexible price.", page: "pricing" },
-        { label: "Enterprise Plan", desc: "For corporations, universities and major media: unlimited capacity, multi-user team accounts and dedicated VIP support.", page: "contact" },
-      ],
-      promo: {
-        video: "/videos/feat-share.mp4",
-        poster: "/videos/feat-share.jpg",
-        kicker: "PRICING",
-        title: "Start free. Scale when ready.",
-        text: "Test everything on your own files — then pick the plan that fits your workload.",
-        cta: "See plans",
-      },
-      stats: [["Free", "trial minutes"], ["3", "plans"], ["VIP", "support"], ["0", "surprises"]],
-    },
-  },
-];
+const NAV = NAV_MENUS;
 
 const FAQ = [
   {
@@ -464,7 +364,7 @@ export default function LandingScreen({ onStart }) {
                 <button
                   onClick={() => (item.label === "About" ? goToPage("about") : item.label === "Pricing" ? goToPage("pricing") : goToSection(item.id))}
                   className={`text-[15px] font-medium transition-colors flex items-center gap-1 ${
-                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || (page.startsWith('info:accuracy') && item.label === 'Features') || (page.startsWith('info:') && !page.startsWith('info:accuracy') && item.label === 'Resources') || activeNav === item.id || openMenu === item.label
+                    (page === 'about' && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || (page.startsWith('info:accuracy') && item.label === 'Features') || (page.startsWith('info:') && !page.startsWith('info:accuracy') && item.label === 'Resources') || ((page === 'human' || page === 'languages' || page === 'calculator' || page === 'changelog' || page === 'legal' || page === 'careers') && item.label === 'Resources') || activeNav === item.id || openMenu === item.label
                       ? "text-[#6415f5]"
                       : "text-[#18123b]/75 hover:text-[#18123b]"
                   }`}
@@ -514,28 +414,31 @@ export default function LandingScreen({ onStart }) {
                       <div>
                         <div className="grid grid-cols-[1.25fr_340px]">
                           <div className="p-6 border-r border-[#18123b]/[0.07]">
-                            <div className="space-y-1">
-                              {item.menu.items.map((it) => (
-                                <button
-                                  key={it.label}
-                                  onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), it.anchor ? setTimeout(() => document.getElementById(it.anchor)?.scrollIntoView({ behavior: "smooth" }), 150) : window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
-                                  className="w-full flex items-center gap-3.5 text-start rounded-xl p-2.5 hover:bg-[#6415f5]/[0.06] transition group/link"
-                                >
-                                  {it.img && (
-                                    <img src={it.img} alt="" className="w-14 h-10 rounded-lg object-cover shrink-0 border border-[#18123b]/10" draggable={false} />
-                                  )}
-                                  <span className="min-w-0">
-                                    <span className="block text-[13.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
-                                      {it.label}
-                                    </span>
-                                    <span className="block text-[11.5px] text-[#4b4763] leading-snug">{it.desc}</span>
-                                  </span>
-                                  <span className="ms-auto text-[#18123b]/30 group-hover/link:text-[#6415f5] transition-colors">→</span>
-                                </button>
+                            <div className={"grid gap-6 " + (item.menu.groups.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+                              {item.menu.groups.map((group) => (
+                                <div key={group.title}>
+                                  <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-3">{group.title}</p>
+                                  <div className="space-y-1">
+                                    {group.items.map((it) => (
+                                      <button
+                                        key={it.label}
+                                        onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
+                                        className="w-full flex items-start gap-2.5 text-start rounded-xl p-2 hover:bg-[#6415f5]/[0.06] transition group/link"
+                                      >
+                                        <span className="min-w-0">
+                                          <span className="block text-[13px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
+                                            {it.label}
+                                          </span>
+                                          <span className="block text-[11px] text-[#4b4763] leading-snug">{it.desc}</span>
+                                        </span>
+                                        <span className="ms-auto mt-1 text-[#18123b]/25 group-hover/link:text-[#6415f5] transition-colors">→</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
                               ))}
                             </div>
-                          </div>
-                          <div className="relative p-0 min-h-[300px]">
+                          </div><div className="relative p-0 min-h-[300px]">
                             {item.menu.promo.video ? (
                               <video
                                 src={item.menu.promo.video}
@@ -587,6 +490,12 @@ export default function LandingScreen({ onStart }) {
       {page === "contact" && <ContactPage />}
       {page.startsWith("feat:") && <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />}
       {page.startsWith("info:") && <InfoPage slug={page.slice(5)} onStart={onStart} />}
+      {page === "human" && <HumanServicesPage onStart={onStart} />}
+      {page === "languages" && <LanguagesPage />}
+      {page === "calculator" && <CalculatorPage onStart={onStart} />}
+      {page === "changelog" && <ChangelogPage />}
+      {page === "legal" && <LegalPage />}
+      {page === "careers" && <CareersPage />}
       {page === "home" && (
       <>
       {/* ── Hero ────────────────────────────────────────────────────────── */}
@@ -799,12 +708,61 @@ export default function LandingScreen({ onStart }) {
       </>
       )}
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
-      <footer className="border-t border-[#18123b]/10">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <img src={audLogo} alt="Aud" className="h-8 w-auto" draggable={false} />
+      {/* ── Footer ── */}
+      <footer className="border-t border-[#18123b]/10 bg-white/60">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-12 grid sm:grid-cols-2 lg:grid-cols-5 gap-8">
+          <div>
+            <img src={audLogo} alt="Aud" className="h-9 w-auto mb-4" draggable={false} />
+            <p className="text-xs text-[#4b4763] leading-relaxed max-w-[220px]">{BRAND.tagline}</p>
+          </div>
+          {[
+            { title: "Product", links: [
+              ["AI Transcription", () => goFeature("ai-transcription")],
+              ["Speaker Detection", () => goFeature("speaker-detection")],
+              ["AI Translation", () => goFeature("translation")],
+              ["Export Center", () => goFeature("share")],
+              ["Pricing", () => goToPage("pricing")],
+            ]},
+            { title: "Features", links: [
+              ["Multi-language", () => goFeature("multi-language")],
+              ["Smart Editor", () => goFeature("editor")],
+              ["Smart Summary", () => goFeature("summary")],
+              ["Speaking Statistics", () => goFeature("statistics")],
+              ["Link Import", () => goFeature("link-import")],
+            ]},
+            { title: "Resources", links: [
+              ["Help Center", () => goToPage("info:help")],
+              ["Blog", () => goToPage("info:blog")],
+              ["Tutorials", () => goToPage("info:tutorials")],
+              ["Use Cases", () => goToPage("info:cases")],
+              ["Pricing Calculator", () => goToPage("calculator")],
+            ]},
+            { title: "About & Legal", links: [
+              ["Company", () => goToPage("about")],
+              ["Security & Privacy", () => goToPage("security")],
+              ["Human-Verified Services", () => goToPage("human")],
+              ["Terms & Privacy", () => goToPage("legal")],
+              ["Careers", () => goToPage("careers")],
+            ]},
+          ].map((col) => (
+            <div key={col.title}>
+              <p className="text-[10px] font-black tracking-[0.14em] text-[#18123b] uppercase mb-3">{col.title}</p>
+              <div className="space-y-2">
+                {col.links.map(([label, fn]) => (
+                  <button key={label} onClick={fn} className="block text-xs text-[#4b4763] hover:text-[#6415f5] transition-colors">
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-8 flex flex-wrap items-center justify-between gap-3 border-t border-[#18123b]/10 pt-6">
           <p className="text-xs text-[#4b4763]/70">
-            © {new Date().getFullYear()} Aud — Transcription Services · Artificial Intelligence
+            © {new Date().getFullYear()} {BRAND.name} — {BRAND.tagline}
+          </p>
+          <p className="text-xs text-[#4b4763]/70">
+            Contact: <a className="font-semibold text-[#6415f5]" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
           </p>
         </div>
       </footer>

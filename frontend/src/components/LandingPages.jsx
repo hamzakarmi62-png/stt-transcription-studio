@@ -1,5 +1,6 @@
 import { useState } from "react";
 import audLogo from "../assets/aud-logo.png";
+import { PLANS, HUMAN_SERVICES, PRICING_FAQ, SUBSCRIPTION_RULES, ALL_LANGUAGES, USE_CASES, BRAND } from "../siteData.js";
 import { Lock, EyeOff, Star, Users, Languages, Sparkles, Chart } from "./Icons.jsx";
 
 // Multi-page landing companions (About / Pricing / Contact) — Rev-style
@@ -139,21 +140,6 @@ export function AboutPage({ goHome, onStart, goTeam, goSecurity }) {
 
 /* ─────────────────────────── PRICING PAGE ─────────────────────────── */
 
-const PLANS = [
-  {
-    name: "Free", price: "$0", per: "forever",
-    tagline: "Everything Aud can do — for everyone.",
-    cta: "Try Aud for free",
-    features: ["Unlimited AI transcription (audio & video)", "Automatic speaker detection", "99 languages + AI translation", "Smart summaries & speaking statistics", "Real-time editor with version history", "Export TXT · SRT · DOCX · PDF · JSON · XML", "Read-only share links", "Folders & organization"],
-  },
-  {
-    name: "Organizations", price: "Custom", per: "tailored",
-    tagline: "For teams, universities and media rooms.",
-    cta: "Contact the team",
-    features: ["Volume transcription for many seats", "Shared folders & organization at scale", "Priority help getting set up", "Custom guidance from the founder"],
-  },
-];
-
 const PLATFORM_FEATURES = [
   "AI Transcription (audio & video)", "Speaker Detection", "Multi-language (99 languages)",
   "AI Translation", "Smart Summaries", "Speaking Statistics", "Real-time Editor",
@@ -161,86 +147,194 @@ const PLATFORM_FEATURES = [
   "Link Import (YouTube & more)", "Privacy-first storage",
 ];
 
-const PRICING_FAQ = [
-  { q: "Is it really free?", a: "Yes — every feature on this page is free, forever. No credit card, no trial timer, no hidden tier." },
-  { q: "How does multi-language transcription work?", a: "Pick up to as many languages as you like. Each language gets its own transcription pass, and the best part of every passage is kept — built for recordings that mix languages." },
-  { q: "Can I correct the transcript afterwards?", a: "Absolutely — the editor works like a word processor. Click between words to type, split paragraphs, rename speakers, and everything saves automatically." },
-  { q: "Who can see my recordings?", a: "Only you. Storage is encrypted, access is authenticated, and share links are read-only until you create them." },
-];
-
-export function PricingPage({ goHome, onStart }) {
+export function PricingPage({ goHome, onStart, goPage }) {
+  const [cycle, setCycle] = useState("monthly"); // monthly | annual (annual = 2 months free)
   const [openFaq, setOpenFaq] = useState(null);
+
+  const price = (p) => {
+    if (p.monthly === null) return "Custom";
+    return "$" + (cycle === "annual" ? p.annual : p.monthly);
+  };
+
   return (
     <div>
       <PageHero
         kicker="Pricing"
-        title={<>One Simple Price: <span style={{ color: PURPLE }}>Free</span></>}
-        sub="All the features, for everyone, without a credit card. If your organization needs more, we tailor it."
+        title={<>Pricing Plans For <span style={{ color: PURPLE }}>Every Voice</span></>}
+        sub="Subscribe to Aud's AI studio — or order human-verified services per minute. All numbers below are placeholders the owner will finalize."
       />
 
-      {/* plans */}
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-14 grid md:grid-cols-2 gap-5">
-        {PLANS.map((plan) => (
-          <div key={plan.name} className="rounded-[26px] bg-white border-[1.5px] border-[#6415f5]/40 shadow-xl shadow-[#6415f5]/10 p-8">
-            <div className="flex items-baseline justify-between">
-              <h3 className="font-semibold text-[#18123b]">{plan.name}</h3>
-              <div className="text-right">
-                <span className="text-4xl font-extrabold tracking-tight text-[#18123b]">{plan.price}</span>
-                <span className="block text-[11px] font-semibold text-[#4b4763]">{plan.per}</span>
-              </div>
+      {/* rating-style header strip */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 -mt-6 pb-2">
+        <p className="text-center text-[13px] font-semibold text-[#4b4763]">
+          “The fastest way to turn speech into text — in any language.”
+        </p>
+      </div>
+
+      {/* cycle toggle */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-8 flex justify-center">
+        <div className="inline-flex items-center rounded-full border border-[#18123b]/15 bg-white p-1">
+          <button
+            onClick={() => setCycle("monthly")}
+            className={`px-5 py-2 rounded-full text-xs font-bold transition ${cycle === "monthly" ? "bg-[#6415f5] text-white" : "text-[#4b4763] hover:text-[#18123b]"}`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setCycle("annual")}
+            className={`px-5 py-2 rounded-full text-xs font-bold transition flex items-center gap-1.5 ${cycle === "annual" ? "bg-[#6415f5] text-white" : "text-[#4b4763] hover:text-[#18123b]"}`}
+          >
+            Annual
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black ${cycle === "annual" ? "bg-white text-[#6415f5]" : "bg-[#6415f5] text-white"}`}>
+              2 months free
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* plan cards */}
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-14 grid md:grid-cols-2 xl:grid-cols-4 gap-5">
+        {PLANS.map((p) => (
+          <div
+            key={p.id}
+            className={`relative rounded-[26px] p-7 flex flex-col ${
+              p.popular
+                ? "bg-[#18123b] text-white shadow-2xl shadow-[#6415f5]/30 xl:-my-4 xl:py-11"
+                : "bg-white border-[1.5px] border-[#18123b]/10 shadow-sm"
+            }`}
+          >
+            {p.popular && (
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full bg-[#6415f5] text-white text-[10px] font-black tracking-wide uppercase whitespace-nowrap">
+                Most Popular
+              </span>
+            )}
+            <h3 className={`font-semibold text-lg ${p.popular ? "text-white" : "text-[#18123b]"}`}>{p.name}</h3>
+            <div className="mt-3 flex items-baseline gap-1.5">
+              <span className={`text-4xl font-extrabold tracking-tight ${p.popular ? "text-white" : "text-[#18123b]"}`}>
+                {price(p)}
+              </span>
+              {p.monthly !== null && (
+                <span className={`text-xs font-semibold ${p.popular ? "text-white/60" : "text-[#4b4763]"}`}>per seat/month</span>
+              )}
             </div>
-            <p className="mt-2 text-sm text-[#4b4763]">{plan.tagline}</p>
-            <ul className="mt-6 space-y-2.5">
-              {plan.features.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm text-[#18123b]/85">
-                  <span className="mt-0.5 w-5 h-5 rounded-full bg-[#6415f5]/[0.08] border border-[#6415f5]/25 text-[#6415f5] flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-                  {f}
+            {cycle === "annual" && p.monthly !== null && p.monthly > 0 && (
+              <p className={`mt-1 text-[11px] font-semibold ${p.popular ? "text-emerald-300" : "text-emerald-500"}`}>
+                2 months free · ${(p.annual * 12).toFixed(2)} billed annually
+              </p>
+            )}
+            <ul className="mt-6 space-y-2.5 flex-1">
+              {[
+                [`${p.minutes} AI transcription minutes / month`],
+                [`Max file length: ${p.maxLen}`],
+                [`Languages: ${p.langs}`],
+                [`Speaker detection: ${p.speakers}`],
+                [`AI translation: ${p.translation}`],
+                [`Exports: ${p.exports.join(", ")}`],
+                [`Transcript editor: ${p.editor}`],
+                [`Human-verified discount: ${p.humanDiscount}`],
+                [`Team seats: ${p.seats}`],
+                [`Support: ${p.support}`],
+                [`API access: ${p.api ? "Yes" : "No"}`],
+              ].map(([row]) => (
+                <li key={row} className={`flex items-start gap-2 text-[13px] ${p.popular ? "text-white/90" : "text-[#4b4763]"}`}>
+                  <span className={`mt-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 ${p.popular ? "bg-white/20 text-white" : "bg-[#6415f5]/[0.08] text-[#6415f5]"}`}>✓</span>
+                  {row}
                 </li>
               ))}
             </ul>
             <button
-              onClick={plan.name === "Free" ? onStart : undefined}
-              className="mt-8 w-full py-3.5 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
+              onClick={p.id === "free" ? onStart : undefined}
+              className={`mt-7 w-full py-3 rounded-xl font-bold transition ${
+                p.popular
+                  ? "bg-[#6415f5] text-white hover:bg-[#5311cf] shadow-lg shadow-[#6415f5]/30"
+                  : "bg-[#6415f5]/[0.08] text-[#6415f5] border border-[#6415f5]/30 hover:bg-[#6415f5] hover:text-white"
+              }`}
             >
-              {plan.cta}
+              {p.id === "business" ? "Talk To A Specialist" : p.id === "free" ? "Get Started" : "Get Started"}
             </button>
-            {plan.name !== "Free" && (
-              <p className="mt-3 text-center text-[11px] text-[#4b4763]">
-                Write to <a className="font-bold text-[#6415f5]" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+            {p.id === "business" && (
+              <p className="mt-2 text-center text-[11px] text-[#4b4763]">
+                Write to <a className="font-bold text-[#6415f5]" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
               </p>
             )}
           </div>
         ))}
       </div>
 
+      {/* subscription rules */}
+      <p className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10 text-center text-[11px] text-[#4b4763]">
+        {SUBSCRIPTION_RULES}
+      </p>
+
       {/* comparison table */}
-      <SectionCard>
-        <div className="p-8">
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-14">
+        <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
           <h2 className="text-2xl font-semibold text-[#18123b] mb-6">Compare Our Plans</h2>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[640px]">
               <thead>
-                <tr className="text-start">
-                  <th className="text-start py-3 px-4 font-black text-[#18123b]">Platform Features</th>
-                  <th className="py-3 px-4 font-black text-[#6415f5]">Free</th>
-                  <th className="py-3 px-4 font-black text-[#4b4763]">Organizations</th>
+                <tr>
+                  <th className="text-start py-3 px-4 font-black text-[#18123b]">Feature</th>
+                  {PLANS.map((p) => (
+                    <th key={p.id} className={`py-3 px-4 font-black ${p.popular ? "text-[#6415f5]" : "text-[#18123b]"}`}>{p.name}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {PLATFORM_FEATURES.map((f) => (
-                  <tr key={f} className="border-t border-[#18123b]/[0.07]">
-                    <td className="py-3 px-4 text-[#4b4763]">{f}</td>
-                    <td className="py-3 px-4 text-center text-emerald-500 font-bold">✓</td>
-                    <td className="py-3 px-4 text-center text-emerald-500 font-bold">✓</td>
+                {[
+                  ["AI transcription minutes / month", "minutes"],
+                  ["Max file length", "maxLen"],
+                  ["Languages", "langs"],
+                  ["Speaker detection", "speakers"],
+                  ["AI translation", "translation"],
+                  ["Transcript editor", "editor"],
+                  ["Human-verified discount", "humanDiscount"],
+                  ["Team seats", "seats"],
+                  ["Support", "support"],
+                  ["API access", "apiText"],
+                ].map(([label, key]) => (
+                  <tr key={key} className="border-t border-[#18123b]/[0.07]">
+                    <td className="py-3 px-4 text-[#4b4763]">{label}</td>
+                    {PLANS.map((p) => {
+                      const val = key === "apiText" ? (p.api ? "Yes" : "No") : p[key];
+                      return <td key={p.id} className="py-3 px-4 text-center text-[#18123b] font-medium">{val}</td>;
+                    })}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
-      </SectionCard>
+      </div>
 
-      {/* subscription FAQ */}
+      {/* human-verified services price list */}
+      <div className="max-w-[1100px] mx-auto px-5 sm:px-8 pb-14">
+        <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
+          <h2 className="text-2xl font-semibold text-[#18123b]">Human-Verified Services</h2>
+          <p className="text-sm text-[#4b4763] mt-2 mb-6">
+            Per-minute add-on available with any plan — a professional reviews the AI output.
+          </p>
+          <div className="divide-y divide-[#18123b]/[0.07]">
+            {HUMAN_SERVICES.map((svc) => (
+              <div key={svc.name} className="py-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-[#18123b] text-sm">{svc.name}</p>
+                  <p className="text-xs text-[#4b4763] mt-0.5">{svc.desc}</p>
+                </div>
+                <div className="text-end">
+                  <span className="text-lg font-extrabold text-[#6415f5]">{svc.price}</span>
+                  <span className="block text-[10px] text-[#4b4763]">{svc.unit}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-[11px] text-[#4b4763]">
+            Prices are placeholders — the owner finalizes them based on real reviewer and API costs.
+          </p>
+        </div>
+      </div>
+
+      {/* FAQ */}
       <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16">
         <h2 className="text-3xl font-semibold text-[#18123b] text-center">Subscription FAQ</h2>
         <div className="mt-8 space-y-3">
@@ -248,10 +342,10 @@ export function PricingPage({ goHome, onStart }) {
             <div key={i} className="rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm">
               <button
                 onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                className="w-full flex items-center justify-between gap-4 cursor-pointer list-none px-6 py-4 font-semibold text-[#18123b] text-start"
+                className="w-full flex items-center justify-between gap-4 px-6 py-4 font-semibold text-[#18123b] text-start"
               >
                 {item.q}
-                <span className="shrink-0 w-7 h-7 rounded-full border border-[#18123b]/15 flex items-center justify-center text-[#18123b]/60">{openFaq === i ? "−" : "+"}</span>
+                <span className={`shrink-0 w-7 h-7 rounded-full border border-[#18123b]/15 flex items-center justify-center text-[#18123b]/60 ${openFaq === i ? "rotate-45 border-[#6415f5] text-[#6415f5]" : ""} transition-transform`}>+</span>
               </button>
               {openFaq === i && <p className="px-6 pb-5 text-sm text-[#4b4763] leading-relaxed">{item.a}</p>}
             </div>
@@ -889,6 +983,230 @@ export function InfoPage({ slug, onStart }) {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ─────── DATA-DRIVEN PAGES (human / languages / calculator / changelog / legal / careers) ─────── */
+
+export function HumanServicesPage({ onStart }) {
+  return (
+    <div>
+      <PageHero
+        kicker="Human-Verified Services"
+        title={<>When It Matters, <span style={{ color: PURPLE }}>A Human Checks It.</span></>}
+        sub="Add professional human review to any plan — per minute, on demand. A specialist corrects, verifies and signs off the AI output."
+      />
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10 grid md:grid-cols-2 gap-5">
+        {HUMAN_SERVICES.map((svc) => (
+          <div key={svc.name} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
+            <div className="flex items-center justify-between gap-4">
+              <h3 className="font-semibold text-[#18123b] text-lg pr-4">{svc.name}</h3>
+              <div className="text-end shrink-0">
+                <span className="text-2xl font-extrabold text-[#6415f5]">{svc.price}</span>
+                <span className="block text-[10px] text-[#4b4763]">{svc.unit}</span>
+              </div>
+            </div>
+            <p className="mt-3 text-sm text-[#4b4763] leading-relaxed">{svc.desc}</p>
+          </div>
+        ))}
+      </div>
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <div className="rounded-[26px] bg-[#18123b] p-8 sm:p-10">
+          <h2 className="text-2xl font-semibold text-white">How it works</h2>
+          <div className="mt-7 grid sm:grid-cols-3 gap-5">
+            {[
+              ["Order", "Pick the service and send your transcript or recording from the studio."],
+              ["A specialist works", "A professional reviewer or translator checks the output against the audio."],
+              ["Verified delivery", "You receive the human-signed version — ready for courts, publishers and archives."],
+            ].map(([t, d], i) => (
+              <div key={t} className="relative rounded-2xl bg-white/[0.06] border border-white/10 p-6">
+                <span className="absolute -top-4 left-5 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">{i + 1}</span>
+                <h3 className="mt-3 font-semibold text-white">{t}</h3>
+                <p className="mt-2 text-sm text-white/70 leading-relaxed">{d}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-[12px] text-white/60">
+            Order by email: <a className="font-bold text-white underline" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function LanguagesPage() {
+  return (
+    <div>
+      <PageHero
+        kicker="Supported Languages"
+        title={<><span style={{ color: PURPLE }}>99 Languages</span>, One Studio</>}
+        sub="Every language below is supported for transcription. Translation follows the same list — and auto-detect picks the language for you."
+      />
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+          {ALL_LANGUAGES.map((l) => (
+            <div key={l.value} className="flex items-center gap-2.5 py-1.5 border-b border-[#18123b]/[0.05]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#6415f5]" />
+              <span className="text-sm text-[#18123b]">{l.label}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-6 text-center text-sm text-[#4b4763]">
+          Mixed recordings? Select several languages in the studio — every language gets its own pass.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export function CalculatorPage({ onStart }) {
+  const [minutes, setMinutes] = useState(120);
+  const [planId, setPlan] = useState("starter");
+  const [humanMinutes, setHumanMinutes] = useState(0);
+  const plan = PLANS.find((p) => p.id === planId);
+  const monthly = plan.monthly === null ? null : plan.monthly;
+  const humanCost = humanMinutes * 1.0;
+  const quota = parseInt(String(plan.minutes).replace(/[^0-9]/g, "") || "0", 10);
+  const over = Math.max(0, minutes - quota);
+  return (
+    <div>
+      <PageHero
+        kicker="Pricing Calculator"
+        title={<>See Exactly What You'd <span style={{ color: PURPLE }}>Pay</span></>}
+        sub="Move the sliders — the estimate updates live. All plan prices are placeholders the owner will finalize."
+      />
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16">
+        <div className="rounded-[26px] bg-white border-[1.5px] border-[#6415f5]/30 shadow-xl shadow-[#6415f5]/10 p-8">
+          <label className="block text-xs font-bold text-slate-700 mb-2">Minutes you transcribe per month: <span className="text-[#6415f5]">{minutes}</span></label>
+          <input type="range" min={10} max={2400} step={10} value={minutes} onChange={(e) => setMinutes(Number(e.target.value))} className="w-full accent-[#6415f5]" />
+          <label className="block text-xs font-bold text-slate-700 mt-6 mb-2">Plan</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {PLANS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPlan(p.id)}
+                className={`px-3 py-2.5 rounded-xl text-xs font-bold border transition ${plan === p.id ? "bg-[#6415f5] text-white border-[#6415f5]" : "border-[#18123b]/15 text-[#4b4763] hover:border-[#6415f5]/40"}`}
+              >
+                {p.name}
+              </button>
+            ))}
+          </div>
+          <label className="block text-xs font-bold text-slate-700 mt-6 mb-2">Human-verified review minutes: <span className="text-[#6415f5]">{humanMinutes}</span></label>
+          <input type="range" min={0} max={600} step={10} value={humanMinutes} onChange={(e) => setHumanMinutes(Number(e.target.value))} className="w-full accent-[#6415f5]" />
+
+          <div className="mt-8 rounded-2xl bg-[#f6f3ed] border border-[#18123b]/10 p-6">
+            <div className="flex flex-wrap justify-between gap-3 text-sm">
+              <span className="text-[#4b4763]">{plan.name} plan (monthly)</span>
+              <span className="font-bold text-[#18123b]">{monthly === null ? "Custom" : "$" + monthly.toFixed(2)}</span>
+            </div>
+            <div className="flex flex-wrap justify-between gap-3 text-sm mt-2">
+              <span className="text-[#4b4763]">Human review ({humanMinutes} min × $1.00)</span>
+              <span className="font-bold text-[#18123b]">${humanCost.toFixed(2)}</span>
+            </div>
+            <div className="flex flex-wrap justify-between gap-3 text-sm mt-2">
+              <span className="text-[#4b4763]">Extra minutes beyond the plan</span>
+              <span className="font-bold text-[#18123b]">{over > 0 ? over + " min" : "none"}</span>
+            </div>
+            <div className="border-t border-[#18123b]/10 mt-4 pt-4 flex flex-wrap justify-between gap-3">
+              <span className="font-black text-[#18123b]">Estimated monthly total</span>
+              <span className="font-black text-2xl text-[#6415f5]">{monthly === null ? "Custom" : "$" + (monthly + humanCost).toFixed(2)}</span>
+            </div>
+            <p className="mt-3 text-[10px] text-[#4b4763]">Estimate only — final prices are set by the owner.</p>
+          </div>
+          <button onClick={onStart} className="mt-6 w-full py-3.5 rounded-xl bg-[#6415f5] text-white font-bold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+            Try Aud for free
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function ChangelogPage() {
+  const entries = [
+    { date: "October 2026", title: "Multi-language transcription", text: "Choose several languages at once — each gets its own transcription pass and the best part of every passage is kept." },
+    { date: "October 2026", title: "Human-verified services", text: "Add professional human review to transcription, translation and subtitles — per minute, on demand." },
+    { date: "October 2026", title: "New pricing plans", text: "Free, Starter, Pro and Business tiers with a monthly/annual toggle and a full comparison table." },
+    { date: "October 2026", title: "99 languages", text: "The language picker now covers every language the engine supports — with auto-detect." },
+    { date: "October 2026", title: "A bigger website", text: "Feature pages, About, Pricing, Contact and a rich multi-page navigation." },
+  ];
+  return (
+    <div>
+      <PageHero kicker="Changelog" title={<>Product <span style={{ color: PURPLE }}>Updates</span></>} sub="Every improvement to the studio, newest first." />
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16 space-y-4">
+        {entries.map((e, i) => (
+          <div key={i} className="rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm p-6 flex gap-5">
+            <span className="shrink-0 text-[11px] font-black text-[#6415f5] uppercase w-28 pt-1">{e.date}</span>
+            <div>
+              <p className="font-semibold text-[#18123b]">{e.title}</p>
+              <p className="text-sm text-[#4b4763] mt-1 leading-relaxed">{e.text}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function LegalPage() {
+  return (
+    <div>
+      <PageHero
+        kicker="Terms & Privacy Policy"
+        title={<>Legal, In <span style={{ color: PURPLE }}>Plain Language</span></>}
+        sub="The short version of how Aud handles your data and your rights."
+      />
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16 space-y-5">
+        {[
+          ["Your recordings are yours", "Audio and transcripts are stored encrypted, accessible only to your account, and never sold or shared. They are never used to train third-party models without your explicit consent."],
+          ["Deletion is real", "Deleting a session removes its audio, transcript and metadata from active storage. Bulk deletion is honored completely."],
+          ["Share links are read-only", "A share link exposes only that transcript and its playback — never your account, other files or personal data."],
+          ["Human review confidentiality", "Human-verified services are performed under confidentiality: reviewers see only the file being reviewed and cannot keep or share it."],
+          ["Subscriptions", "Plans can be canceled at any time. Monthly allowances reset each cycle. Prices shown on the pricing page are finalized by the owner."],
+          ["Contact", "For any legal or privacy question: " + BRAND.email],
+        ].map(([h, p]) => (
+          <div key={h} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-7">
+            <h3 className="font-semibold text-[#18123b]">{h}</h3>
+            <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{p}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function CareersPage() {
+  return (
+    <div>
+      <PageHero
+        kicker="Careers"
+        title={<>Build The Studio <span style={{ color: PURPLE }}>With Us</span></>}
+        sub="Aud is a small, focused team building speech tools for languages the industry forgot. We hire people who use what they build."
+      />
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16 space-y-4">
+        {[
+          ["Speech AI Engineer", "Fine-tune recognition models for dialects and noisy field audio."],
+          ["Applied Linguist (Arabic dialects)", "Review, annotate and shape how the models hear Maghrebi and Levantine speech."],
+          ["Full-stack Developer (React/FastAPI)", "Build the studio: editor, pipelines, sharing."],
+          ["UX Designer", "Make hour-long editing feel effortless."],
+        ].map(([role, desc]) => (
+          <div key={role} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-7 flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-[#18123b]">{role}</h3>
+              <p className="text-sm text-[#4b4763] mt-1">{desc}</p>
+            </div>
+            <a href={"mailto:" + BRAND.email + "?subject=" + encodeURIComponent("Aud — " + role)} className="px-5 py-2.5 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold text-sm hover:bg-[#6415f5]/[0.06] transition">
+              Apply
+            </a>
+          </div>
+        ))}
+        <p className="text-center text-sm text-[#4b4763] pt-4">
+          No open role fits? Write to <a className="font-bold text-[#6415f5]" href={"mailto:" + BRAND.email}>{BRAND.email}</a> anyway — the best hires rarely check a box.
+        </p>
       </div>
     </div>
   );
