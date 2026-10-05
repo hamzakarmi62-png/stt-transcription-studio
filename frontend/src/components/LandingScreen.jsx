@@ -315,6 +315,8 @@ export default function LandingScreen({ onStart }) {
     window.scrollTo({ top: 0, behavior: "instant" });
   };
 
+  const menuData = (item) => item.menu || (item.groups ? { groups: item.groups, promo: item.promo, stats: item.stats } : null);
+
   const goFeature = (slug) => {
     setOpenMenu(null);
     setPage("feat:" + slug);
@@ -360,7 +362,7 @@ export default function LandingScreen({ onStart }) {
 
           <nav className="hidden lg:flex items-center gap-7" onMouseLeave={scheduleClose}>
             {NAV.map((item) => (
-              <div key={item.label} className="relative" onMouseEnter={() => item.menu && openWith(item.label)}>
+              <div key={item.label} className="relative" onMouseEnter={() => menuData(item) && openWith(item.label)}>
                 <button
                   aria-haspopup={item.menu ? "true" : undefined}
                   aria-expanded={item.menu ? openMenu === item.label : undefined}
@@ -376,7 +378,7 @@ export default function LandingScreen({ onStart }) {
                   }`}
                 >
                   {item.label}
-                  {item.menu && (
+                  {menuData(item) && (
                     <svg viewBox="0 0 24 24" className={`w-3 h-3 transition-transform ${openMenu === item.label ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M19 9l-7 7-7-7" />
                     </svg>
@@ -415,13 +417,13 @@ export default function LandingScreen({ onStart }) {
                 <div className="mt-2 rounded-3xl bg-white border border-[#18123b]/10 shadow-2xl shadow-[#18123b]/15 overflow-hidden">
                   {(() => {
                     const item = NAV.find((n) => n.label === openMenu);
-                    if (!item || !item.menu) return null;
+                    if (!item || !menuData(item)) return null;
                     return (
                       <div>
                         <div className="grid grid-cols-[1.25fr_340px]">
                           <div className="p-6 border-r border-[#18123b]/[0.07]">
-                            <div className={"grid gap-6 " + (item.menu.groups.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
-                              {item.menu.groups.map((group) => (
+                            <div className={"grid gap-6 " + (menuData(item).groups.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
+                              {menuData(item).groups.map((group) => (
                                 <div key={group.title}>
                                   <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-3">{group.title}</p>
                                   <div className="space-y-1">
@@ -445,10 +447,10 @@ export default function LandingScreen({ onStart }) {
                               ))}
                             </div>
                           </div><div className="relative p-0 min-h-[300px]">
-                            {item.menu.promo.video ? (
+                            {menuData(item).promo.video ? (
                               <video
-                                src={item.menu.promo.video}
-                                poster={item.menu.promo.poster}
+                                src={menuData(item).promo.video}
+                                poster={menuData(item).promo.poster}
                                 autoPlay muted loop playsInline
                                 className="absolute inset-0 w-full h-full object-cover"
                               />
@@ -457,23 +459,23 @@ export default function LandingScreen({ onStart }) {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/95 via-[#12101f]/55 to-transparent" />
                             <div className="relative h-full flex flex-col justify-end p-6 text-white">
-                              {item.menu.promo.kicker && (
-                                <p className="text-[9px] font-black tracking-[0.16em] text-[#c4b5fd] uppercase">{item.menu.promo.kicker}</p>
+                              {menuData(item).promo.kicker && (
+                                <p className="text-[9px] font-black tracking-[0.16em] text-[#c4b5fd] uppercase">{menuData(item).promo.kicker}</p>
                               )}
-                              <p className="text-[15px] font-bold leading-snug mt-1">{item.menu.promo.title}</p>
-                              <p className="text-[11.5px] text-white/80 mt-1.5 leading-relaxed">{item.menu.promo.text}</p>
+                              <p className="text-[15px] font-bold leading-snug mt-1">{menuData(item).promo.title}</p>
+                              <p className="text-[11.5px] text-white/80 mt-1.5 leading-relaxed">{menuData(item).promo.text}</p>
                               <button
                                 onClick={onStart}
                                 className="mt-4 self-start px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12px] font-semibold hover:bg-[#5311cf] transition"
                               >
-                                {item.menu.promo.cta}
+                                {menuData(item).promo.cta}
                               </button>
                             </div>
                           </div>
                         </div>
-                        {item.menu.stats && (
+                        {menuData(item).stats && (
                           <div className="grid grid-cols-4 border-t border-[#18123b]/[0.07] bg-[#f6f3ed]">
-                            {item.menu.stats.map(([n, label]) => (
+                            {menuData(item).stats.map(([n, label]) => (
                               <div key={label} className="py-3.5 text-center border-r border-[#18123b]/[0.05] last:border-r-0">
                                 <span className="text-lg font-extrabold text-[#18123b]">{n}</span>
                                 <span className="ms-1.5 text-[11px] font-semibold text-[#4b4763]">{label}</span>
