@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import audLogo from "../assets/aud-logo.png";
-import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServicesPage, LanguagesPage, CalculatorPage, ChangelogPage, LegalPage, CareersPage, ServicePage, AudiencePage, ListingPage, TeamPage, PressPage, FreelancersPage, PartnersPage, LocationsPage } from "./LandingPages.jsx";
-import { NAV_MENUS, BRAND } from "../siteData.js";
+import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServicesPage, LanguagesPage, CalculatorPage, ChangelogPage, LegalPage, CareersPage, ServicePage, AudiencePage, ListingPage, TeamPage, PressPage, FreelancersPage, PartnersPage, LocationsPage, UseCasesPage, ReviewersPage } from "./LandingPages.jsx";
+import { NAV_MENUS, BRAND, PLANS, USE_CASES } from "../siteData.js";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
   Lock, EyeOff,
@@ -15,6 +15,27 @@ const PURPLE = "#6415f5";
 const CONTACT_EMAIL = "hamzakarmi62@gmail.com";
 
 const NAV = NAV_MENUS;
+
+// Flatten every routable item of a dropdown (for the mobile accordion).
+function collectItems(item) {
+  const out = [];
+  for (const col of item.columns || []) {
+    if (col.items) out.push(...col.items);
+    if (col.grid2x2) for (const g of col.grid2x2) out.push(...g.items);
+  }
+  return out;
+}
+
+// Status badge: New/Beta = purple pill · Planned = amber pill.
+function StatusBadge({ kind }) {
+  if (!kind) return null;
+  const planned = kind === "Planned";
+  return (
+    <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-black tracking-wide uppercase ${planned ? "bg-amber-100 text-amber-800" : "bg-[#6415f5] text-white"}`}>
+      {kind}
+    </span>
+  );
+}
 
 const FAQ = [
   {
@@ -58,6 +79,11 @@ const STEPS = [
   { n: "2", title: "The AI works", text: "Transcription, speakers and language detected automatically in minutes." },
   { n: "3", title: "Edit and export", text: "Fix the text, name the speakers, then export in your favorite format." },
 ];
+
+// Trust bar stats — [CONFIRMED product facts]
+const TRUST_STATS = [["99", "languages"], ["12", "speakers"], ["6", "export formats"], ["$0", "free plan"]];
+// TODO: owner to verify — replace with real customer logos when available.
+const PLACEHOLDER_LOGOS = ["UNIVERSITY", "NEWSROOM", "LAW FIRM", "PODCAST STUDIO", "RESEARCH LAB"];
 
 function CursorIcon({ className }) {
   return (
@@ -290,9 +316,9 @@ function HeroDemo() {
 }
 
 export default function LandingScreen({ onStart }) {
-  const [activeNav, setActiveNav] = useState(null);
   const [openMenu, setOpenMenu] = useState(null);
-  const [page, setPage] = useState("home"); // home | about | pricing | contact
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [page, setPage] = useState("home"); // home | about | pricing | contact | feat:* | svc:* | aud:* | res:* | info:* | ...
   const closeTimer = useRef(null);
 
   const goToSection = (id) => {
@@ -300,27 +326,43 @@ export default function LandingScreen({ onStart }) {
     if (page !== "home") {
       setPage("home");
       setTimeout(() => {
-        setActiveNav(id);
         document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 120);
       return;
     }
-    setActiveNav(id);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const goToPage = (pg) => {
     setOpenMenu(null);
+    setMobileOpen(false);
     setPage(pg);
     window.scrollTo({ top: 0, behavior: "instant" });
   };
 
-  const menuData = (item) => item.menu || (item.groups ? { groups: item.groups, promo: item.promo, stats: item.stats } : null);
-
   const goFeature = (slug) => {
     setOpenMenu(null);
+    setMobileOpen(false);
     setPage("feat:" + slug);
     window.scrollTo({ top: 0, behavior: "instant" });
+  };
+
+  // Cross-page links inside page components (About, Audience, Service…)
+  useEffect(() => {
+    window.__goTeam = () => goToPage("team");
+    window.__goSecurity = () => goToPage("info:security");
+    window.__goPricing = () => goToPage("pricing");
+    window.__goFeature = (k) => goFeature(k);
+    window.__goSvc = (k) => goToPage("svc:" + k);
+    window.__goPage = (p) => goToPage(p);
+  }, []);
+
+  const navFromItem = (it) => {
+    if (!it) return;
+    if (it.slug) goFeature(it.slug);
+    else if (it.svc) goToPage("svc:" + it.svc);
+    else if (it.page) goToPage(it.page);
+    else if (it.target) goToSection(it.target);
   };
 
   // Desktop mega-menu: opens on hover, closes on leaving the header area
@@ -332,6 +374,24 @@ export default function LandingScreen({ onStart }) {
     if (closeTimer.current) clearTimeout(closeTimer.current);
     closeTimer.current = setTimeout(() => setOpenMenu(null), 180);
   };
+
+  // Which nav item is highlighted for the current page
+  const navActive = (label) => {
+    if (label === "Product") return page.startsWith("feat:") || page.startsWith("svc:");
+    if (label === "Features") return page.startsWith("aud:") || page === "human";
+    if (label === "Resources") return page.startsWith("res:") || page.startsWith("info:") || ["languages", "calculator", "changelog"].includes(page);
+    if (label === "About") return ["about", "team", "press", "freelancers", "partners", "reviewers", "legal", "careers"].includes(page);
+    if (label === "Pricing") return page === "pricing";
+    return false;
+  };
+
+  // Split a column's items into `n` sub-columns (Product → AI platform, 9 items).
+  const subCols = (items, n) => {
+    const half = Math.ceil(items.length / n);
+    return Array.from({ length: n }, (_, i) => items.slice(i * half, (i + 1) * half)).filter((a) => a.length);
+  };
+
+  const openNavItem = NAV.find((n) => n.label === openMenu);
 
   return (
     <div
@@ -353,32 +413,33 @@ export default function LandingScreen({ onStart }) {
         .demo-pulse {animation: demoPulse 1.4s ease-in-out infinite}
       `}</style>
 
-      {/* ── Nav ─────────────────────────────────────────────────────────── */}
+      {/* ── Header ──────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 bg-[#f6f3ed]/95 backdrop-blur border-b border-[#18123b]/[0.06]">
-        <div className="max-w-[1400px] mx-auto flex items-center gap-8 px-5 sm:px-8 h-[76px]">
-          <button onClick={onStart} className="shrink-0" aria-label="Aud — home">
+        <div className="max-w-[1400px] mx-auto flex items-center gap-6 px-5 sm:px-8 h-[76px]">
+          <button onClick={() => goToPage("home")} className="shrink-0" aria-label="Aud — home">
             <img src={audLogo} alt="Aud" className="h-10 w-auto" draggable={false} />
           </button>
 
-          <nav className="hidden lg:flex items-center gap-7" onMouseLeave={scheduleClose}>
+          {/* Desktop nav */}
+          <nav className="hidden lg:flex items-center gap-6" onMouseLeave={scheduleClose} aria-label="Main">
             {NAV.map((item) => (
-              <div key={item.label} className="relative" onMouseEnter={() => menuData(item) && openWith(item.label)}>
+              <div key={item.label} className="relative" onMouseEnter={() => item.columns && openWith(item.label)}>
                 <button
-                  aria-haspopup={item.menu ? "true" : undefined}
-                  aria-expanded={item.menu ? openMenu === item.label : undefined}
+                  aria-haspopup={item.columns ? "true" : undefined}
+                  aria-expanded={item.columns ? openMenu === item.label : undefined}
                   onKeyDown={(e) => {
-                    if (e.key === "Escape") { setOpenMenu(null); }
-                    if (e.key === "ArrowDown" && item.menu) { e.preventDefault(); openWith(item.label); }
+                    if (e.key === "Escape") setOpenMenu(null);
+                    if (e.key === "ArrowDown" && item.columns) { e.preventDefault(); openWith(item.label); }
                   }}
-                  onClick={() => (item.label === "About" ? goToPage("about") : item.label === "Pricing" ? goToPage("pricing") : item.menu ? openWith(item.label) : goToSection(item.id))}
-                  className={`text-[15px] font-medium transition-colors flex items-center gap-1 ${
-                    ((page === 'about' || page === 'team' || page === 'press' || page === 'freelancers' || page === 'partners' || page === 'security') && item.label === 'About') || (page === 'pricing' && item.label === 'Pricing') || (page.startsWith('feat:') && item.label === 'Product') || (page.startsWith('svc:') && item.label === 'Product') || (page.startsWith('info:accuracy') && item.label === 'Features') || (page.startsWith('info:') && !page.startsWith('info:accuracy') && item.label === 'Resources') || ((page === 'human' || page === 'languages' || page === 'calculator' || page === 'changelog' || page === 'legal' || page === 'careers' || page.startsWith('res:')) && item.label === 'Resources') || activeNav === item.id || openMenu === item.label
+                  onClick={() => (item.columns ? (openMenu === item.label ? setOpenMenu(null) : openWith(item.label)) : goToPage(item.page))}
+                  className={`text-[14px] font-medium transition-colors flex items-center gap-1 ${
+                    navActive(item.label) || openMenu === item.label
                       ? "text-[#6415f5]"
                       : "text-[#18123b]/75 hover:text-[#18123b]"
                   }`}
                 >
                   {item.label}
-                  {menuData(item) && (
+                  {item.columns && (
                     <svg viewBox="0 0 24 24" className={`w-3 h-3 transition-transform ${openMenu === item.label ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2.5">
                       <path d="M19 9l-7 7-7-7" />
                     </svg>
@@ -389,118 +450,273 @@ export default function LandingScreen({ onStart }) {
           </nav>
 
           <div className="ml-auto flex items-center gap-2.5 sm:gap-4">
-            <button onClick={onStart} className="hidden sm:block text-[15px] font-medium text-[#18123b]/85 hover:text-[#18123b] transition-colors px-2">
+            <button onClick={onStart} className="hidden sm:block text-[14px] font-medium text-[#18123b]/85 hover:text-[#18123b] transition-colors px-2">
               Log in
             </button>
             <a
               href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
-              className="hidden md:inline-flex items-center px-5 py-2.5 rounded-[10px] border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white/50 text-[15px] font-semibold hover:bg-white transition"
+              className="hidden xl:inline-flex items-center px-5 py-2.5 rounded-[10px] border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white/50 text-[14px] font-semibold hover:bg-white transition"
             >
               Talk to a specialist
             </a>
             <button
               onClick={onStart}
-              className="inline-flex items-center px-5 py-2.5 rounded-[10px] bg-[#6415f5] text-white text-[15px] font-semibold hover:bg-[#5311cf] transition shadow-sm"
+              className="inline-flex items-center px-5 py-2.5 rounded-[10px] bg-[#6415f5] text-white text-[14px] font-semibold hover:bg-[#5311cf] transition shadow-sm"
             >
               Try Aud for free
             </button>
+            {/* Mobile hamburger */}
+            <button
+              className="lg:hidden w-10 h-10 rounded-xl border border-[#18123b]/15 bg-white/60 flex items-center justify-center"
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-expanded={mobileOpen}
+              aria-label="Menu"
+            >
+              {mobileOpen ? "✕" : "☰"}
+            </button>
           </div>
 
-          {/* ── Mega-menu panel ── */}
-          {openMenu && (
+          {/* ── Mega-menu panel (desktop) ── */}
+          {openNavItem && openNavItem.columns && (
             <div
               className="absolute left-0 right-0 top-full z-30 hidden lg:block"
               onMouseEnter={() => openWith(openMenu)}
               onMouseLeave={scheduleClose}
+              onKeyDown={(e) => { if (e.key === "Escape") setOpenMenu(null); }}
             >
               <div className="max-w-[1400px] mx-auto px-5 sm:px-8">
                 <div className="mt-2 rounded-3xl bg-white border border-[#18123b]/10 shadow-2xl shadow-[#18123b]/15 overflow-hidden">
-                  {(() => {
-                    const item = NAV.find((n) => n.label === openMenu);
-                    if (!item || !menuData(item)) return null;
-                    return (
-                      <div>
-                        <div className="grid grid-cols-[1.25fr_340px]">
-                          <div className="p-6 border-r border-[#18123b]/[0.07]">
-                            <div className={"grid gap-6 " + (menuData(item).groups.length > 1 ? "grid-cols-2" : "grid-cols-1")}>
-                              {menuData(item).groups.map((group) => (
-                                <div key={group.title}>
-                                  <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-3">{group.title}</p>
-                                  <div className="space-y-1">
-                                    {group.items.map((it) => (
+                  <div className="grid grid-cols-[1fr_320px]">
+                    <div className="p-6 border-r border-[#18123b]/[0.07]">
+                      <div
+                        className="grid gap-6"
+                        style={{ gridTemplateColumns: openNavItem.columns.length > 1 ? openNavItem.widths || "1fr" : "1fr" }}
+                      >
+                        {openNavItem.columns.map((col) => (
+                          <div key={col.title} className="min-w-0">
+                            <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-3">{col.title}</p>
+
+                            {/* Core features → 2×2 grid of groups */}
+                            {col.grid2x2 && (
+                              <div className="grid grid-cols-2 gap-x-5 gap-y-5">
+                                {col.grid2x2.map((g) => (
+                                  <div key={g.title}>
+                                    <p className="text-[11px] font-bold text-[#18123b]/70 mb-1.5">{g.title}</p>
+                                    <div className="space-y-0.5">
+                                      {g.items.map((it) => (
+                                        <button
+                                          key={it.label}
+                                          onClick={() => navFromItem(it)}
+                                          className="w-full flex items-center gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[#6415f5]/[0.06] transition group/link"
+                                        >
+                                          <span className="text-[12.5px] font-medium text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">{it.label}</span>
+                                          <StatusBadge kind={it.badge} />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* AI platform → items split into 2 sub-columns */}
+                            {col.subCols && (
+                              <div className="grid grid-cols-2 gap-x-5">
+                                {subCols(col.items, col.subCols).map((chunk, ci) => (
+                                  <div key={ci} className="space-y-1">
+                                    {chunk.map((it) => (
                                       <button
                                         key={it.label}
-                                        onClick={() => (it.page ? (setOpenMenu(null), setPage(it.page), window.scrollTo({ top: 0, behavior: "instant" })) : it.slug ? goFeature(it.slug) : goToSection(it.target))}
+                                        onClick={() => navFromItem(it)}
                                         className="w-full flex items-start gap-2.5 text-start rounded-xl p-2 hover:bg-[#6415f5]/[0.06] transition group/link"
                                       >
+                                        <span className="shrink-0 w-8 h-8 rounded-lg bg-[#6415f5]/[0.07] border border-[#6415f5]/15 flex items-center justify-center text-[14px]">{it.icon}</span>
                                         <span className="min-w-0">
-                                          <span className="block text-[13px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">
-                                            {it.label}
+                                          <span className="flex items-center gap-1.5">
+                                            <span className="text-[12.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">{it.label}</span>
+                                            <StatusBadge kind={it.badge} />
                                           </span>
-                                          <span className="block text-[11px] text-[#4b4763] leading-snug">{it.desc}</span>
+                                          <span className="block text-[10.5px] text-[#4b4763] leading-snug">{it.desc}</span>
                                         </span>
-                                        <span className="ms-auto mt-1 text-[#18123b]/25 group-hover/link:text-[#6415f5] transition-colors">→</span>
                                       </button>
                                     ))}
                                   </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div><div className="relative p-0 min-h-[300px]">
-                            {menuData(item).promo.video ? (
-                              <video
-                                src={menuData(item).promo.video}
-                                poster={menuData(item).promo.poster}
-                                autoPlay muted loop playsInline
-                                className="absolute inset-0 w-full h-full object-cover"
-                              />
-                            ) : (
-                              <img src="/videos/hero-woman.jpg" alt="Aud Studio" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-                            )}
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/95 via-[#12101f]/55 to-transparent" />
-                            <div className="relative h-full flex flex-col justify-end p-6 text-white">
-                              {menuData(item).promo.kicker && (
-                                <p className="text-[9px] font-black tracking-[0.16em] text-[#c4b5fd] uppercase">{menuData(item).promo.kicker}</p>
-                              )}
-                              <p className="text-[15px] font-bold leading-snug mt-1">{menuData(item).promo.title}</p>
-                              <p className="text-[11.5px] text-white/80 mt-1.5 leading-relaxed">{menuData(item).promo.text}</p>
-                              <button
-                                onClick={onStart}
-                                className="mt-4 self-start px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12px] font-semibold hover:bg-[#5311cf] transition"
-                              >
-                                {menuData(item).promo.cta}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        {menuData(item).stats && (
-                          <div className="grid grid-cols-4 border-t border-[#18123b]/[0.07] bg-[#f6f3ed]">
-                            {menuData(item).stats.map(([n, label]) => (
-                              <div key={label} className="py-3.5 text-center border-r border-[#18123b]/[0.05] last:border-r-0">
-                                <span className="text-lg font-extrabold text-[#18123b]">{n}</span>
-                                <span className="ms-1.5 text-[11px] font-semibold text-[#4b4763]">{label}</span>
+                                ))}
                               </div>
-                            ))}
+                            )}
+
+                            {/* Simple list columns (Human-verified / Developers / Who it's for) */}
+                            {col.items && !col.cols3 && !col.subCols && (
+                              <div className="space-y-1">
+                                {col.items.map((it) => (
+                                  <button
+                                    key={it.label}
+                                    onClick={() => navFromItem(it)}
+                                    className="w-full flex items-start gap-2.5 text-start rounded-xl p-2 hover:bg-[#6415f5]/[0.06] transition group/link"
+                                  >
+                                    {it.icon && <span className="shrink-0 w-8 h-8 rounded-lg bg-[#6415f5]/[0.07] border border-[#6415f5]/15 flex items-center justify-center text-[14px]">{it.icon}</span>}
+                                    <span className="min-w-0">
+                                      <span className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[12.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">{it.label}</span>
+                                        <StatusBadge kind={it.badge} />
+                                      </span>
+                                      {it.desc && <span className="block text-[10.5px] text-[#4b4763] leading-snug">{it.desc}</span>}
+                                    </span>
+                                  </button>
+                                ))}
+                                {/* Also serving (Features col 2) */}
+                                {col.also && (
+                                  <div className="pt-3 mt-2 border-t border-[#18123b]/[0.07]">
+                                    <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763]/80 uppercase mb-2">{col.also.title}</p>
+                                    <div className="space-y-0.5">
+                                      {col.also.items.map((it) => (
+                                        <button
+                                          key={it.label}
+                                          onClick={() => navFromItem(it)}
+                                          className="w-full flex items-center gap-2 text-start rounded-lg px-2 py-1.5 hover:bg-[#6415f5]/[0.06] transition group/link"
+                                        >
+                                          <span className="text-[12px] font-medium text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">{it.label}</span>
+                                          <StatusBadge kind={it.badge} />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Resources / About → 3-column grid of icon cards */}
+                            {col.cols3 && (
+                              <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+                                {col.items.map((it) => (
+                                  <button
+                                    key={it.label}
+                                    onClick={() => navFromItem(it)}
+                                    className="flex items-start gap-2.5 text-start rounded-xl p-2 hover:bg-[#6415f5]/[0.06] transition group/link"
+                                  >
+                                    <span className="shrink-0 w-8 h-8 rounded-lg bg-[#6415f5]/[0.07] border border-[#6415f5]/15 flex items-center justify-center text-[14px]">{it.icon}</span>
+                                    <span className="min-w-0">
+                                      <span className="flex items-center gap-1.5 flex-wrap">
+                                        <span className="text-[12.5px] font-semibold text-[#18123b] group-hover/link:text-[#6415f5] transition-colors">{it.label}</span>
+                                        <StatusBadge kind={it.badge} />
+                                      </span>
+                                      <span className="block text-[10.5px] text-[#4b4763] leading-snug">{it.desc}</span>
+                                    </span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        )}
+                        ))}
                       </div>
-                    );
-                  })()}
+                    </div>
+
+                    {/* Promo rail */}
+                    <div className="relative p-0 min-h-[320px]">
+                      {openNavItem.promo.video ? (
+                        <video
+                          src={openNavItem.promo.video}
+                          poster={openNavItem.promo.poster}
+                          autoPlay muted loop playsInline
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img src="/videos/hero-woman.jpg" alt="Aud Studio" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/95 via-[#12101f]/55 to-transparent" />
+                      <div className="relative h-full flex flex-col justify-end p-6 text-white">
+                        {openNavItem.promo.kicker && (
+                          <p className="text-[9px] font-black tracking-[0.16em] text-[#c4b5fd] uppercase">{openNavItem.promo.kicker}</p>
+                        )}
+                        <p className="text-[15px] font-bold leading-snug mt-1">{openNavItem.promo.title}</p>
+                        <p className="text-[11.5px] text-white/80 mt-1.5 leading-relaxed">{openNavItem.promo.text}</p>
+                        <button
+                          onClick={onStart}
+                          className="mt-4 self-start px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12px] font-semibold hover:bg-[#5311cf] transition"
+                        >
+                          {openNavItem.promo.cta}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {openNavItem.stats && (
+                    <div className="grid grid-cols-4 border-t border-[#18123b]/[0.07] bg-[#f6f3ed]">
+                      {openNavItem.stats.map(([n, label]) => (
+                        <div key={label} className="py-3.5 text-center border-r border-[#18123b]/[0.05] last:border-r-0">
+                          <span className="text-lg font-extrabold text-[#18123b]">{n}</span>
+                          <span className="ms-1.5 text-[11px] font-semibold text-[#4b4763]">{label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           )}
         </div>
+
+        {/* ── Mobile menu (accordion) ── */}
+        {mobileOpen && (
+          <div className="lg:hidden border-t border-[#18123b]/[0.06] bg-[#f6f3ed] max-h-[calc(100vh-76px)] overflow-y-auto">
+            <div className="px-5 py-4 space-y-2 pb-8">
+              {NAV.filter((n) => n.columns).map((item) => (
+                <details key={item.label} className="rounded-xl bg-white border border-[#18123b]/[0.08]">
+                  <summary className="px-4 py-3 font-semibold text-[#18123b] cursor-pointer list-none flex items-center justify-between">
+                    {item.label}
+                    <span className="text-[#4b4763]">▾</span>
+                  </summary>
+                  <div className="px-2 pb-2 space-y-0.5">
+                    {collectItems(item).map((it) => (
+                      <button
+                        key={it.label + (it.slug || it.svc || it.page || "")}
+                        onClick={() => navFromItem(it)}
+                        className="w-full flex items-center gap-2 text-start rounded-lg px-3 py-2 hover:bg-[#6415f5]/[0.06] transition"
+                      >
+                        {it.icon && <span className="text-[14px]">{it.icon}</span>}
+                        <span className="text-[13px] font-medium text-[#18123b]">{it.label}</span>
+                        <StatusBadge kind={it.badge} />
+                      </button>
+                    ))}
+                  </div>
+                </details>
+              ))}
+              <button
+                onClick={() => goToPage("pricing")}
+                className="w-full rounded-xl bg-white border border-[#18123b]/[0.08] px-4 py-3 font-semibold text-[#18123b] text-start"
+              >
+                Pricing
+              </button>
+              <div className="grid grid-cols-1 gap-2 pt-2">
+                <button onClick={onStart} className="w-full py-3 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition">
+                  Try Aud for free
+                </button>
+                <a
+                  href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
+                  className="w-full py-3 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold text-center"
+                >
+                  Talk to a specialist
+                </a>
+                <button onClick={onStart} className="w-full py-3 rounded-xl text-[#18123b]/85 font-medium">
+                  Log in
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
-      {page === "about" && <AboutPage onStart={onStart} goTeam={() => goToPage("team")} goSecurity={() => goToPage("security")} />}
+      {page === "about" && <AboutPage onStart={onStart} goTeam={() => goToPage("team")} goSecurity={() => goToPage("info:security")} />}
       {page === "pricing" && <PricingPage onStart={onStart} />}
       {page === "contact" && <ContactPage />}
       {page.startsWith("feat:") && <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />}
       {page.startsWith("info:") && <InfoPage slug={page.slice(5)} onStart={onStart} />}
       {page.startsWith("svc:") && <ServicePage slug={page.slice(4)} onStart={onStart} />}
       {page.startsWith("aud:") && <AudiencePage slug={page.slice(4)} />}
-      {page.startsWith("res:") && <ListingPage slug={page.slice(4)} onStart={onStart} />}
+      {page.startsWith("res:") && (page === "res:usecases"
+        ? <UseCasesPage goAudience={(a) => goToPage("aud:" + a)} />
+        : <ListingPage slug={page.slice(4)} onStart={onStart} />)}
+      {page === "reviewers" && <ReviewersPage goFreelancers={() => goToPage("freelancers")} />}
       {page === "team" && <TeamPage onStart={onStart} />}
       {page === "press" && <PressPage />}
       {page === "freelancers" && <FreelancersPage />}
@@ -514,29 +730,49 @@ export default function LandingScreen({ onStart }) {
       {page === "careers" && <CareersPage />}
       {page === "home" && (
       <>
-      {/* ── Hero ────────────────────────────────────────────────────────── */}
+      {/* ── 1. Hero ─────────────────────────────────────────────────────── */}
       <section id="produit" className="relative scroll-mt-4">
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 lg:pt-14 pb-14 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 items-center">
           {/* Left */}
           <div>
             <TypedHeadline />
 
-            <p className="mt-9 text-[17px] leading-[1.6] text-[#4b4763] max-w-[580px]">
+            <p className="mt-7 text-[17px] leading-[1.6] text-[#4b4763] max-w-[580px]">
               The transcription platform built for teams that don't have
               time to re-listen to everything. Transcription, speaker detection,
               translation and summaries for all your recordings. Every word
               verified, so the decision stays yours.
             </p>
 
-            <button
-              onClick={onStart}
-              className="mt-9 inline-flex items-center px-9 py-4 rounded-xl bg-[#6415f5] text-white text-[17px] font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
-            >
-              Try Aud for free
-            </button>
+            <div className="mt-7 flex flex-wrap items-center gap-3">
+              <button
+                onClick={onStart}
+                className="inline-flex items-center px-8 py-3.5 rounded-xl bg-[#6415f5] text-white text-[16px] font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
+              >
+                Try Aud for free
+              </button>
+              <a
+                href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
+                className="inline-flex items-center px-7 py-3.5 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold hover:bg-[#6415f5]/[0.06] transition"
+              >
+                Talk to a specialist
+              </a>
+            </div>
+
+            {/* Upload box */}
+            <div className="mt-5 max-w-[580px] rounded-2xl border-2 border-dashed border-[#6415f5]/35 bg-white/70 px-5 py-4 flex flex-wrap items-center gap-4">
+              <span className="w-10 h-10 rounded-xl bg-[#6415f5]/[0.08] border border-[#6415f5]/20 flex items-center justify-center text-[18px]">🎙️</span>
+              <p className="text-[13px] font-semibold text-[#18123b]/90 leading-snug min-w-0">
+                Drag &amp; drop audio or video — or paste a YouTube link.
+                <span className="block text-[11.5px] font-medium text-[#4b4763]">MP3, WAV, M4A, OGG, MP4, MKV and more.</span>
+              </p>
+              <button onClick={onStart} className="ms-auto px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12.5px] font-semibold hover:bg-[#5311cf] transition shrink-0">
+                Start now
+              </button>
+            </div>
 
             {/* Trust badges */}
-            <div className="mt-11 flex flex-wrap items-center gap-x-8 gap-y-5">
+            <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-5">
               <div className="flex items-center gap-3">
                 <span className="w-11 h-11 rounded-xl border-[1.5px] border-[#18123b]/25 flex items-center justify-center text-[#18123b]">
                   <Lock className="w-5 h-5" />
@@ -572,8 +808,98 @@ export default function LandingScreen({ onStart }) {
         </div>
       </section>
 
-      {/* ── Features ────────────────────────────────────────────────────── */}
-      <section id="fonctionnalites" className="scroll-mt-4 border-t border-[#18123b]/[0.07] bg-white/60">
+      {/* ── 2. Trust bar ────────────────────────────────────────────────── */}
+      <section className="border-t border-[#18123b]/[0.07] bg-white/60">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-10">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {TRUST_STATS.map(([n, label]) => (
+              <div key={label} className="text-center">
+                <p className="text-3xl font-extrabold tracking-tight text-[#18123b]">{n}</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#4b4763] mt-1">{label}</p>
+              </div>
+            ))}
+          </div>
+          {/* TODO: owner to verify — replace these placeholder wordmarks with real customer logos */}
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-45">
+            {PLACEHOLDER_LOGOS.map((logo) => (
+              <span key={logo} className="text-[13px] font-black tracking-[0.22em] text-[#18123b]">{logo}</span>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. How it works ─────────────────────────────────────────────── */}
+      <section id="fonctionnalites-steps" className="border-t border-[#18123b]/[0.07]">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">How it works</h2>
+          <div className="mt-11 grid sm:grid-cols-3 gap-5">
+            {STEPS.map((s) => (
+              <div key={s.n} className="relative rounded-2xl bg-white border border-[#18123b]/[0.08] p-6 shadow-sm">
+                <span className="absolute -top-4 left-6 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">
+                  {s.n}
+                </span>
+                <h3 className="mt-4 font-semibold text-[#18123b]">{s.title}</h3>
+                <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{s.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. AI vs Human-verified ─────────────────────────────────────── */}
+      <section className="border-t border-[#18123b]/[0.07] bg-white/60">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
+            Two ways to a finished transcript
+          </h2>
+          <p className="mt-3 text-center text-[#4b4763] max-w-xl mx-auto">
+            AI speed when you need it now — human verification when the words must be certain.
+          </p>
+          <div className="mt-11 grid lg:grid-cols-2 gap-5 max-w-4xl mx-auto">
+            {/* AI card */}
+            <div className="rounded-[26px] bg-white border-[1.5px] border-[#6415f5]/40 shadow-xl shadow-[#6415f5]/10 p-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-[#18123b]">AI transcription</h3>
+                <span className="px-2.5 py-1 rounded-md bg-[#6415f5] text-white text-[9px] font-black tracking-wide uppercase">Ready now</span>
+              </div>
+              <ul className="mt-5 space-y-3">
+                {["Timestamped text in minutes", "Speakers detected automatically", "99 languages, one-click translation", "Word-level editor included", "Free to start"].map((p) => (
+                  <li key={p} className="flex items-start gap-3 text-sm text-[#18123b]/85">
+                    <span className="mt-0.5 w-5 h-5 rounded-full bg-[#6415f5]/[0.08] border border-[#6415f5]/25 text-[#6415f5] flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={onStart} className="mt-7 w-full py-3.5 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25">
+                Try Aud for free
+              </button>
+            </div>
+
+            {/* Human-verified card */}
+            <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-[#18123b]">Human-verified</h3>
+                <span className="px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 text-[9px] font-black tracking-wide uppercase">Planned</span>
+              </div>
+              <ul className="mt-5 space-y-3">
+                {["A person checks every word", "For legal, media and research work", "Per-minute pricing on top of any plan", "Verbatim, timestamps and rush options", "Ordered from the studio"].map((p) => (
+                  <li key={p} className="flex items-start gap-3 text-sm text-[#18123b]/85">
+                    <span className="mt-0.5 w-5 h-5 rounded-full bg-[#6415f5]/[0.08] border border-[#6415f5]/25 text-[#6415f5] flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+              {/* TODO: owner to verify — service goes live with the reviewer program */}
+              <button onClick={() => goToPage("human")} className="mt-7 w-full py-3.5 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold hover:bg-[#6415f5]/[0.06] transition">
+                See the services
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. Feature cards ────────────────────────────────────────────── */}
+      <section id="fonctionnalites" className="scroll-mt-4 border-t border-[#18123b]/[0.07]">
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
             Everything you need for your <span className="text-[#6415f5]">meeting minutes</span>
@@ -596,26 +922,88 @@ export default function LandingScreen({ onStart }) {
         </div>
       </section>
 
-      {/* ── Steps ───────────────────────────────────────────────────────── */}
+      {/* ── 6. Industries / use cases ───────────────────────────────────── */}
+      <section className="border-t border-[#18123b]/[0.07] bg-white/60">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
+            Built for the way you work
+          </h2>
+          <div className="mt-11 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {USE_CASES.map((u) => (
+              <button
+                key={u.title}
+                onClick={() => u.aud && goToPage("aud:" + u.aud)}
+                className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-7 text-start hover:shadow-md hover:border-[#6415f5]/30 transition group"
+              >
+                <h3 className="text-lg font-semibold text-[#18123b] group-hover:text-[#6415f5] transition-colors">{u.title}</h3>
+                <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{u.text}</p>
+                <span className="mt-4 inline-block text-[13px] font-semibold text-[#6415f5]">See how it works →</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. Stories (placeholders) ───────────────────────────────────── */}
       <section className="border-t border-[#18123b]/[0.07]">
         <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">How it works</h2>
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
+            Teams that trust Aud
+          </h2>
+          {/* TODO: owner to verify — replace with real customer stories */}
           <div className="mt-11 grid sm:grid-cols-3 gap-5">
-            {STEPS.map((s) => (
-              <div key={s.n} className="relative rounded-2xl bg-white border border-[#18123b]/[0.08] p-6 shadow-sm">
-                <span className="absolute -top-4 left-6 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">
-                  {s.n}
-                </span>
-                <h3 className="mt-4 font-semibold text-[#18123b]">{s.title}</h3>
-                <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{s.text}</p>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="rounded-[26px] border-2 border-dashed border-[#18123b]/20 bg-white/50 p-8 text-center">
+                <p className="text-4xl leading-none text-[#6415f5]/40 font-black">"</p>
+                <p className="mt-2 text-sm font-medium text-[#18123b]/55 leading-relaxed">TODO: owner to add a real customer story.</p>
+                <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.12em] text-[#4b4763]/70">Name · Role</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Ressources (FAQ) ────────────────────────────────────────────── */}
-      <section id="ressources" className="scroll-mt-4 border-t border-[#18123b]/[0.07] bg-white/60">
+      {/* ── 8. Pricing preview ──────────────────────────────────────────── */}
+      <section id="tarifs-preview" className="border-t border-[#18123b]/[0.07] bg-white/60">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
+            Start free, scale when you need to
+          </h2>
+          <p className="mt-3 text-center text-[#4b4763] max-w-xl mx-auto">
+            Every plan includes the full studio. Human-verified services are priced per minute on top.
+          </p>
+          <div className="mt-11 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {PLANS.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => goToPage("pricing")}
+                className={`rounded-[26px] p-7 text-start transition shadow-sm hover:shadow-md ${
+                  p.popular ? "bg-white border-[1.5px] border-[#6415f5]/50 shadow-lg shadow-[#6415f5]/10" : "bg-white border border-[#18123b]/[0.08]"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-[#18123b]">{p.name}</h3>
+                  {p.popular && <span className="px-2 py-0.5 rounded-md bg-[#6415f5] text-white text-[9px] font-black tracking-wide uppercase">Popular</span>}
+                </div>
+                <p className="mt-3">
+                  <span className="text-3xl font-extrabold tracking-tight text-[#18123b]">{p.monthly === null ? "Custom" : `$${p.monthly}`}</span>
+                  {p.monthly !== null && p.monthly > 0 && <span className="text-[11px] font-semibold text-[#4b4763]"> /month</span>}
+                </p>
+                <p className="mt-2 text-[12.5px] text-[#4b4763] leading-relaxed">{p.minutes} min · {p.maxLen} max file</p>
+                <span className="mt-4 inline-block text-[13px] font-semibold text-[#6415f5]">See the plan →</span>
+              </button>
+            ))}
+          </div>
+          <div className="mt-9 text-center">
+            <button onClick={() => goToPage("pricing")} className="px-8 py-3.5 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold hover:bg-[#6415f5]/[0.06] transition">
+              Compare all plans
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 9. FAQ ──────────────────────────────────────────────────────── */}
+      <section id="ressources" className="scroll-mt-4 border-t border-[#18123b]/[0.07]">
         <div className="max-w-[900px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
           <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
             Frequently asked questions
@@ -642,67 +1030,8 @@ export default function LandingScreen({ onStart }) {
         </div>
       </section>
 
-      {/* ── Tarifs ──────────────────────────────────────────────────────── */}
-      <section id="tarifs" className="scroll-mt-4 border-t border-[#18123b]/[0.07]">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
-            One simple price: <span className="text-[#6415f5]">free</span>
-          </h2>
-          <p className="mt-3 text-center text-[#4b4763] max-w-xl mx-auto">
-            All features, no credit card. Transcribe from your very first try.
-          </p>
-          <div className="mt-10 flex justify-center">
-            <div className="w-full max-w-md rounded-[26px] bg-white border-[1.5px] border-[#6415f5]/40 shadow-xl shadow-[#6415f5]/10 p-8">
-              <div className="flex items-baseline justify-between">
-                <h3 className="font-semibold text-[#18123b]">Free account</h3>
-                <div className="text-right">
-                  <span className="text-4xl font-extrabold tracking-tight text-[#18123b]">$0</span>
-                  <span className="block text-[11px] font-semibold text-[#4b4763]">forever</span>
-                </div>
-              </div>
-              <ul className="mt-6 space-y-3">
-                {PLAN_FEATURES.map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-sm text-[#18123b]/85">
-                    <span className="mt-0.5 w-5 h-5 rounded-full bg-[#6415f5]/[0.08] border border-[#6415f5]/25 text-[#6415f5] flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={onStart}
-                className="mt-8 w-full py-3.5 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
-              >
-                Try Aud for free
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── À propos ────────────────────────────────────────────────────── */}
-      <section id="apropos" className="scroll-mt-4 border-t border-[#18123b]/[0.07] bg-white/60">
-        <div className="max-w-[900px] mx-auto px-5 sm:px-8 py-16 lg:py-20 text-center">
-          <img src={audLogo} alt="Aud" className="h-14 w-auto mx-auto" draggable={false} />
-          <h2 className="mt-6 text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b]">About Aud</h2>
-          <p className="mt-5 text-[16px] leading-[1.75] text-[#4b4763] max-w-2xl mx-auto">
-            Aud is a transcription studio powered by artificial intelligence.
-            It turns your meetings, interviews and recordings into verifiable text:
-            every word timestamped, every speaker identified, every export ready to share.
-            Your files stay private — never resold, never used to train models.
-          </p>
-          <div className="mt-8 inline-flex flex-col sm:flex-row items-center gap-3">
-            <a
-              href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white font-semibold hover:bg-[#6415f5]/[0.06] transition"
-            >
-              ✉ {CONTACT_EMAIL}
-            </a>
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ─────────────────────────────────────────────────────────── */}
-      <section className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+      {/* ── 10. Final CTA ───────────────────────────────────────────────── */}
+      <section id="apropos" className="scroll-mt-4 max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
         <div className="rounded-[26px] bg-[#6415f5] relative overflow-hidden px-8 py-14 sm:py-16 text-center">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
           <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-black/10 blur-3xl" />
@@ -724,48 +1053,75 @@ export default function LandingScreen({ onStart }) {
       </>
       )}
 
-      {/* ── Footer ── */}
-      <footer className="border-t border-[#18123b]/10 bg-white/60">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-12 grid sm:grid-cols-2 lg:grid-cols-5 gap-8">
+      {/* ── Footer (blueprint R: dark, 5 columns) ── */}
+      <footer className="bg-[#18123b] text-white">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-14 grid sm:grid-cols-2 lg:grid-cols-5 gap-10">
+          {/* Brand column */}
           <div>
-            <img src={audLogo} alt="Aud" className="h-9 w-auto mb-4" draggable={false} />
-            <p className="text-xs text-[#4b4763] leading-relaxed max-w-[220px]">{BRAND.tagline}</p>
+            <p className="text-2xl font-extrabold tracking-tight text-white">Aud</p>
+            <p className="mt-3 text-xs text-white/60 leading-relaxed max-w-[240px]">{BRAND.tagline}</p>
+            <a href={`mailto:${BRAND.email}`} className="mt-4 inline-block text-xs font-semibold text-[#c4b5fd] hover:text-white transition">
+              {BRAND.email}
+            </a>
+            {/* Social — TODO: owner to verify — add real profile URLs */}
+            <div className="mt-5 flex items-center gap-2.5">
+              {[
+                ["X", "X (Twitter)"], ["in", "LinkedIn"], ["▶", "YouTube"],
+              ].map(([glyph, label]) => (
+                <a
+                  key={label}
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                  title={`TODO: owner to add the real ${label} profile`}
+                  aria-label={label}
+                  className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-[11px] font-bold text-white/70 hover:text-white hover:border-white/50 transition"
+                >
+                  {glyph}
+                </a>
+              ))}
+            </div>
           </div>
+
           {[
             { title: "Product", links: [
               ["AI Transcription", () => goFeature("ai-transcription")],
               ["Speaker Detection", () => goFeature("speaker-detection")],
+              ["Transcript Editor", () => goFeature("editor")],
               ["AI Translation", () => goFeature("translation")],
               ["Export Center", () => goFeature("share")],
               ["Pricing", () => goToPage("pricing")],
             ]},
             { title: "Features", links: [
               ["Multi-language", () => goFeature("multi-language")],
-              ["Smart Editor", () => goFeature("editor")],
               ["Smart Summary", () => goFeature("summary")],
+              ["Key Moments", () => goFeature("key-moments")],
               ["Speaking Statistics", () => goFeature("statistics")],
-              ["Link Import", () => goFeature("link-import")],
+              ["Link Transcription", () => goFeature("link-import")],
+              ["Files and Folders", () => goFeature("files-folders")],
             ]},
             { title: "Resources", links: [
+              ["Blog", () => goToPage("res:blog")],
               ["Help Center", () => goToPage("info:help")],
-              ["Blog", () => goToPage("info:blog")],
-              ["Tutorials", () => goToPage("info:tutorials")],
-              ["Use Cases", () => goToPage("info:cases")],
-              ["Pricing Calculator", () => goToPage("calculator")],
+              ["Tutorials", () => goToPage("res:tutorials")],
+              ["Use Cases", () => goToPage("res:usecases")],
+              ["Supported Languages", () => goToPage("languages")],
+              ["Changelog", () => goToPage("changelog")],
+              ["Reports & Guides", () => goToPage("res:guides")],
             ]},
-            { title: "About & Legal", links: [
+            { title: "About", links: [
               ["Company", () => goToPage("about")],
-              ["Security & Privacy", () => goToPage("security")],
-              ["Human-Verified Services", () => goToPage("human")],
-              ["Terms & Privacy", () => goToPage("legal")],
+              ["Security & Privacy", () => goToPage("info:security")],
+              ["Our Human Reviewers", () => goToPage("reviewers")],
+              ["Contact", () => goToPage("contact")],
               ["Careers", () => goToPage("careers")],
+              ["Terms and Privacy", () => goToPage("legal")],
             ]},
           ].map((col) => (
             <div key={col.title}>
-              <p className="text-[10px] font-black tracking-[0.14em] text-[#18123b] uppercase mb-3">{col.title}</p>
+              <p className="text-[10px] font-black tracking-[0.14em] text-white/90 uppercase mb-3">{col.title}</p>
               <div className="space-y-2">
                 {col.links.map(([label, fn]) => (
-                  <button key={label} onClick={fn} className="block text-xs text-[#4b4763] hover:text-[#6415f5] transition-colors">
+                  <button key={label} onClick={fn} className="block text-xs text-white/60 hover:text-white transition-colors">
                     {label}
                   </button>
                 ))}
@@ -773,13 +1129,27 @@ export default function LandingScreen({ onStart }) {
             </div>
           ))}
         </div>
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-8 flex flex-wrap items-center justify-between gap-3 border-t border-[#18123b]/10 pt-6">
-          <p className="text-xs text-[#4b4763]/70">
+
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6">
+          <p className="text-xs text-white/50">
             © {new Date().getFullYear()} {BRAND.name} — {BRAND.tagline}
           </p>
-          <p className="text-xs text-[#4b4763]/70">
-            Contact: <a className="font-semibold text-[#6415f5]" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
-          </p>
+          <div className="flex items-center gap-4">
+            <button onClick={() => goToPage("legal")} className="text-xs text-white/50 hover:text-white transition">Terms of Service</button>
+            <button onClick={() => goToPage("legal")} className="text-xs text-white/50 hover:text-white transition">Privacy Policy</button>
+            {/* TODO: owner to verify — language selector is a placeholder until translations ship */}
+            <select
+              aria-label="Language"
+              defaultValue="en"
+              title="TODO: owner to verify — translations coming"
+              onChange={() => {}}
+              className="rounded-lg bg-white/10 border border-white/15 text-white/80 text-xs px-2.5 py-1.5 focus:outline-none"
+            >
+              <option value="en" className="text-[#18123b]">English</option>
+              <option value="fr" className="text-[#18123b]">Français</option>
+              <option value="ar" className="text-[#18123b]">العربية</option>
+            </select>
+          </div>
         </div>
       </footer>
     </div>

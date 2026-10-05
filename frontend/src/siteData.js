@@ -185,50 +185,68 @@ export const PRICING_FAQ = [
   { q: "Is there a student discount?", a: "Students and universities can contact us for tailored academic conditions." },
 ];
 
-// ── Use cases for the home page ──────────────────────────────────────────
+// ── Use cases for the home page (each links to its audience page) ────────
 export const USE_CASES = [
-  { title: "Journalists", text: "Turn interviews into searchable, quotable text with exact timestamps — every quote verifiable." },
-  { title: "Students & researchers", text: "Transcribe field interviews and lectures, then code and translate them for your thesis." },
-  { title: "Podcasters", text: "Episodes become show notes, articles and subtitles from one transcript." },
-  { title: "Video creators", text: "Generate SRT subtitles in the original or translated language, ready for publishing." },
-  { title: "Businesses", text: "Keep meeting minutes and multilingual calls organized, searchable and shared." },
-  { title: "Translators", text: "Start from a precise AI draft and deliver professional translations faster." },
+  { title: "Journalists", aud: "newsrooms", text: "Turn interviews into searchable, quotable text with exact timestamps — every quote verifiable." },
+  { title: "Students & researchers", aud: "researchers", text: "Transcribe field interviews and lectures, then code and translate them for your thesis." },
+  { title: "Podcasters", aud: "creators", text: "Episodes become show notes, articles and subtitles from one transcript." },
+  { title: "Video creators", aud: "video", text: "Generate SRT subtitles in the original or translated language, ready for publishing." },
+  { title: "Businesses", aud: "businesses", text: "Keep meeting minutes and multilingual calls organized, searchable and shared." },
+  { title: "Translators", aud: "consulting", text: "Start from a precise AI draft and deliver professional translations faster." },
 ];
 
-// ── Navigation [labels CONFIRMED; sub-item grouping per blueprint;
-//    some descriptions PROPOSED — TODO: owner to verify] ──────────────────
+// ── Human Reviewers page [PLANNED — TODO: owner to verify everything] ────
+export const REVIEWERS = {
+  steps: [
+    ["Selection", "TODO: how you choose reviewers and test their language skills — publish only what is true."],
+    ["Confidentiality", "TODO: agreements and access limits for every reviewer in the network."],
+    ["Quality checks", "TODO: how verified work is sampled and checked before delivery."],
+  ],
+  notice: "This page goes live only when the reviewer program is real — keep the TODO comments until then.",
+};
+
+export const CONTACT_INFO = {
+  email: BRAND.email,
+  hours: null, // TODO: owner to verify — support hours
+};
+
+// ── Navigation — REFINED BLUEPRINT ────────────────────────────────────────
+// Every item carries status: "exists" (real, live feature) | "planned"
+// (Planned badge) | "proposed" (idea — TODO: owner to verify).
+// Item routing: slug → feature page (feat:) · svc → service page (svc:)
+//              · page → direct page string.
 export const NAV_MENUS = [
   {
     label: "Product",
-    groups: [
+    widths: "2fr 1fr 0.9fr",
+    columns: [
       {
-        title: "AI Platform",
+        title: "AI platform", subCols: 2,
         items: [
-          { label: "Multi-File Analysis", desc: "Analyze several audio, video and document files together — every result cites its exact source file.", slug: "multi-file" },
-          { label: "Document Editor", desc: "Draft and edit documents, keep citations, export to Word or PDF.", slug: "document-editor", badge: "Beta" },
-          { label: "Image Analysis", desc: "Upload an image, ask questions, get answers linked to the source.", slug: "image-analysis", badge: "New" },
-          { label: "Transcript Editor & Clipping", desc: "Edit text, mark key moments, clip video to the second.", slug: "clipping" },
-          { label: "AI Templates", desc: "Prebuilt workflows: summary, timeline, key points.", slug: "ai-templates" },
-          { label: "Mobile App", desc: "Record, review and analyze on iOS and Android.", slug: "mobile-app" },
-          { label: "AI Notetaker", desc: "Joins Google Meet, Zoom, Teams and WebEx — searchable transcripts.", slug: "notetaker", badge: "New" },
-          { label: "File Organization", desc: "Google Drive sync, ZIP upload, bulk download, color tags.", slug: "file-organization" },
+          { icon: "🎙️", label: "AI Transcription", desc: "Timestamped text from audio and video", status: "exists", slug: "ai-transcription" },
+          { icon: "🧑‍🤝‍🧑", label: "Speaker Detection", desc: "Who said what, and when", status: "exists", slug: "speaker-detection" },
+          { icon: "✏️", label: "Transcript Editor", desc: "Fix text word by word", status: "exists", slug: "editor" },
+          { icon: "💬", label: "Aud AI Chat", desc: "Ask questions, get cited answers", status: "exists", badge: "New", slug: "ask" },
+          { icon: "⭐", label: "Key Moments", desc: "AI finds what matters", status: "exists", slug: "key-moments" },
+          { icon: "🌍", label: "AI Translation", desc: "Translate, keep the original", status: "exists", slug: "translation" },
+          { icon: "📤", label: "Export Center", desc: "TXT, SRT, DOCX, PDF", status: "exists", slug: "share" },
+          { icon: "🔗", label: "Link Transcription", desc: "From a YouTube or media link", status: "exists", slug: "link-import" },
+          { icon: "🗂️", label: "Files and Folders", desc: "Everything in one place", status: "exists", slug: "files-folders" },
         ],
       },
       {
-        title: "Human-Verified Services",
+        title: "Human-verified",
         items: [
-          { label: "Human Transcription", desc: "A person verifies the transcript. Accuracy, turnaround, rush, verbatim and timestamp options.", slug: "human-transcription" },
-          { label: "Human Captions", desc: "Reviewed captions for video — YouTube, Vimeo, Dropbox, Google Drive.", slug: "human-captions" },
-          { label: "Global Subtitles", desc: "Human translation of subtitles into many languages — source captions included.", slug: "global-subtitles" },
+          { icon: "🧑‍💼", label: "Human Transcription", desc: "A person verifies the text", status: "planned", badge: "Planned", svc: "human-transcription" },
+          { icon: "🌐", label: "Human Translation", desc: "Reviewed by a translator", status: "planned", badge: "Planned", svc: "global-subtitles" },
+          { icon: "🎬", label: "Verified Subtitles", desc: "Ready to publish", status: "planned", badge: "Planned", svc: "human-captions" },
         ],
       },
       {
-        title: "For Developers",
+        title: "Developers",
         items: [
-          { label: "API and Docs", desc: "Developer site and documentation.", page: "info:apps" },
-          { label: "Documentation", desc: "Endpoints, webhooks and SDKs.", page: "info:apps" },
-          { label: "API Status", desc: "Live service status.", page: "info:apps" },
-          { label: "Changelog", desc: "Product updates.", page: "changelog" },
+          { icon: "⚙️", label: "API and Docs", desc: "Developer site and documentation", status: "proposed", page: "info:api" }, // TODO: owner to verify — remove if no API
+          { icon: "📜", label: "Changelog", desc: "Product updates", status: "exists", page: "changelog" },
         ],
       },
     ],
@@ -242,45 +260,55 @@ export const NAV_MENUS = [
   },
   {
     label: "Features",
-    groups: [
+    widths: "1.3fr 1fr",
+    columns: [
       {
-        title: "Core Features",
-        items: [
-          { label: "Timestamped text", desc: "Every word locked to the audio.", slug: "ai-transcription" },
-          { label: "Speaker detection", desc: "Who said what, when.", slug: "speaker-detection" },
-          { label: "All world languages", desc: "Recognition in 99 languages.", slug: "multi-language" },
-          { label: "Accents & mixed audio", desc: "Dialects and code-switching handled.", page: "info:dialects" },
-          { label: "Instant AI translation", desc: "Full transcripts and subtitles.", slug: "translation" },
-          { label: "Human translation on request", desc: "Professional sign-off.", page: "human" },
-          { label: "Side-by-side view", desc: "Original and translated together.", slug: "translation" },
-          { label: "In-browser editor", desc: "Fix text while you listen.", slug: "editor" },
-          { label: "Export suite", desc: "TXT, SRT, DOCX, PDF.", slug: "share" },
-          { label: "Copy & share", desc: "Read-only links with playback.", slug: "share" },
-          { label: "Project library", desc: "Folders, names and search.", slug: "share" },
-          { label: "Bulk upload", desc: "Many files, one queue.", target: "produit" },
+        title: "Core features",
+        grid2x2: [
+          { title: "Transcribe", items: [
+            { label: "Timestamped text", status: "exists", slug: "ai-transcription" },
+            { label: "Speaker detection", status: "exists", slug: "speaker-detection" },
+            { label: "Language auto-detect", status: "exists", slug: "multi-language" },
+            { label: "Large files", status: "exists", slug: "ai-transcription" },
+          ]},
+          { title: "Translate", items: [
+            { label: "AI translation", status: "exists", slug: "translation" },
+            { label: "Original kept intact", status: "exists", slug: "translation" },
+            { label: "Multiple languages", status: "exists", slug: "multi-language" },
+            { label: "Human translation", status: "planned", badge: "Planned", page: "human" },
+          ]},
+          { title: "Edit and export", items: [
+            { label: "Word-level editor", status: "exists", slug: "editor" },
+            { label: "Auto-save", status: "exists", slug: "editor" },
+            { label: "Share transcript", status: "exists", slug: "share" },
+            { label: "TXT, SRT, DOCX, PDF", status: "exists", slug: "share" },
+          ]},
+          { title: "Organize", items: [
+            { label: "Folders", status: "exists", slug: "files-folders" },
+            { label: "Sessions archive", status: "exists", slug: "share" },
+            { label: "Search", status: "exists", slug: "share" },
+            { label: "Bulk upload", status: "proposed", slug: "share" }, // TODO: owner to verify
+          ]},
         ],
       },
       {
-        title: "Who It's For",
+        title: "Who it's for",
         items: [
-          { label: "Businesses", desc: "Meetings that write their own minutes.", page: "aud:businesses" },
-          { label: "Creators & Podcasters", desc: "One recording, every format.", page: "aud:creators" },
-          { label: "Researchers", desc: "Interviews coded in minutes.", page: "aud:researchers" },
+          { icon: "💼", label: "Businesses", desc: "Meetings you can search", status: "exists", page: "aud:businesses" },
+          { icon: "🎙️", label: "Creators & podcasters", desc: "Show notes and subtitles", status: "exists", page: "aud:creators" },
+          { icon: "🔬", label: "Researchers", desc: "Analyze long recordings", status: "exists", page: "aud:researchers" },
         ],
-      },
-      {
-        title: "Also Serving",
-        items: [
-          { label: "Research & Consulting", desc: "Discovery interviews, structured.", page: "aud:consulting" },
-          { label: "Newsrooms & Journalists", desc: "Every quote verified to the second.", page: "aud:newsrooms" },
-          { label: "Education", desc: "Lectures as study material.", page: "aud:education" },
-          { label: "Video Distribution & Accessibility", desc: "Subtitles for whole libraries.", page: "aud:video" },
-        ],
+        also: { title: "Also serving", items: [
+          { label: "Journalists & newsrooms", desc: "Verify quotes fast", status: "exists", page: "aud:newsrooms" },
+          { label: "Education", desc: "Lectures as study material", status: "exists", page: "aud:education" },
+          { label: "Video accessibility", desc: "Subtitles for libraries", status: "exists", page: "aud:video" },
+          { label: "Research & consulting", desc: "Discovery interviews, structured", status: "exists", page: "aud:consulting" },
+        ]},
       },
     ],
     promo: {
       video: "/videos/feat-team.mp4", poster: "/videos/feat-team.jpg",
-      kicker: "WHO IT'S FOR", title: "Built for the people who talk for a living",
+      kicker: "WHO IT'S FOR", title: "Built for people who talk for a living",
       text: "Journalists, researchers, teams and creators — Aud speaks your language.",
       cta: "Find your workflow",
     },
@@ -288,24 +316,17 @@ export const NAV_MENUS = [
   },
   {
     label: "Resources",
-    groups: [
-      {
-        title: "Resources",
-        items: [
-          { label: "Blog", desc: "Insights on transcription, translation and AI workflows.", page: "res:blog" },
-          { label: "Reports & Guides", desc: "Whitepapers and guides to download.", page: "res:guides" },
-          { label: "Learning Center", desc: "Tutorials grouped by topic.", page: "res:tutorials" },
-          { label: "Transcript Library", desc: "Free example transcripts, searchable.", page: "res:library" },
-          { label: "Success Stories", desc: "Customer stories as cards.", page: "res:stories" },
-          { label: "Webinars", desc: "Live and on-demand sessions.", page: "res:webinars" },
-          { label: "Reviews", desc: "Ratings from review sites and app stores.", page: "res:reviews" },
-          { label: "Apps & Tools", desc: "Online tools including the cost calculator.", page: "calculator", badge: "New" },
-          { label: "Help Center", desc: "Support articles and guides.", page: "info:help" },
-          { label: "Supported Languages", desc: "The full list of 99 languages.", page: "languages" },
-          { label: "Changelog", desc: "Product updates.", page: "changelog" },
-          { label: "Services By Location", desc: "Aud around the world.", page: "locations" },
-        ],
-      },
+    widths: "1fr",
+    columns: [
+      { title: "Resources", cols3: true, items: [
+        { icon: "📝", label: "Blog", desc: "Insights on transcription, translation and AI workflows.", status: "exists", page: "res:blog" },
+        { icon: "🆘", label: "Help Center", desc: "Answers and how-tos.", status: "exists", page: "info:help" },
+        { icon: "🎓", label: "Tutorials", desc: "Step-by-step guides.", status: "exists", page: "res:tutorials" },
+        { icon: "🧩", label: "Use Cases", desc: "How teams use Aud.", status: "exists", page: "res:usecases" },
+        { icon: "🌍", label: "Supported Languages", desc: "Searchable full list.", status: "exists", page: "languages" },
+        { icon: "📜", label: "Changelog", desc: "What we shipped.", status: "exists", badge: "New", page: "changelog" },
+        { icon: "✉️", label: "Contact Support", desc: "Email or form.", status: "exists", page: "contact" },
+      ]},
     ],
     promo: {
       video: "/videos/feat-ask.mp4", poster: "/videos/feat-ask.jpg",
@@ -313,26 +334,20 @@ export const NAV_MENUS = [
       text: "Guides, articles and videos that turn first-time users into power users.",
       cta: "Explore resources",
     },
-    stats: [["12", "resources"], ["24/7", "available"], ["EN/FR/AR", "guides"], ["Free", "always"]],
+    stats: [["7", "hubs"], ["24/7", "available"], ["EN/FR/AR", "guides"], ["Free", "always"]],
   },
   {
     label: "About",
-    groups: [
-      {
-        title: "About Aud",
-        items: [
-          { label: "Company", desc: "Mission and approach — AI with optional human review, every result traceable to its source.", page: "about" },
-          { label: "Our Story", desc: "A timeline of milestones from launch to today.", page: "about" },
-          { label: "Leadership", desc: "The team and advisors behind the studio.", page: "team" },
-          { label: "Security and Privacy", desc: "Encryption, governance and your deletion rights.", page: "security" },
-          { label: "Careers", desc: "Open positions on a small, focused team.", page: "careers" },
-          { label: "Press", desc: "News and media mentions.", page: "press" },
-          { label: "Freelancers", desc: "Join the human reviewers network.", page: "freelancers" },
-          { label: "Partners", desc: "Partnership information and contact.", page: "partners" },
-          { label: "Support", desc: "Help center and guides.", page: "info:help" },
-          { label: "Contact", desc: "Phone, hours, email and form.", page: "contact" },
-        ],
-      },
+    widths: "1fr",
+    columns: [
+      { title: "About Aud", cols3: true, items: [
+        { icon: "🏛️", label: "Company", desc: "Our mission and approach.", status: "exists", page: "about" },
+        { icon: "🛡️", label: "Security and Privacy", desc: "How we protect your files.", status: "exists", page: "info:security" },
+        { icon: "🧑‍💼", label: "Our Human Reviewers", desc: "How reviewers are vetted.", status: "planned", badge: "Planned", page: "reviewers" },
+        { icon: "✉️", label: "Contact", desc: "Email and form.", status: "exists", page: "contact" },
+        { icon: "🚀", label: "Careers", desc: "Join the team.", status: "exists", page: "careers" },
+        { icon: "⚖️", label: "Terms and Privacy", desc: "The legal pages.", status: "exists", page: "legal" },
+      ]},
     ],
     promo: {
       video: "/videos/hero-woman.mp4", poster: "/videos/hero-woman.jpg",
@@ -343,8 +358,7 @@ export const NAV_MENUS = [
     stats: [["4", "disciplines"], ["24/7", "support"], ["100%", "private"], ["$0", "free plan"]],
   },
   {
-    // Pricing — direct nav item; the pricing PAGE holds plans, comparison,
-    // human-verified price list and FAQ per the blueprint.
+    // Pricing — direct nav item, no dropdown (per blueprint).
     label: "Pricing", id: "tarifs", page: "pricing",
   },
 ];

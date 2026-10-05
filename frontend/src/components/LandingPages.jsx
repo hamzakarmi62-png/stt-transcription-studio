@@ -1,6 +1,6 @@
 import { useState } from "react";
 import audLogo from "../assets/aud-logo.png";
-import { PLANS, HUMAN_SERVICES, PRICING_FAQ, SUBSCRIPTION_RULES, ALL_LANGUAGES, USE_CASES, BRAND } from "../siteData.js";
+import { PLANS, HUMAN_SERVICES, PRICING_FAQ, SUBSCRIPTION_RULES, ALL_LANGUAGES, USE_CASES, BRAND, REVIEWERS } from "../siteData.js";
 import { Lock, EyeOff, Star, Users, Languages, Sparkles, Chart } from "./Icons.jsx";
 
 // Multi-page landing companions (About / Pricing / Contact) — Rev-style
@@ -640,6 +640,46 @@ export const FEATURES = {
     why: [["Read-only share pages", "A link with built-in playback — your audience reads and listens without touching your account."], ["Six export formats", "TXT for notes, SRT for subtitles, DOCX for documents, PDF for records, JSON and XML for developers."], ["Folders and custom names", "Keep dozens of transcripts organized like real files in real folders."], ["Everything searchable", "Find any word across your entire archive in one search."]],
     facts: [["6", "formats"], ["Read", "only"], ["Folders", "+ names"], ["Full", "search"]],
   },
+  "key-moments": {
+    kicker: "Key Moments",
+    title: "The Moments That Matter, Found",
+    video: "/videos/feat-summary.mp4",
+    poster: "/videos/feat-summary.jpg",
+    lead: "Aud flags the key moments in your recording so you can review hours of audio in minutes — jump straight to the decision, the admission or the punchline.",
+    sections: [
+      { h: "Moments surface automatically", p: "As the transcript is written, the AI marks the passages that carry the weight of the conversation — decisions, commitments, contradictions and turning points." },
+      { h: "Jump and verify", p: "Click any flagged moment to play the audio from exactly there — every moment is verified against the recording in one click." },
+      { h: "Mark your own", p: "Flag any line as a key moment in the editor — your flags sit alongside the AI's, color-coded and searchable." },
+    ],
+    steps: [
+      ["Transcribe", "The AI reads the whole recording and writes the transcript."],
+      ["Moments surface", "Important passages are flagged with their timestamps."],
+      ["Jump and clip", "Play or clip each moment to the second."],
+    ],
+    whyTitle: "Hours of audio, minutes of review",
+    why: [["AI finds what matters", "Decisions, admissions and turning points are flagged while the transcript is written."], ["Every moment is clickable", "Each flag jumps the audio to the exact second — verify before you quote."], ["Your flags too", "Mark your own moments in the editor; the AI's and yours live side by side."], ["Feeds the summary", "Key moments drive the AI summary — the short version is built from the parts that mattered."]],
+    facts: [["1", "click verify"], ["∞", "your flags"], ["±0.2s", "word sync"], ["$0", "forever"]],
+  },
+  "files-folders": {
+    kicker: "Files and Folders",
+    title: "Everything In One Place",
+    video: "/videos/feat-editor.mp4",
+    poster: "/videos/feat-editor.jpg",
+    lead: "Folders, custom names, color tags and a searchable archive — keep dozens of transcripts organized like a professional library, safe from accidental deletion.",
+    sections: [
+      { h: "Folders that behave like folders", p: "Create folders per project, course or client; move sessions between them, rename anything, and color-tag files so the archive reads at a glance." },
+      { h: "Search the whole archive", p: "One search box finds any word inside every transcript you own — the results jump straight into the session at the matching line." },
+      { h: "My Files protection", p: "Files saved in My Files are skipped by the archive's bulk-delete — your curated library cannot be wiped by an accidental sweep." },
+    ],
+    steps: [
+      ["Create folders", "Organize per project, course or client."],
+      ["Name and tag", "Custom names and color tags per file."],
+      ["Search everything", "Find any word across the whole archive."],
+    ],
+    whyTitle: "An archive, not a pile",
+    why: [["Folders and custom names", "Structure that survives dozens — or hundreds — of transcripts."], ["Color tags", "Tag by status or priority; the archive reads at a glance."], ["Bulk actions, safely", "Bulk move, bulk delete — and My Files is always skipped by bulk delete."], ["Full-text search", "Every word of every transcript is searchable from one box."]],
+    facts: [["∞", "folders"], ["Tag", "colors"], ["Bulk", "safe"], ["Full", "search"]],
+  },
 };
 
 export function FeaturePage({ slug, onStart, goFeature }) {
@@ -860,24 +900,6 @@ export const INFO_PAGES = {
     ],
     facts: [["Research", "coded faster"], ["Press", "on deadline"], ["Creators", "5 outputs"], ["All", "free"]],
   },
-  "security": {
-    kicker: "Security & Privacy",
-    title: "Your Words, Locked Down",
-    lead: "Clear legal and technical commitments about your data: confidentiality, encryption in transit and at rest, and strict non-usage of files outside your transcription purpose.",
-    video: "/videos/hero-man.mp4",
-    poster: "/videos/hero-man.jpg",
-    sections: [
-      { h: "Encrypted everywhere", p: "Audio files and transcripts are encrypted in transit (HTTPS/TLS) and at rest in storage. Access requires authenticated tokens — nothing is public unless you create a share link." },
-      { h: "Never used against you", p: "Your recordings and transcripts are processed solely for your transcription purpose. They are never sold, never shared, and never used to train third-party models." },
-      { h: "You control deletion", p: "Delete a session and its audio, transcript and metadata are removed from the active storage. Bulk deletion works the same way — your archive is yours to erase." },
-    ],
-    steps: [
-      ["Encrypted transit", "HTTPS/TLS on every request."],
-      ["Encrypted storage", "Authenticated access only."],
-      ["Your deletion rules", "Single or bulk — honored completely."],
-    ],
-    facts: [["TLS", "in transit"], ["Encrypted", "at rest"], ["0", "third-party use"], ["You", "control deletion"]],
-  },
   "team": {
     kicker: "Meet the Team",
     title: "The People Behind Aud",
@@ -914,6 +936,25 @@ export const INFO_PAGES = {
     ],
     facts: [["SSL/TLS", "in transit"], ["AES-256", "at rest"], ["0", "third-party training"], ["Isolated", "per account"]],
   },
+  "api": {
+    kicker: "API and Docs",
+    title: "Build On Aud",
+    lead: "TODO: owner to verify — this page is a placeholder until the public API exists. Do not present the endpoints below as live.",
+    video: "/videos/feat-linkimport.mp4",
+    poster: "/videos/feat-linkimport.jpg",
+    sections: [
+      { h: "Planned: authentication", p: "TODO: owner to verify — API keys, scopes and rate limits once the API ships." },
+      { h: "Planned: transcribe a file", p: "TODO: owner to verify — endpoint, parameters and response shape documented from the real API." },
+      { h: "Planned: errors and limits", p: "TODO: owner to verify — error codes, quotas and status page." },
+    ],
+    code: "POST /v1/transcriptions\nfile: meeting.mp3\nlanguage: auto\nspeakers: auto", // TODO: owner to verify
+    steps: [
+      ["Get a key", "TODO: how developers authenticate."],
+      ["Send audio", "TODO: the real request format."],
+      ["Receive text", "TODO: the real response format."],
+    ],
+    facts: [["API", "planned"], ["Docs", "coming"], ["SDKs", "TBD"], ["Status", "TBD"]],
+  },
 };
 
 export function InfoPage({ slug, onStart }) {
@@ -944,6 +985,12 @@ export function InfoPage({ slug, onStart }) {
             <p className="mt-3 text-[15px] text-[#4b4763] leading-[1.75]">{sec.p}</p>
           </div>
         ))}
+        {f.code && (
+          <div className="rounded-[26px] bg-[#18123b] p-6 shadow-sm">
+            <p className="text-[10px] font-black tracking-[0.14em] text-white/60 uppercase mb-3">Example request — TODO: owner to verify</p>
+            <pre className="text-[13px] leading-[1.7] text-emerald-300 font-mono whitespace-pre-wrap">{f.code}</pre>
+          </div>
+        )}
       </div>
 
       <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10">
@@ -1314,10 +1361,10 @@ export function ServicePage({ slug, onStart }) {
         <h2 className="text-xl font-semibold text-[#18123b] mb-5">Related products</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           {others.map((k) => (
-            <div key={k} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-5 shadow-sm">
+            <button key={k} onClick={() => window.__goSvc && window.__goSvc(k)} className="rounded-2xl bg-white border border-[#18123b]/[0.08] p-5 shadow-sm text-start hover:border-[#6415f5]/40 transition group">
               <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{SERVICE_PAGES[k].kicker}</p>
-              <p className="mt-1 font-semibold text-[#18123b]">{SERVICE_PAGES[k].title}</p>
-            </div>
+              <p className="mt-1 font-semibold text-[#18123b] group-hover:text-[#6415f5] transition-colors">{SERVICE_PAGES[k].title}</p>
+            </button>
           ))}
         </div>
       </div>
@@ -1358,12 +1405,22 @@ export function AudiencePage({ slug }) {
         <div className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
           <h2 className="text-xl font-semibold text-[#18123b] mb-1">Recommended products</h2>
           <div className="grid sm:grid-cols-3 gap-4 mt-5">
-            {f.recommended.map((k) => (
-              <div key={k} className="rounded-2xl border border-[#18123b]/[0.08] p-5">
-                <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{SERVICE_PAGES[k] ? SERVICE_PAGES[k].kicker : k}</p>
-                <p className="mt-1 font-semibold text-[#18123b] text-sm">{SERVICE_PAGES[k] ? SERVICE_PAGES[k].title : k}</p>
-              </div>
-            ))}
+            {f.recommended.map((k) => {
+              const feat = FEATURES[k];
+              const svc = SERVICE_PAGES[k];
+              const r = feat || svc;
+              if (!r) return null;
+              return (
+                <button
+                  key={k}
+                  onClick={() => (feat ? window.__goFeature && window.__goFeature(k) : window.__goSvc && window.__goSvc(k))}
+                  className="rounded-2xl border border-[#18123b]/[0.08] p-5 text-start hover:border-[#6415f5]/40 transition group"
+                >
+                  <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{r.kicker}</p>
+                  <p className="mt-1 font-semibold text-[#18123b] text-sm group-hover:text-[#6415f5] transition-colors">{r.title}</p>
+                </button>
+              );
+            })}
           </div>
           <div className="mt-6 rounded-2xl bg-[#f6f3ed] border border-[#18123b]/[0.08] p-6">
             <p className="text-sm italic text-[#4b4763]">“{f.story.quote}”</p>
@@ -1592,6 +1649,85 @@ export function LocationsPage() {
             <p className="text-sm text-[#4b4763]">{l.note}</p>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────── USE CASES PAGE (Resources → Use Cases) ─────────────────── */
+
+export function UseCasesPage({ goAudience }) {
+  return (
+    <div>
+      <PageHero
+        kicker="Use Cases"
+        title={<>See How People <span style={{ color: PURPLE }}>Use Aud</span></>}
+        sub="From newsrooms to lecture halls — pick the workflow that looks like yours and see the features that carry it."
+      />
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {USE_CASES.map((u) => (
+            <button
+              key={u.title}
+              onClick={() => u.aud && goAudience && goAudience(u.aud)}
+              className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-7 text-start hover:shadow-md hover:border-[#6415f5]/30 transition group"
+            >
+              <p className="text-[10px] font-black tracking-[0.12em] text-[#6415f5] uppercase">{u.aud ? u.aud.replace("-", " ") : "workflow"}</p>
+              <h3 className="mt-2 text-lg font-semibold text-[#18123b] group-hover:text-[#6415f5] transition-colors">{u.title}</h3>
+              <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{u.text}</p>
+              <span className="mt-4 inline-block text-[13px] font-semibold text-[#6415f5]">See how it works →</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Featured story — placeholder */}
+        <div className="mt-10 rounded-[26px] border-2 border-dashed border-[#18123b]/20 bg-white/50 p-10 text-center">
+          <p className="text-[10px] font-black tracking-[0.14em] text-[#4b4763] uppercase">Featured customer story</p>
+          <p className="mt-3 text-lg font-semibold text-[#18123b]/60">"TODO: owner to add a real customer story."</p>
+          <p className="mt-2 text-xs text-[#4b4763]">TODO: owner to verify — appears here once a real story exists.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────── HUMAN REVIEWERS PAGE [PLANNED] ─────────────────── */
+
+export function ReviewersPage({ goFreelancers }) {
+  return (
+    <div>
+      <PageHero
+        kicker="Our Human Reviewers"
+        title={<>People Behind <span style={{ color: PURPLE }}>The Review</span></>}
+        sub="When a transcript is verified by a human, here is who that human is — and how they are held to the standard."
+      >
+        <span className="inline-block mt-4 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800 text-[11px] font-black tracking-wide uppercase">
+          Planned — program not live yet
+        </span>
+      </PageHero>
+      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
+        <div className="grid sm:grid-cols-3 gap-5">
+          {REVIEWERS.steps.map(([t, d], i) => (
+            <div key={t} className="relative rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-7">
+              <span className="absolute -top-4 left-6 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">{i + 1}</span>
+              <h3 className="mt-3 font-semibold text-[#18123b]">{t}</h3>
+              <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{d}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 rounded-[26px] border-2 border-dashed border-amber-400/60 bg-amber-50/60 p-7">
+          <p className="text-sm text-amber-900 leading-relaxed">⚠ {REVIEWERS.notice}</p>
+        </div>
+
+        <div className="mt-10 text-center">
+          <button
+            onClick={goFreelancers}
+            className="px-8 py-4 rounded-xl bg-[#6415f5] text-white font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
+          >
+            Become a reviewer
+          </button>
+        </div>
       </div>
     </div>
   );
