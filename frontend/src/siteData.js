@@ -329,6 +329,11 @@ export const NAV_MENUS = [
     },
     stats: [["4", "disciplines"], ["24/7", "support"], ["100%", "private"], ["$0", "free plan"]],
   },
+  {
+    // Pricing — direct nav item (the pricing PAGE holds the plans, comparison
+    // table, human-verified price list and FAQ per the blueprint).
+    label: "Pricing", id: "tarifs", page: "pricing",
+  },
 ];
 
 // Pricing has no dropdown — direct link (per blueprint rule 1).
