@@ -223,30 +223,30 @@ export const NAV_MENUS = [
       {
         title: "AI platform", subCols: 2,
         items: [
-          { icon: "🎙️", label: "AI Transcription", desc: "Timestamped text from audio and video", status: "exists", slug: "ai-transcription" },
-          { icon: "🧑‍🤝‍🧑", label: "Speaker Detection", desc: "Who said what, and when", status: "exists", slug: "speaker-detection" },
-          { icon: "✏️", label: "Transcript Editor", desc: "Fix text word by word", status: "exists", slug: "editor" },
-          { icon: "💬", label: "Aud AI Chat", desc: "Ask questions, get cited answers", status: "exists", badge: "New", slug: "ask" },
-          { icon: "⭐", label: "Key Moments", desc: "AI finds what matters", status: "exists", slug: "key-moments" },
-          { icon: "🌍", label: "AI Translation", desc: "Translate, keep the original", status: "exists", slug: "translation" },
-          { icon: "📤", label: "Export Center", desc: "TXT, SRT, DOCX, PDF", status: "exists", slug: "share" },
-          { icon: "🔗", label: "Link Transcription", desc: "From a YouTube or media link", status: "exists", slug: "link-import" },
-          { icon: "🗂️", label: "Files and Folders", desc: "Everything in one place", status: "exists", slug: "files-folders" },
+          { icon: "mic", label: "AI Transcription", desc: "Timestamped text from audio and video", status: "exists", slug: "ai-transcription" },
+          { icon: "users", label: "Speaker Detection", desc: "Who said what, and when", status: "exists", slug: "speaker-detection" },
+          { icon: "pencil", label: "Transcript Editor", desc: "Fix text word by word", status: "exists", slug: "editor" },
+          { icon: "chat", label: "Aud AI Chat", desc: "Ask questions, get cited answers", status: "exists", badge: "New", slug: "ask" },
+          { icon: "star", label: "Key Moments", desc: "AI finds what matters", status: "exists", slug: "key-moments" },
+          { icon: "globe", label: "AI Translation", desc: "Translate, keep the original", status: "exists", slug: "translation" },
+          { icon: "export", label: "Export Center", desc: "TXT, SRT, DOCX, PDF", status: "exists", slug: "share" },
+          { icon: "link", label: "Link Transcription", desc: "From a YouTube or media link", status: "exists", slug: "link-import" },
+          { icon: "folder", label: "Files and Folders", desc: "Everything in one place", status: "exists", slug: "files-folders" },
         ],
       },
       {
         title: "Human-verified",
         items: [
-          { icon: "🧑‍💼", label: "Human Transcription", desc: "A person verifies the text", status: "planned", badge: "Planned", svc: "human-transcription" },
-          { icon: "🌐", label: "Human Translation", desc: "Reviewed by a translator", status: "planned", badge: "Planned", svc: "global-subtitles" },
-          { icon: "🎬", label: "Verified Subtitles", desc: "Ready to publish", status: "planned", badge: "Planned", svc: "human-captions" },
+          { icon: "userCheck", label: "Human Transcription", desc: "A person verifies the text", status: "planned", badge: "Planned", svc: "human-transcription" },
+          { icon: "fileText", label: "Human Translation", desc: "Reviewed by a translator", status: "planned", badge: "Planned", svc: "global-subtitles" },
+          { icon: "captions", label: "Verified Subtitles", desc: "Ready to publish", status: "planned", badge: "Planned", svc: "human-captions" },
         ],
       },
       {
         title: "Developers",
         items: [
-          { icon: "⚙️", label: "API and Docs", desc: "Developer site and documentation", status: "proposed", page: "info:api" }, // TODO: owner to verify — remove if no API
-          { icon: "📜", label: "Changelog", desc: "Product updates", status: "exists", page: "changelog" },
+          { icon: "code", label: "API and Docs", desc: "Developer site and documentation", status: "proposed", page: "info:api" }, // TODO: owner to verify — remove if no API
+          { icon: "list", label: "Changelog", desc: "Product updates", status: "exists", page: "changelog" },
         ],
       },
     ],
@@ -294,9 +294,9 @@ export const NAV_MENUS = [
       {
         title: "Who it's for",
         items: [
-          { icon: "💼", label: "Businesses", desc: "Meetings you can search", status: "exists", page: "aud:businesses" },
-          { icon: "🎙️", label: "Creators & podcasters", desc: "Show notes and subtitles", status: "exists", page: "aud:creators" },
-          { icon: "🔬", label: "Researchers", desc: "Analyze long recordings", status: "exists", page: "aud:researchers" },
+          { icon: "briefcase", label: "Businesses", desc: "Meetings you can search", status: "exists", page: "aud:businesses" },
+          { icon: "podcast", label: "Creators & podcasters", desc: "Show notes and subtitles", status: "exists", page: "aud:creators" },
+          { icon: "flask", label: "Researchers", desc: "Analyze long recordings", status: "exists", page: "aud:researchers" },
         ],
         also: { title: "Also serving", items: [
           { label: "Journalists & newsrooms", desc: "Verify quotes fast", status: "exists", page: "aud:newsrooms" },
@@ -319,13 +319,13 @@ export const NAV_MENUS = [
     widths: "1fr",
     columns: [
       { title: "Resources", cols3: true, items: [
-        { icon: "📝", label: "Blog", desc: "Insights on transcription, translation and AI workflows.", status: "exists", page: "res:blog" },
-        { icon: "🆘", label: "Help Center", desc: "Answers and how-tos.", status: "exists", page: "info:help" },
-        { icon: "🎓", label: "Tutorials", desc: "Step-by-step guides.", status: "exists", page: "res:tutorials" },
-        { icon: "🧩", label: "Use Cases", desc: "How teams use Aud.", status: "exists", page: "res:usecases" },
-        { icon: "🌍", label: "Supported Languages", desc: "Searchable full list.", status: "exists", page: "languages" },
-        { icon: "📜", label: "Changelog", desc: "What we shipped.", status: "exists", badge: "New", page: "changelog" },
-        { icon: "✉️", label: "Contact Support", desc: "Email or form.", status: "exists", page: "contact" },
+        { icon: "pen", label: "Blog", desc: "Insights on transcription, translation and AI workflows.", status: "exists", page: "res:blog" },
+        { icon: "help", label: "Help Center", desc: "Answers and how-tos.", status: "exists", page: "info:help" },
+        { icon: "cap", label: "Tutorials", desc: "Step-by-step guides.", status: "exists", page: "res:tutorials" },
+        { icon: "grid", label: "Use Cases", desc: "How teams use Aud.", status: "exists", page: "res:usecases" },
+        { icon: "globe", label: "Supported Languages", desc: "Searchable full list.", status: "exists", page: "languages" },
+        { icon: "list", label: "Changelog", desc: "What we shipped.", status: "exists", badge: "New", page: "changelog" },
+        { icon: "mail", label: "Contact Support", desc: "Email or form.", status: "exists", page: "contact" },
       ]},
     ],
     promo: {
@@ -341,12 +341,12 @@ export const NAV_MENUS = [
     widths: "1fr",
     columns: [
       { title: "About Aud", cols3: true, items: [
-        { icon: "🏛️", label: "Company", desc: "Our mission and approach.", status: "exists", page: "about" },
-        { icon: "🛡️", label: "Security and Privacy", desc: "How we protect your files.", status: "exists", page: "info:security" },
-        { icon: "🧑‍💼", label: "Our Human Reviewers", desc: "How reviewers are vetted.", status: "planned", badge: "Planned", page: "reviewers" },
-        { icon: "✉️", label: "Contact", desc: "Email and form.", status: "exists", page: "contact" },
-        { icon: "🚀", label: "Careers", desc: "Join the team.", status: "exists", page: "careers" },
-        { icon: "⚖️", label: "Terms and Privacy", desc: "The legal pages.", status: "exists", page: "legal" },
+        { icon: "building", label: "Company", desc: "Our mission and approach.", status: "exists", page: "about" },
+        { icon: "shield", label: "Security and Privacy", desc: "How we protect your files.", status: "exists", page: "info:security" },
+        { icon: "userCheck", label: "Our Human Reviewers", desc: "How reviewers are vetted.", status: "planned", badge: "Planned", page: "reviewers" },
+        { icon: "mail", label: "Contact", desc: "Email and form.", status: "exists", page: "contact" },
+        { icon: "rocket", label: "Careers", desc: "Join the team.", status: "exists", page: "careers" },
+        { icon: "scale", label: "Terms and Privacy", desc: "The legal pages.", status: "exists", page: "legal" },
       ]},
     ],
     promo: {
