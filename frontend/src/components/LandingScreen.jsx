@@ -431,7 +431,7 @@ export default function LandingScreen({ onStart }) {
                     if (e.key === "Escape") setOpenMenu(null);
                     if (e.key === "ArrowDown" && item.columns) { e.preventDefault(); openWith(item.label); }
                   }}
-                  onClick={() => (item.columns ? (openMenu === item.label ? setOpenMenu(null) : openWith(item.label)) : goToPage(item.page))}
+                  onClick={() => (item.columns ? openWith(item.label) : goToPage(item.page))}
                   className={`text-[14px] font-medium transition-colors flex items-center gap-1 ${
                     navActive(item.label) || openMenu === item.label
                       ? "text-[#6415f5]"

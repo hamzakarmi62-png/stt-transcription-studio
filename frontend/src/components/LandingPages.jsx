@@ -1,6 +1,6 @@
 import { useState } from "react";
 import audLogo from "../assets/aud-logo.png";
-import { PLANS, HUMAN_SERVICES, PRICING_FAQ, SUBSCRIPTION_RULES, ALL_LANGUAGES, USE_CASES, BRAND, REVIEWERS } from "../siteData.js";
+import { PLANS, HUMAN_SERVICES, PRICING_FAQ, SUBSCRIPTION_RULES, ALL_LANGUAGES, USE_CASES, BRAND, REVIEWERS, SERVICE_PAGES, AUDIENCE_PAGES, RESOURCE_LISTINGS, LEADERSHIP, BOARD, PRESS, LOCATIONS } from "../siteData.js";
 import { Lock, EyeOff, Star, Users, Languages, Sparkles, Chart } from "./Icons.jsx";
 
 // Multi-page landing companions (About / Pricing / Contact) — Rev-style
