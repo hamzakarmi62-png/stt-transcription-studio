@@ -22,7 +22,13 @@ function Crumb({ section, text, badge }) {
   );
 }
 
-function Page({ section, crumb, badge, children }) {
+function Page({ section, crumb, badge, desc, children }) {
+
+  useEffect(() => {
+    document.title = `${crumb} — Aud`;
+    const m = document.querySelector('meta[name="description"]');
+    if (m && desc) m.setAttribute("content", desc);
+  }, [crumb, desc]);
   return (
     <div className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-7 pb-20">
       <Crumb section={section} text={crumb} badge={badge} />
@@ -188,7 +194,7 @@ export function TFeaturePage({ slug, goFeature, goPage }) {
     ...(tools ? [{ id: "page-tools", label: "Try it on this page" }] : []),
     ...(slug === "ai-transcription" ? [{ id: "quality", label: "What affects quality" }, { id: "formats", label: "Formats" }] : []),
     ...(slug === "link-import" ? [{ id: "linktypes", label: "Link types & problems" }] : []),
-    ...(slug === "share" ? [{ id: "exportguide", label: "Format guide" }, { id: "cmptable", label: "Comparison" }] : []),
+    ...(slug === "share" ? [{ id: "exportguide", label: "Format guide" }, { id: "cmptable", label: "Comparison" }, { id: "sharing", label: "Sharing vs exporting" }] : []),
     ...(slug === "translation" ? [{ id: "trhow", label: "How it works" }, { id: "trtips", label: "Tips" }] : []),
     ...(slug === "speaker-detection" ? [{ id: "spktips", label: "Tips" }] : []),
     ...(slug === "editor" ? [{ id: "edtips", label: "Workflow & tips" }] : []),
@@ -224,7 +230,7 @@ export function TFeaturePage({ slug, goFeature, goPage }) {
           {g && (
             <div className="mt-5 space-y-3">
               {g.items.map(([label, target, para]) => (
-                <button key={label} onClick={() => goFeature(target)} className="w-full text-start rounded-xl bg-white border border-[#18123b]/10 p-5 hover:border-[#6415f5]/40 transition">
+                <button key={label} onClick={() => (target.includes(":") ? goPage && goPage(target) : goFeature(target))} className="w-full text-start rounded-xl bg-white border border-[#18123b]/10 p-5 hover:border-[#6415f5]/40 transition">
                   <p className="text-[15px] font-bold text-[#18123b] group-hover:text-[#6415f5]">{label} →</p>
                   <p className="mt-1 text-[13.5px] text-[#4b4763] leading-relaxed">{para}</p>
                 </button>
@@ -265,6 +271,15 @@ export function TFeaturePage({ slug, goFeature, goPage }) {
 
           {slug === "link-import" && (
             <div className="mt-12"><SectionH id="linktypes">Supported link types &amp; common problems</SectionH><LinkGuide /></div>
+          )}
+
+          {slug === "share" && (
+            <div className="mt-12"><SectionH id="sharing">{RICH_DATA.shareLinks.h}</SectionH>
+              <div className="rounded-xl bg-white border border-[#18123b]/10 p-5">
+                <p className="text-[13.5px] text-[#4b4763] leading-relaxed">{RICH_DATA.shareLinks.p1}</p>
+                <p className="mt-2 text-[13.5px] text-[#4b4763] leading-relaxed">{RICH_DATA.shareLinks.p2}</p>
+              </div>
+            </div>
           )}
 
           {slug === "share" && (
@@ -390,48 +405,41 @@ function SpeakerRegroup({ count }) {
 /* ── Template: human-verified service page (planned) + waitlist ─────────── */
 export function THumanPage({ slug }) {
   const h = SPEC_DATA.human;
-  const crumb = h.crumbs[slug];
+  const p = h.pages[slug];
   const w = usePost("/api/public/waitlist");
   const [email, setEmail] = useState("");
   const [langs, setLangs] = useState("");
   const [note, setNote] = useState("");
-  if (!crumb) return null;
+  if (!p) return null;
   const submit = (e) => {
     e.preventDefault();
-    w.post({ kind: "service", service: crumb, email, languages: langs, note }, "You're on the list — we'll email you when the service goes live.");
+    const site = e.target.elements["website"]?.value || "";
+    w.post({ kind: "service", service: p.service, email, languages: langs, note, website: site },
+      "You're on the list — we'll email you when the service goes live.");
   };
   return (
-    <Page section="Product" crumb={crumb} badge={h.badge}>
-      <h1 className="text-[clamp(28px,2.8vw,42px)] leading-[1.18] font-semibold tracking-[-0.015em] text-[#18123b]">{h.headline}</h1>
-      <p className="mt-3.5 text-[16px] leading-[1.65] text-[#4b4763] max-w-[540px]">{h.desc}</p>
+    <Page section="Product" crumb={p.crumb} badge={h.badge} desc={p.desc}>
+      <h1 className="text-[clamp(28px,2.8vw,42px)] leading-[1.18] font-semibold tracking-[-0.015em] text-[#18123b]">{p.headline}</h1>
+      <p className="mt-3.5 text-[16px] leading-[1.65] text-[#4b4763] max-w-[540px]">{p.desc}</p>
       <div className="mt-6"><PurpleBtn onClick={() => document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" })}>{h.cta}</PurpleBtn></div>
 
       <div className="mt-12 grid lg:grid-cols-[220px_1fr] gap-10 items-start">
-        <PageToc items={[{ id: "how", label: "How it would work" }, { id: "detail", label: "In detail" }, { id: "waitlist", label: "Join the waitlist" }]} />
+        <PageToc items={[{ id: "how", label: "How it would work" }, { id: "status", label: "Status" }, { id: "waitlist", label: "Join the waitlist" }]} />
         <div className="min-w-0">
-          <SectionH id="how">{h.stepsTitle}</SectionH>
-          <StepsRow steps={h.steps} />
-          <div className="mt-10"><SectionH id="detail">In detail</SectionH></div>
-          <div className="space-y-4">
-            {(RICH_DATA.humanDetail || []).map((x) => (
-              <div key={x.h} className="rounded-xl bg-white border border-[#18123b]/10 p-5">
-                <p className="text-[15px] font-bold text-[#18123b]">{x.h}</p>
-                <p className="mt-1.5 text-[13.5px] text-[#4b4763] leading-relaxed">{x.p}</p>
-              </div>
-            ))}
+          <SectionH id="how">{p.stepsTitle}</SectionH>
+          <StepsRow steps={p.steps} />
+
+          <div className="mt-10" id="status"><SectionH id="status-h">Status</SectionH></div>
+          <div className="rounded-xl bg-white border border-[#18123b]/10 p-5">
+            <p className="text-[13.5px] text-[#4b4763] leading-relaxed">{p.detail}</p>
           </div>
-          <div className="mt-10 grid sm:grid-cols-3 gap-4">
-            {h.details.map(([t, d]) => (
-              <div key={t} className="rounded-xl border-2 border-dashed border-[#18123b]/20 bg-white/40 p-5">
-                <p className="text-[13.5px] font-semibold text-[#18123b]/80">{t}</p>
-                <p className="mt-1 text-[13px] text-[#4b4763]">{d}</p>
-              </div>
-            ))}
-          </div>
-          <div className="mt-8"><Dashed title={h.noticeTitle}>{h.notice}</Dashed></div>
 
           <div className="mt-12" id="waitlist"><SectionH id="waitlist-h">Join the waitlist</SectionH></div>
           <form onSubmit={submit} className="rounded-2xl bg-white border border-[#18123b]/10 p-6 space-y-4 max-w-[560px]">
+            <div>
+              <label className="block text-[13px] font-semibold text-[#18123b] mb-1.5" htmlFor="wl-service">Service</label>
+              <input id="wl-service" value={p.service} readOnly className="w-full rounded-lg border border-[#18123b]/15 bg-[#f6f3ed] px-4 py-2.5 text-[14px] font-semibold text-[#18123b]/80 focus:outline-none" />
+            </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#18123b] mb-1.5" htmlFor="wl-email">Email</label>
               <input id="wl-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg border border-[#18123b]/15 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#6415f5]/30" />
@@ -469,7 +477,7 @@ export function TAudiencePage({ slug, goFeature }) {
   }[slug];
   const a = RICH_DATA.audiences[slug];
   if (!base || !a) return null;
-  const titles = { businesses: "For Businesses", creators: "For Creators & Podcasters", researchers: "For Researchers", newsrooms: "Also Serving — Newsrooms & Journalists", education: "Also Serving — Education", video: "Also Serving — Video & Accessibility", consulting: "Also Serving — Research & Consulting" };
+  const titles = { businesses: "Businesses", creators: "Creators & podcasters", researchers: "Researchers", newsrooms: "Journalists & newsrooms", education: "Education", video: "Video accessibility", consulting: "Research & consulting" };
   const toc = [
     { id: "problem", label: "The problem" },
     { id: "how", label: "How Aud helps" },
@@ -555,11 +563,12 @@ export function TContact({ goPage }) {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const submit = (e) => {
     e.preventDefault();
-    post.post({ ...form, website: "" }, "Received — we reply by email.");
+    const site = e.target.elements["website"]?.value || "";
+    post.post({ ...form, website: site }, "Received — we reply by email.");
   };
   const missing = RICH_DATA.missing;
   return (
-    <Page section="About" crumb={c.crumb}>
+    <Page section="About" crumb={c.crumb} desc={c.desc}>
       <div className="grid lg:grid-cols-2 gap-12 items-start">
         <div>
           <h1 className="text-[clamp(28px,2.8vw,42px)] font-semibold tracking-[-0.015em] text-[#18123b]">{c.headline}</h1>
@@ -614,6 +623,55 @@ export function TContact({ goPage }) {
   );
 }
 
+/* ── Template: contact support (topic fixed to Support) ─────────────────── */
+export function TContactSupport({ goPage }) {
+  const c = SPEC_DATA.support;
+  const post = usePost("/api/public/contact");
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+  const submit = (e) => {
+    e.preventDefault();
+    const site = e.target.elements["website"]?.value || "";
+    post.post({ ...form, topic: "Support", website: site }, "Received — support replies by email.");
+  };
+  return (
+    <Page section="Resources" crumb={c.crumb} desc={c.desc}>
+      <div className="grid lg:grid-cols-2 gap-12 items-start">
+        <div>
+          <h1 className="text-[clamp(28px,2.8vw,42px)] font-semibold tracking-[-0.015em] text-[#18123b]">{c.headline}</h1>
+          <p className="mt-3.5 text-[15.5px] text-[#4b4763] max-w-[420px]">{c.desc}</p>
+          <div className="mt-8">
+            <PurpleBtn outline onClick={() => goPage("info:help")}>Browse the Help Center first</PurpleBtn>
+          </div>
+        </div>
+        <form onSubmit={submit} className="rounded-2xl bg-white border border-[#18123b]/10 p-6 sm:p-7 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-[#4b4763]">Topic</span>
+            <span className="px-2.5 py-1 rounded-md bg-[#6415f5]/[0.08] text-[#6415f5] text-[11.5px] font-bold">Support</span>
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#18123b] mb-1.5" htmlFor="cs-name">Name</label>
+            <input id="cs-name" required value={form.name} onChange={set("name")} className="w-full rounded-lg border border-[#18123b]/15 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#6415f5]/30" />
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#18123b] mb-1.5" htmlFor="cs-email">Email</label>
+            <input id="cs-email" type="email" required value={form.email} onChange={set("email")} className="w-full rounded-lg border border-[#18123b]/15 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#6415f5]/30" />
+          </div>
+          <div>
+            <label className="block text-[13px] font-semibold text-[#18123b] mb-1.5" htmlFor="cs-msg">Message</label>
+            <textarea id="cs-msg" rows={5} required value={form.message} onChange={set("message")} placeholder="What happened, and what did you expect?" className="w-full rounded-lg border border-[#18123b]/15 px-4 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#6415f5]/30" />
+          </div>
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
+          <button type="submit" disabled={post.state === "loading"} className="px-6 py-3 rounded-[10px] bg-[#6415f5] text-white text-[15px] font-semibold hover:bg-[#5311cf] transition disabled:opacity-50">
+            {post.state === "loading" ? "Sending…" : "Send to support"}
+          </button>
+          <FormNote {...post} />
+        </form>
+      </div>
+    </Page>
+  );
+}
+
 /* ── Template: careers (application posts to the backend) ───────────────── */
 export function TCareers() {
   const c = SPEC_DATA.careers;
@@ -622,7 +680,8 @@ export function TCareers() {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const submit = (e) => {
     e.preventDefault();
-    post.post({ ...form, website: "" }, "Application received — thank you.");
+    const site = e.target.elements["website"]?.value || "";
+    post.post({ ...form, website: site }, "Application received — thank you.");
   };
   return (
     <Page section="About" crumb={c.crumb}>
@@ -739,7 +798,8 @@ export function TReviewers({ goFreelancers }) {
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
   const submit = (e) => {
     e.preventDefault();
-    post.post({ kind: "reviewer", service: "Reviewer application", ...form }, "Interest received — we'll be in touch when the program opens.");
+    const site = e.target.elements["website"]?.value || "";
+    post.post({ kind: "reviewer", service: "Reviewer application", ...form, website: site }, "Interest received — we'll be in touch when the program opens.");
   };
   return (
     <Page section="About" crumb={r.crumb} badge={r.badge}>
@@ -758,7 +818,7 @@ export function TReviewers({ goFreelancers }) {
         ))}
       </div>
 
-      <div className="mt-10"><Dashed title={r.noticeTitle}>{r.notice}</Dashed></div>
+      <div className="mt-10"><Dashed>{r.plannedNotice}</Dashed></div>
 
       <form onSubmit={submit} className="mt-8 rounded-2xl bg-white border border-[#18123b]/10 p-6 space-y-4 max-w-[560px]">
         <p className="text-[15px] font-bold text-[#18123b]">Interested in reviewing?</p>
@@ -781,7 +841,6 @@ export function TReviewers({ goFreelancers }) {
         <FormNote {...post} />
       </form>
 
-      <div className="mt-8"><PurpleBtn outline onClick={goFreelancers}>See the freelancer page</PurpleBtn></div>
     </Page>
   );
 }

@@ -1039,47 +1039,31 @@ export function InfoPage({ slug, onStart }) {
 /* ─────── DATA-DRIVEN PAGES (human / languages / calculator / changelog / legal / careers) ─────── */
 
 export function HumanServicesPage({ onStart }) {
+  const services = [
+    ["Human Transcription", "human-transcription", "A reviewer would check the AI transcript against the audio, word by word."],
+    ["Human Translation", "global-subtitles", "A professional translator would review the translation — the original text stays intact."],
+    ["Verified Subtitles", "human-captions", "Your SRT subtitles would be reviewed for timing and wording before publishing."],
+  ];
   return (
     <div>
       <PageHero
-        kicker="Human-Verified Services"
-        title={<>When It Matters, <span style={{ color: PURPLE }}>A Human Checks It.</span></>}
-        sub="Add professional human review to any plan — per minute, on demand. A specialist corrects, verifies and signs off the AI output."
-      />
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-10 grid md:grid-cols-2 gap-5">
-        {HUMAN_SERVICES.map((svc) => (
-          <div key={svc.name} className="rounded-[26px] bg-white border border-[#18123b]/[0.08] shadow-sm p-8">
-            <div className="flex items-center justify-between gap-4">
-              <h3 className="font-semibold text-[#18123b] text-lg pr-4">{svc.name}</h3>
-              <div className="text-end shrink-0">
-                <span className="text-2xl font-extrabold text-[#6415f5]">{svc.price}</span>
-                <span className="block text-[10px] text-[#4b4763]">{svc.unit}</span>
-              </div>
-            </div>
-            <p className="mt-3 text-sm text-[#4b4763] leading-relaxed">{svc.desc}</p>
-          </div>
+        kicker="Human-verified"
+        title={<>AI Speed, <span style={{ color: PURPLE }}>Human Care</span></>}
+        sub="Planned add-on services on top of any plan — each described on its own page. Nothing can be ordered yet."
+      >
+        <span className="inline-block mt-4 px-3 py-1.5 rounded-lg bg-amber-100 text-amber-800 text-[11px] font-black tracking-wide uppercase">Planned</span>
+      </PageHero>
+      <div className="max-w-[900px] mx-auto px-5 sm:px-8 pb-16 space-y-4">
+        {services.map(([t, slug, d]) => (
+          <button key={slug} onClick={() => window.__goSvc && window.__goSvc(slug)} className="w-full text-start rounded-2xl bg-white border border-[#18123b]/[0.08] shadow-sm p-6 hover:border-[#6415f5]/40 transition">
+            <p className="font-semibold text-[#18123b]">
+              {t}
+              <span className="ms-2 px-2 py-0.5 rounded-md bg-amber-100 text-amber-800 text-[10px] font-black uppercase align-middle">Planned</span>
+            </p>
+            <p className="text-sm text-[#4b4763] mt-1">{d}</p>
+          </button>
         ))}
-      </div>
-      <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pb-16">
-        <div className="rounded-[26px] bg-[#18123b] p-8 sm:p-10">
-          <h2 className="text-2xl font-semibold text-white">How it works</h2>
-          <div className="mt-7 grid sm:grid-cols-3 gap-5">
-            {[
-              ["Order", "Pick the service and send your transcript or recording from the studio."],
-              ["A specialist works", "A professional reviewer or translator checks the output against the audio."],
-              ["Verified delivery", "You receive the human-signed version — ready for courts, publishers and archives."],
-            ].map(([t, d], i) => (
-              <div key={t} className="relative rounded-2xl bg-white/[0.06] border border-white/10 p-6">
-                <span className="absolute -top-4 left-5 w-9 h-9 rounded-xl bg-[#6415f5] text-white font-extrabold flex items-center justify-center shadow-md">{i + 1}</span>
-                <h3 className="mt-3 font-semibold text-white">{t}</h3>
-                <p className="mt-2 text-sm text-white/70 leading-relaxed">{d}</p>
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-[12px] text-white/60">
-            Order by email: <a className="font-bold text-white underline" href={`mailto:${BRAND.email}`}>{BRAND.email}</a>
-          </p>
-        </div>
+        <p className="text-xs text-[#4b4763]/80">Waitlists open on each service's page. Pricing, turnaround and language coverage will be published only when the program is real.</p>
       </div>
     </div>
   );

@@ -245,7 +245,6 @@ export const NAV_MENUS = [
       {
         title: "Developers",
         items: [
-          { icon: "code", label: "API and Docs", desc: "Developer site and documentation", status: "proposed", page: "info:api" }, // TODO: owner to verify — remove if no API
           { icon: "list", label: "Changelog", desc: "Product updates", status: "exists", page: "changelog" },
         ],
       },
@@ -256,7 +255,7 @@ export const NAV_MENUS = [
       text: "One click turns your finished transcript into another language — speakers and timestamps stay intact.",
       cta: "Try translation free",
     },
-    stats: [["98%+", "accuracy"], ["<3 min", "per hour"], ["99", "languages"], ["$0", "free plan"]],
+    stats: [["99", "languages"], ["12", "speakers"], ["6", "export formats"], ["$0", "free plan"]],
   },
   {
     label: "Features",
@@ -275,7 +274,7 @@ export const NAV_MENUS = [
             { label: "AI translation", status: "exists", slug: "translation" },
             { label: "Original kept intact", status: "exists", slug: "translation" },
             { label: "Multiple languages", status: "exists", slug: "multi-language" },
-            { label: "Human translation", status: "planned", badge: "Planned", page: "human" },
+            { label: "Human translation", status: "planned", badge: "Planned", page: "svc:global-subtitles" },
           ]},
           { title: "Edit and export", items: [
             { label: "Word-level editor", status: "exists", slug: "editor" },
@@ -285,9 +284,9 @@ export const NAV_MENUS = [
           ]},
           { title: "Organize", items: [
             { label: "Folders", status: "exists", slug: "files-folders" },
-            { label: "Sessions archive", status: "exists", slug: "share" },
-            { label: "Search", status: "exists", slug: "share" },
-            { label: "Bulk upload", status: "proposed", slug: "share" }, // TODO: owner to verify
+            { label: "Sessions archive", status: "exists", slug: "files-folders" },
+            { label: "Search", status: "exists", slug: "files-folders" },
+            { label: "Bulk upload", status: "proposed", slug: "files-folders" },
           ]},
         ],
       },
@@ -312,7 +311,7 @@ export const NAV_MENUS = [
       text: "Journalists, researchers, teams and creators — Aud speaks your language.",
       cta: "Find your workflow",
     },
-    stats: [["99", "languages"], ["12", "speakers"], ["7", "audiences"], ["$0", "free plan"]],
+    stats: [["99", "languages"], ["12", "speakers"], ["6", "export formats"], ["$0", "free plan"]],
   },
   {
     label: "Resources",
@@ -325,7 +324,7 @@ export const NAV_MENUS = [
         { icon: "grid", label: "Use Cases", desc: "How teams use Aud.", status: "exists", page: "res:usecases" },
         { icon: "globe", label: "Supported Languages", desc: "Searchable full list.", status: "exists", page: "languages" },
         { icon: "list", label: "Changelog", desc: "What we shipped.", status: "exists", badge: "New", page: "changelog" },
-        { icon: "mail", label: "Contact Support", desc: "Email or form.", status: "exists", page: "contact" },
+        { icon: "mail", label: "Contact Support", desc: "Email or form.", status: "exists", page: "support" },
       ]},
     ],
     promo: {
@@ -334,7 +333,7 @@ export const NAV_MENUS = [
       text: "Guides, articles and videos that turn first-time users into power users.",
       cta: "Explore resources",
     },
-    stats: [["7", "hubs"], ["24/7", "available"], ["EN/FR/AR", "guides"], ["Free", "always"]],
+    stats: [["99", "languages"], ["12", "speakers"], ["6", "export formats"], ["$0", "free plan"]],
   },
   {
     label: "About",
@@ -355,7 +354,7 @@ export const NAV_MENUS = [
       text: "North-African roots, world-class speech AI.",
       cta: "Read our story",
     },
-    stats: [["4", "disciplines"], ["24/7", "support"], ["100%", "private"], ["$0", "free plan"]],
+    stats: [["99", "languages"], ["12", "speakers"], ["6", "export formats"], ["$0", "free plan"]],
   },
   {
     // Pricing — direct nav item, no dropdown (per blueprint).
@@ -715,35 +714,6 @@ export const RESOURCE_LISTINGS = {
       { title: "Example: team meeting with three speakers", cat: "Meetings", date: "October 2026" },
       { title: "Example: lecture with slide references", cat: "Lectures", date: "October 2026" },
       { title: "Example: podcast with intro music", cat: "Podcasts", date: "October 2026" },
-    ],
-  },
-  stories: {
-    kicker: "Success Stories", title: "Success Stories",
-    lead: "Customer stories — how teams and professionals put Aud to work.", // TODO: owner to verify
-    categories: ["Research", "Media", "Business", "Education"],
-    cards: [ // TODO: owner to replace with real stories
-      { title: "PLACEHOLDER — customer story", cat: "Research", date: "October 2026" },
-      { title: "PLACEHOLDER — customer story", cat: "Media", date: "October 2026" },
-      { title: "PLACEHOLDER — customer story", cat: "Business", date: "October 2026" },
-      { title: "PLACEHOLDER — customer story", cat: "Education", date: "October 2026" },
-    ],
-  },
-  webinars: {
-    kicker: "Webinars", title: "Webinars",
-    lead: "Live and on-demand sessions with the Aud team and guests.",
-    categories: ["Live", "On-demand"],
-    cards: [ // TODO: owner to replace with real webinars
-      { title: "PLACEHOLDER — upcoming webinar", cat: "Live", date: "Coming soon" },
-      { title: "PLACEHOLDER — recorded session", cat: "On-demand", date: "October 2026" },
-    ],
-  },
-  reviews: {
-    kicker: "Reviews", title: "Reviews",
-    lead: "Ratings and feedback from review sites and app stores.", // TODO: owner to verify — add real review links
-    categories: ["Review sites", "App stores"],
-    cards: [ // TODO: owner to replace with real reviews
-      { title: "PLACEHOLDER — review site rating", cat: "Review sites", date: "—" },
-      { title: "PLACEHOLDER — app store rating", cat: "App stores", date: "—" },
     ],
   },
 };

@@ -12,6 +12,7 @@ import { PageToc, SectionH, FaqBlock, Highlight } from "./Toc.jsx";
 const CONTACT_EMAIL = BRAND.email;
 
 function Page({ section, crumb, badge, children }) {
+  useEffect(() => { document.title = `${crumb} — Aud`; }, [crumb]);
   return (
     <div className="max-w-[1200px] mx-auto px-5 sm:px-8 pt-7 pb-20">
       <p className="text-[13px] text-[#4b4763]/80 mb-5 flex items-center gap-2.5 flex-wrap">
@@ -132,7 +133,7 @@ export function THelpCenter({ goPage }) {
         <HelpfulFeedback articleId={open.id} />
         <div className="mt-8 max-w-[720px] rounded-xl bg-[#f6f3ed] border border-[#18123b]/10 p-5 flex flex-wrap items-center justify-between gap-3">
           <p className="text-[13.5px] text-[#4b4763]">Didn't find your answer?</p>
-          <button onClick={() => goPage("contact")} className="px-4 py-2 rounded-lg border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white text-[13px] font-semibold hover:bg-[#6415f5]/[0.06] transition">Contact Support</button>
+          <button onClick={() => goPage("support")} className="px-4 py-2 rounded-lg border-[1.5px] border-[#6415f5] text-[#6415f5] bg-white text-[13px] font-semibold hover:bg-[#6415f5]/[0.06] transition">Contact Support</button>
         </div>
         <Live message={msg} />
       </Page>

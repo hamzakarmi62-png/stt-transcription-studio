@@ -102,6 +102,13 @@ export const RICH_DATA = {
     },
   },
 
+  // Export Center: the read-only share link, kept distinct from exports
+  shareLinks: {
+    h: "Sharing, not exporting",
+    p1: "Exporting produces a file you send around yourself — TXT, SRT, DOCX or PDF. Sharing is the lighter path: Aud gives a transcript a read-only link, and whoever opens it reads the text, sees the speakers and can play the audio.",
+    p2: "The link never grants access to your account, and nothing becomes public unless you create it. Use exports when the destination needs a file; use a share link when the destination is a person.",
+  },
+
   // ── Sample Q&A (Aud AI Chat + Key Moments) ────────────────────────────
   chatExamples: [
     { q: "What did Speaker 2 say about the deadline?", a: "Speaker 2 moved the deadline to Friday and asked everyone to have their parts ready the day before.", t: "01:12.4", line: 4 },
@@ -170,7 +177,7 @@ export const RICH_DATA = {
         ["AI translation", "translation", "Translate the full transcript in one step — every segment rewritten in the chosen language."],
         ["Original kept intact", "translation", "The original text never changes. Switch between original and translation whenever you need to check a phrase."],
         ["Multiple languages", "multi-language", "Mixed recordings — speakers switching languages mid-sentence — are transcribed with multi-language passes."],
-        ["Human translation", "human-transcription", "Planned: a professional translator reviewing the text, for the work that cannot afford doubt."],
+        ["Human translation", "svc:global-subtitles", "Planned: a professional translator reviewing the text, for the work that cannot afford doubt."],
       ],
     },
     "edit-export": {
@@ -189,10 +196,8 @@ export const RICH_DATA = {
       headline: "An archive, not a pile",
       desc: "How Aud keeps a growing library of transcripts usable.",
       items: [
-        ["Files and folders", "files-folders", "Create folders, rename anything, move sessions between them — structure that survives dozens of transcripts."],
-        ["Sessions archive", "share", "Every transcription session is kept and revisit-able, from the newest interview to last year's lecture."],
-        ["Search", "share", "One search box across the whole archive — find the exact moment a word was said, in any file."],
-        ["Bulk actions", "share", "Move and clean up in batches. Files saved in My Files are protected from bulk deletion."],
+        ["Files, archive & search", "files-folders", "Folders, the sessions archive and full-text search — one page covers how your whole library stays findable."],
+        ["Bulk actions", "files-folders", "Move and clean up in batches. Files saved in My Files are protected from bulk deletion."],
       ],
     },
   },
@@ -522,9 +527,7 @@ export const RICH_DATA = {
     ["Are the timestamps accurate?", "Every word carries its own timestamp, and the editor is synced to the audio: click any word and playback jumps to that exact moment, so you can verify any line against the recording."],
     ["What happens to my files after transcription?", "Your session is kept in your archive where you can edit, translate, share and export it. Files are encrypted in transit and at rest, are never sold, and are only visible to your account unless you create a share link."],
     ["Can I correct mistakes?", "Yes — the editor works like a word processor synced to the audio. Type a correction and it attaches to the same timestamp; undo, redo and auto-save are all built in."],
-    ["Can I get subtitles from a transcript?", "Yes — export as SRT and the file drops into video players, YouTube, Vimeo and editors with precise timecodes. Corrections made in the transcript flow into the exported file."],
     ["Does it work on phone recordings?", "Yes — phone voice memos (M4A) are a standard input. Quality depends mostly on the recording: distance to the speaker and background noise matter more than the device."],
-    ["What is Aud AI Chat?", "A way to ask your transcript questions in plain language: the AI answers from your transcript and cites the exact moment each claim came from, with a clickable timestamp."],
   ],
 
   // Link Transcription page: supported types & common problems

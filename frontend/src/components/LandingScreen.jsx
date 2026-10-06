@@ -4,7 +4,7 @@ import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServic
 import { NAV_MENUS, BRAND, PLANS, USE_CASES } from "../siteData.js";
 import { SPEC_DATA } from "../specData.js";
 import { RICH_DATA } from "../specContent.js";
-import { TFeaturePage, THumanPage, TApi, TContact, TCareers, TCompany, TReviewers, TTerms, TAudiencePage, TSecurity } from "./SpecPages.jsx";
+import { TFeaturePage, THumanPage, TApi, TContact, TContactSupport, TCareers, TCompany, TReviewers, TTerms, TAudiencePage, TSecurity } from "./SpecPages.jsx";
 import { TBlog, TTutorials, TUseCases, TLanguages, TChangelog } from "./SpecResources.jsx";
 import { FileChecker } from "./tools/Checkers.jsx";
 import { MenuIcon, MenuGlyph } from "./MenuIcons.jsx";
@@ -88,9 +88,6 @@ const STEPS = [
 
 // Trust bar stats — [CONFIRMED product facts]
 const TRUST_STATS = [["99", "languages"], ["12", "speakers"], ["6", "export formats"], ["$0", "free plan"]];
-// TODO: owner to verify — replace with real customer logos when available.
-const PLACEHOLDER_LOGOS = ["UNIVERSITY", "NEWSROOM", "LAW FIRM", "PODCAST STUDIO", "RESEARCH LAB"];
-
 function CursorIcon({ className }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="white" stroke="#18123b" strokeWidth="1.4">
@@ -438,7 +435,7 @@ export default function LandingScreen({ onStart }) {
                     if (e.key === "ArrowDown" && item.columns) { e.preventDefault(); openWith(item.label); }
                   }}
                   onClick={() => (item.columns ? openWith(item.label) : goToPage(item.page))}
-                  className={`text-[14px] font-medium transition-colors flex items-center gap-1 ${
+                  className={`text-[14px] font-medium transition-colors flex items-center gap-1 rounded-lg px-2 py-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6415f5]/50 ${
                     navActive(item.label) || openMenu === item.label
                       ? "text-[#6415f5]"
                       : "text-[#18123b]/75 hover:text-[#18123b]"
@@ -703,6 +700,7 @@ export default function LandingScreen({ onStart }) {
       {page === "about" && <TCompany />}
       {page === "pricing" && <PricingPage onStart={onStart} />}
       {page === "contact" && <TContact goPage={goToPage} />}
+      {page === "support" && <TContactSupport goPage={goToPage} />}
       {page.startsWith("feat:") && ((SPEC_DATA.features[page.slice(5)] || RICH_DATA.groupPages[page.slice(5)])
         ? <TFeaturePage slug={page.slice(5)} goFeature={goFeature} goPage={goToPage} />
         : <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />)}
@@ -711,7 +709,7 @@ export default function LandingScreen({ onStart }) {
         : page === "info:api" ? <TApi />
         : page === "info:security" ? <TSecurity />
         : <InfoPage slug={page.slice(5)} onStart={onStart} />)}
-      {page.startsWith("svc:") && (SPEC_DATA.human.crumbs[page.slice(4)]
+      {page.startsWith("svc:") && (SPEC_DATA.human.pages[page.slice(4)]
         ? <THumanPage slug={page.slice(4)} />
         : <ServicePage slug={page.slice(4)} onStart={onStart} />)}
       {page.startsWith("aud:") && <TAudiencePage slug={page.slice(4)} goFeature={goFeature} />}
@@ -816,12 +814,7 @@ export default function LandingScreen({ onStart }) {
               </div>
             ))}
           </div>
-          {/* TODO: owner to verify — replace these placeholder wordmarks with real customer logos */}
-          <div className="mt-9 flex flex-wrap items-center justify-center gap-x-10 gap-y-4 opacity-45">
-            {PLACEHOLDER_LOGOS.map((logo) => (
-              <span key={logo} className="text-[13px] font-black tracking-[0.22em] text-[#18123b]">{logo}</span>
-            ))}
-          </div>
+
         </div>
       </section>
 
@@ -936,25 +929,6 @@ export default function LandingScreen({ onStart }) {
                 <p className="mt-2 text-sm text-[#4b4763] leading-relaxed">{u.text}</p>
                 <span className="mt-4 inline-block text-[13px] font-semibold text-[#6415f5]">See how it works →</span>
               </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 7. Stories (placeholders) ───────────────────────────────────── */}
-      <section className="border-t border-[#18123b]/[0.07]">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 py-16 lg:py-20">
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-[#18123b] text-center">
-            Teams that trust Aud
-          </h2>
-          {/* TODO: owner to verify — replace with real customer stories */}
-          <div className="mt-11 grid sm:grid-cols-3 gap-5">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="rounded-[26px] border-2 border-dashed border-[#18123b]/20 bg-white/50 p-8 text-center">
-                <p className="text-4xl leading-none text-[#6415f5]/40 font-black">"</p>
-                <p className="mt-2 text-sm font-medium text-[#18123b]/55 leading-relaxed">TODO: owner to add a real customer story.</p>
-                <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.12em] text-[#4b4763]/70">Name · Role</p>
-              </div>
             ))}
           </div>
         </div>
