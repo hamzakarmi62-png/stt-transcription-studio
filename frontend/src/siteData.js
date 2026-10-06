@@ -165,10 +165,10 @@ export const SUBSCRIPTION_RULES = "Cancel anytime · minutes pooled across seats
 // ── Human-verified services [CONFIRMED: human review exists] —
 //    [PRICES PROPOSED — TODO: owner to verify per-minute costs] ───────────
 export const HUMAN_SERVICES = [
-  { name: "Human Transcription Review", price: "$1.00", unit: "per minute", desc: "A human proofreader checks and corrects the AI transcript for higher accuracy." },
-  { name: "Human Translation (standard languages)", price: "$4.00", unit: "per minute", desc: "A professional translator reviews or produces the translation." },
-  { name: "Human Translation (rare languages)", price: "$8.00", unit: "per minute", desc: "Rare-language translation by a specialized professional translator." },
-  { name: "Human-Verified Subtitles", price: "$1.50", unit: "per minute", desc: "Reviewed subtitles ready for publishing." },
+  { name: "Human Transcription Review", price: null, unit: null, desc: "A human proofreader checks and corrects the AI transcript for higher accuracy." },
+  { name: "Human Translation (standard languages)", price: null, unit: null, desc: "A professional translator reviews or produces the translation." },
+  { name: "Human Translation (rare languages)", price: null, unit: null, desc: "Rare-language translation by a specialized professional translator." },
+  { name: "Human-Verified Subtitles", price: null, unit: null, desc: "Reviewed subtitles ready for publishing." },
 ];
 
 // Delivery times / accuracy guarantees: fill in ONLY if you can honor them.
