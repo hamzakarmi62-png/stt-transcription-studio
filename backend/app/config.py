@@ -53,6 +53,21 @@ class Settings(BaseSettings):
     s3_secret_key: str = ""
     s3_presign_seconds: int = 3600
 
+    # Public-site form notifications (optional). When SMTP_HOST, SMTP_USER,
+    # SMTP_PASS and NOTIFY_EMAIL are all set, each public submission also
+    # sends one email. Otherwise submissions are only stored in SQLite.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_pass: str = ""
+    notify_email: str = ""
+
+    # Optional guest demo on the AI Transcription page — OFF by default.
+    # When true: POST /api/public/guest-demo accepts a clip of at most 60 s
+    # and 25 MB, per-IP daily limits apply, nothing is stored afterwards.
+    guest_demo_enabled: bool = False
+    guest_demo_daily_limit: int = 3
+
     supabase_url: str = ""
     # Supplied by backend/.env. Never commit the real key: it is a service_role
     # secret that bypasses row-level security.

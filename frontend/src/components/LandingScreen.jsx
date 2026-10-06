@@ -3,7 +3,10 @@ import audLogo from "../assets/aud-logo.png";
 import { AboutPage, PricingPage, ContactPage, FeaturePage, InfoPage, HumanServicesPage, LanguagesPage, CalculatorPage, ChangelogPage, LegalPage, CareersPage, ServicePage, AudiencePage, ListingPage, TeamPage, PressPage, FreelancersPage, PartnersPage, LocationsPage, UseCasesPage, ReviewersPage } from "./LandingPages.jsx";
 import { NAV_MENUS, BRAND, PLANS, USE_CASES } from "../siteData.js";
 import { SPEC_DATA } from "../specData.js";
-import { TFeaturePage, THumanPage, THelpCenter, TTutorials, TUseCases, TLanguages, TChangelog, TApi, TContact, TCareers, TCompany, TReviewers, TTerms } from "./SpecPages.jsx";
+import { RICH_DATA } from "../specContent.js";
+import { TFeaturePage, THumanPage, TApi, TContact, TCareers, TCompany, TReviewers, TTerms, TAudiencePage, TSecurity } from "./SpecPages.jsx";
+import { TBlog, TTutorials, TUseCases, TLanguages, TChangelog } from "./SpecResources.jsx";
+import { FileChecker } from "./tools/Checkers.jsx";
 import { MenuIcon, MenuGlyph } from "./MenuIcons.jsx";
 import {
   Mic, Users, Languages, Sparkles, Chart, Download,
@@ -700,20 +703,22 @@ export default function LandingScreen({ onStart }) {
       {page === "about" && <TCompany />}
       {page === "pricing" && <PricingPage onStart={onStart} />}
       {page === "contact" && <TContact goPage={goToPage} />}
-      {page.startsWith("feat:") && (SPEC_DATA.features[page.slice(5)]
-        ? <TFeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />
+      {page.startsWith("feat:") && ((SPEC_DATA.features[page.slice(5)] || RICH_DATA.groupPages[page.slice(5)])
+        ? <TFeaturePage slug={page.slice(5)} goFeature={goFeature} goPage={goToPage} />
         : <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />)}
       {page.startsWith("info:") && (page === "info:help"
         ? <THelpCenter goPage={goToPage} />
         : page === "info:api" ? <TApi />
+        : page === "info:security" ? <TSecurity />
         : <InfoPage slug={page.slice(5)} onStart={onStart} />)}
       {page.startsWith("svc:") && (SPEC_DATA.human.crumbs[page.slice(4)]
         ? <THumanPage slug={page.slice(4)} />
         : <ServicePage slug={page.slice(4)} onStart={onStart} />)}
-      {page.startsWith("aud:") && <AudiencePage slug={page.slice(4)} />}
+      {page.startsWith("aud:") && <TAudiencePage slug={page.slice(4)} goFeature={goFeature} />}
       {page.startsWith("res:") && (page === "res:usecases"
         ? <TUseCases goAudience={(a) => goToPage("aud:" + a)} />
         : page === "res:tutorials" ? <TTutorials />
+        : page === "res:blog" ? <TBlog />
         : <ListingPage slug={page.slice(4)} onStart={onStart} />)}
       {page === "reviewers" && <TReviewers goFreelancers={() => goToPage("freelancers")} />}
       {page === "team" && <TeamPage onStart={onStart} />}
@@ -745,10 +750,10 @@ export default function LandingScreen({ onStart }) {
 
             <div className="mt-7 flex flex-wrap items-center gap-3">
               <button
-                onClick={onStart}
+                onClick={() => document.getElementById("home-upload")?.scrollIntoView({ behavior: "smooth", block: "center" })}
                 className="inline-flex items-center px-8 py-3.5 rounded-xl bg-[#6415f5] text-white text-[16px] font-semibold hover:bg-[#5311cf] transition shadow-lg shadow-[#6415f5]/25"
               >
-                Try Aud for free
+                Check your file
               </button>
               <a
                 href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Aud — Contact request")}`}
@@ -758,16 +763,9 @@ export default function LandingScreen({ onStart }) {
               </a>
             </div>
 
-            {/* Upload box */}
-            <div className="mt-5 max-w-[580px] rounded-2xl border-2 border-dashed border-[#6415f5]/35 bg-white/70 px-5 py-4 flex flex-wrap items-center gap-4">
-              <span className="w-10 h-10 rounded-xl bg-[#6415f5]/[0.08] border border-[#6415f5]/20 flex items-center justify-center text-[#6415f5]"><MenuIcon name="mic" className="w-5 h-5" /></span>
-              <p className="text-[13px] font-semibold text-[#18123b]/90 leading-snug min-w-0">
-                Drag &amp; drop audio or video — or paste a YouTube link.
-                <span className="block text-[11.5px] font-medium text-[#4b4763]">MP3, WAV, M4A, OGG, MP4, MKV and more.</span>
-              </p>
-              <button onClick={onStart} className="ms-auto px-4 py-2 rounded-lg bg-[#6415f5] text-white text-[12.5px] font-semibold hover:bg-[#5311cf] transition shrink-0">
-                Start now
-              </button>
+            {/* Upload box — runs the local file check; nothing is uploaded */}
+            <div className="mt-5 max-w-[580px]" id="home-upload">
+              <FileChecker compact />
             </div>
 
             {/* Trust badges */}

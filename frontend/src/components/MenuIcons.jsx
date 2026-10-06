@@ -34,6 +34,7 @@ export const MENU_ICONS = {
   play: <><circle cx="12" cy="12" r="8.5" /><path d="M10 8.8v6.4L15.4 12 10 8.8z" /></>,
   newsroom: <><rect x="3.5" y="5" width="14" height="15" rx="1.5" /><path d="M17.5 8.5H19a1.5 1.5 0 0 1 1.5 1.5v8a2 2 0 0 1-2 2H5" /><path d="M6.5 9h8" /><path d="M6.5 12.5h8" /><path d="M6.5 16h5" /></>,
   search: <><circle cx="11" cy="11" r="6.5" /><path d="M20 20l-4.4-4.4" /></>,
+  lock: <><rect x="5.5" y="10.5" width="13" height="9.5" rx="2" /><path d="M8.5 10.5V7.5a3.5 3.5 0 0 1 7 0v3" /></>,
   chevron: <path d="M9 6l6 6-6 6" />,
 };
 

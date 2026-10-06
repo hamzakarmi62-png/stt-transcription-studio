@@ -178,6 +178,19 @@ def init_db() -> None:
                 )
                 """
             )
+            # Public-site form submissions (contact / waitlist / careers /
+            # article feedback) — additive, no migration needed.
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS public_submissions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    kind TEXT NOT NULL,
+                    payload TEXT NOT NULL,
+                    ip TEXT DEFAULT '',
+                    created_at TEXT NOT NULL
+                )
+                """
+            )
             try:
                 conn.execute("ALTER TABLE users ADD COLUMN profile TEXT DEFAULT '{}'")
             except sqlite3.OperationalError:
