@@ -218,7 +218,7 @@ export const CONTACT_INFO = {
 export const NAV_MENUS = [
   {
     label: "Product",
-    widths: "2fr 1fr 0.9fr",
+    widths: "2fr 1fr",
     columns: [
       {
         title: "AI platform", subCols: 2,
@@ -242,12 +242,6 @@ export const NAV_MENUS = [
           { icon: "captions", label: "Verified Subtitles", desc: "Ready to publish", status: "planned", badge: "Planned", svc: "human-captions" },
         ],
       },
-      {
-        title: "Developers",
-        items: [
-          { icon: "list", label: "Changelog", desc: "Product updates", status: "exists", page: "changelog" },
-        ],
-      },
     ],
     promo: {
       video: "/videos/feat-multilang.mp4", poster: "/videos/feat-multilang.jpg",
@@ -265,25 +259,18 @@ export const NAV_MENUS = [
         title: "Core features",
         grid2x2: [
           { title: "Transcribe", items: [
-            { label: "Timestamped text", status: "exists", slug: "ai-transcription" },
-            { label: "Speaker detection", status: "exists", slug: "speaker-detection" },
             { label: "Language auto-detect", status: "exists", slug: "multi-language" },
             { label: "Large files", status: "exists", slug: "ai-transcription" },
           ]},
           { title: "Translate", items: [
-            { label: "AI translation", status: "exists", slug: "translation" },
             { label: "Original kept intact", status: "exists", slug: "translation" },
             { label: "Multiple languages", status: "exists", slug: "multi-language" },
-            { label: "Human translation", status: "planned", badge: "Planned", page: "svc:global-subtitles" },
           ]},
           { title: "Edit and export", items: [
-            { label: "Word-level editor", status: "exists", slug: "editor" },
             { label: "Auto-save", status: "exists", slug: "editor" },
             { label: "Share transcript", status: "exists", slug: "share" },
-            { label: "TXT, SRT, DOCX, PDF", status: "exists", slug: "share" },
           ]},
           { title: "Organize", items: [
-            { label: "Folders", status: "exists", slug: "files-folders" },
             { label: "Sessions archive", status: "exists", slug: "files-folders" },
             { label: "Search", status: "exists", slug: "files-folders" },
             { label: "Bulk upload", status: "proposed", slug: "files-folders" },
@@ -343,7 +330,6 @@ export const NAV_MENUS = [
         { icon: "building", label: "Company", desc: "Our mission and approach.", status: "exists", page: "about" },
         { icon: "shield", label: "Security and Privacy", desc: "How we protect your files.", status: "exists", page: "info:security" },
         { icon: "userCheck", label: "Our Human Reviewers", desc: "How reviewers are vetted.", status: "planned", badge: "Planned", page: "reviewers" },
-        { icon: "mail", label: "Contact", desc: "Email and form.", status: "exists", page: "contact" },
         { icon: "rocket", label: "Careers", desc: "Join the team.", status: "exists", page: "careers" },
         { icon: "scale", label: "Terms and Privacy", desc: "The legal pages.", status: "exists", page: "legal" },
       ]},
