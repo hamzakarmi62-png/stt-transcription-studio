@@ -260,20 +260,20 @@ export const NAV_MENUS = [
         grid2x2: [
           { title: "Transcribe", items: [
             { label: "Language auto-detect", status: "exists", slug: "multi-language" },
-            { label: "Large files", status: "exists", slug: "ai-transcription" },
+            { label: "Large files", status: "exists", slug: "ai-transcription", anchor: "largefiles" },
           ]},
           { title: "Translate", items: [
-            { label: "Original kept intact", status: "exists", slug: "translation" },
-            { label: "Multiple languages", status: "exists", slug: "multi-language" },
+            { label: "Original kept intact", status: "exists", slug: "translation", anchor: "original" },
+            { label: "Multiple languages", status: "exists", slug: "multi-language", anchor: "multiple" },
           ]},
           { title: "Edit and export", items: [
-            { label: "Auto-save", status: "exists", slug: "editor" },
-            { label: "Share transcript", status: "exists", slug: "share" },
+            { label: "Auto-save", status: "exists", slug: "editor", anchor: "autosave" },
+            { label: "Share transcript", status: "exists", slug: "share", anchor: "sharing" },
           ]},
           { title: "Organize", items: [
-            { label: "Sessions archive", status: "exists", slug: "files-folders" },
-            { label: "Search", status: "exists", slug: "files-folders" },
-            { label: "Bulk upload", status: "proposed", slug: "files-folders" },
+            { label: "Sessions archive", status: "exists", slug: "files-folders", anchor: "archive" },
+            { label: "Search", status: "exists", slug: "files-folders", anchor: "search" },
+            { label: "Bulk upload", status: "proposed", slug: "files-folders", anchor: "bulk" },
           ]},
         ],
       },

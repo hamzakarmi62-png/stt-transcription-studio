@@ -321,6 +321,7 @@ function HeroDemo() {
 export default function LandingScreen({ onStart }) {
   const [openMenu, setOpenMenu] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [pendingAnchor, setPendingAnchor] = useState(null);
   const [page, setPage] = useState("home"); // home | about | pricing | contact | feat:* | svc:* | aud:* | res:* | info:* | ...
   const closeTimer = useRef(null);
 
@@ -343,9 +344,10 @@ export default function LandingScreen({ onStart }) {
     window.scrollTo({ top: 0, behavior: "instant" });
   };
 
-  const goFeature = (slug) => {
+  const goFeature = (slug, anchor) => {
     setOpenMenu(null);
     setMobileOpen(false);
+    setPendingAnchor(anchor || null);
     setPage("feat:" + slug);
     window.scrollTo({ top: 0, behavior: "instant" });
   };
@@ -362,7 +364,7 @@ export default function LandingScreen({ onStart }) {
 
   const navFromItem = (it) => {
     if (!it) return;
-    if (it.slug) goFeature(it.slug);
+    if (it.slug) goFeature(it.slug, it.anchor);
     else if (it.svc) goToPage("svc:" + it.svc);
     else if (it.page) goToPage(it.page);
     else if (it.target) goToSection(it.target);
@@ -414,6 +416,8 @@ export default function LandingScreen({ onStart }) {
         .hero-ring {animation: heroRing 1s ease-out infinite}
         @keyframes demoPulse {0%,100%{opacity:.35}50%{opacity:1}}
         .demo-pulse {animation: demoPulse 1.4s ease-in-out infinite}
+        @keyframes secFlash {0%,55%{box-shadow:0 0 0 3px rgba(100,21,245,.45); background:rgba(100,21,245,.05)} 100%{box-shadow:0 0 0 3px rgba(100,21,245,0); background:transparent}}
+        .sec-flash {animation: secFlash 2.4s ease-out 1}
       `}</style>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
@@ -702,7 +706,7 @@ export default function LandingScreen({ onStart }) {
       {page === "contact" && <TContact goPage={goToPage} />}
       {page === "support" && <TContactSupport goPage={goToPage} />}
       {page.startsWith("feat:") && ((SPEC_DATA.features[page.slice(5)] || RICH_DATA.groupPages[page.slice(5)])
-        ? <TFeaturePage slug={page.slice(5)} goFeature={goFeature} goPage={goToPage} />
+        ? <TFeaturePage slug={page.slice(5)} goFeature={goFeature} goPage={goToPage} anchor={pendingAnchor} />
         : <FeaturePage slug={page.slice(5)} onStart={onStart} goFeature={goFeature} />)}
       {page.startsWith("info:") && (page === "info:help"
         ? <THelpCenter goPage={goToPage} />

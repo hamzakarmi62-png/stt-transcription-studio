@@ -18,7 +18,10 @@ export const SPEC_DATA = {
       ],
       steps: [["Upload", "MP3, WAV, M4A, OGG, MP4, MKV — or paste a link"], ["Transcribe", "Language and speakers detected automatically"], ["Edit", "Fix anything in the editor — every correction stays synced to the audio"]],
       related: [["Speaker Detection", "speaker-detection"], ["Transcript Editor", "editor"], ["Key Moments", "key-moments"]],
-      faq: [["Which file formats does Aud support?", "All common formats: MP3, WAV, M4A, OGG for audio, and MP4, MKV for video. Audio is extracted from videos automatically."]],
+      faq: [["Which file formats does Aud support?", "All common formats: MP3, WAV, M4A, OGG for audio, and MP4, MKV for video. Audio is extracted from videos automatically."]],      sections: [
+        { id: "largefiles", h: "Large files are the normal case", p: "Long lectures, full interviews, whole meetings — upload the recording as it is instead of splitting it into pieces. The exact size ceiling of your plan is shown on the studio's upload screen." },
+      ],
+
       cta: "Start transcribing for free",
     },
     "speaker-detection": {
@@ -42,7 +45,10 @@ export const SPEC_DATA = {
       card: [{ s: "Speaker 1", t: "00:41.5", c: "#10b981", l: "Edit any word while listening." }],
       steps: [["Click to play", "Click any word to jump the audio there"], ["Type to fix", "Corrections sync to the timestamp"], ["Search instantly", "Find any word across the transcript"]],
       related: [["Speaker Detection", "speaker-detection"], ["AI Transcription", "ai-transcription"], ["Export Center", "share"]],
-      faq: [["Is my editing saved?", "Yes — every change autosaves as you type."]],
+      faq: [["Is my editing saved?", "Yes — every change autosaves as you type."]],      sections: [
+        { id: "autosave", h: "Auto-save while you type", p: "Every correction is stored as you type — close the tab and come back to the same transcript. Undo and redo cover the structural changes, like splitting a paragraph." },
+      ],
+
       cta: "Open the editor",
     },
     "ask": {
@@ -78,7 +84,10 @@ export const SPEC_DATA = {
       ],
       steps: [["Finish the transcript", "Correct it until it is exactly right"], ["Translate", "The AI rewrites every segment in the chosen language"], ["Switch freely", "Original and translation stay side by side"]],
       related: [["AI Transcription", "ai-transcription"], ["Export Center", "share"], ["Language auto-detect", "multi-language"]],
-      faq: [["Does translation change my original?", "No — the original transcript stays intact."]],
+      faq: [["Does translation change my original?", "No — the original transcript stays intact."]],      sections: [
+        { id: "original", h: "The original is never replaced", p: "Translating adds a second text alongside the first. Switch back to the original at any time to check a sentence against what was actually said — nothing is overwritten." },
+      ],
+
       cta: "Translate your first transcript",
     },
     "share": {
@@ -112,7 +121,13 @@ export const SPEC_DATA = {
       card: [{ s: "Archive", t: "—", c: "#6415f5", l: "Every transcript organized and searchable." }],
       steps: [["Create folders", "Organize per project, course or client"], ["Name and tag", "Custom names and color tags per file"], ["Search everything", "Find any word across the whole archive"]],
       related: [["Share transcript", "share"], ["Aud AI Chat", "ask"]],
-      faq: [["Are files in folders protected from bulk delete?", "Yes — the archive bulk delete skips everything saved in My Files."]],
+      faq: [["Are files in folders protected from bulk delete?", "Yes — the archive bulk delete skips everything saved in My Files."]],      sections: [
+        { id: "folders", h: "Create, rename, move, delete", p: "Folders per project, course or client, with custom names and color tags — the archive reads at a glance and stays structured as it grows." },
+        { id: "archive", h: "Sessions archive", p: "Every transcription session is kept, newest first — last year's lecture is as reopen-able as this morning's interview." },
+        { id: "search", h: "Search the whole archive", p: "One search box across all your files: find any word and jump straight into the session at that exact line." },
+        { id: "bulk", h: "Bulk actions (proposed)", p: "Bulk upload and batch moves are proposed — cleaning up in batches, with files saved in My Files always protected from bulk deletion." },
+      ],
+
       cta: "Organize your archive",
     },
     "multi-language": {
@@ -125,7 +140,10 @@ export const SPEC_DATA = {
       ],
       steps: [["Pick your languages", "One for precision — or several for mixed recordings"], ["Every pass is transcribed", "Each language gets its own pass"], ["The best parts win", "The most confident segment of every passage"]],
       related: [["AI Transcription", "ai-transcription"], ["AI Translation", "translation"], ["Speaker Detection", "speaker-detection"]],
-      faq: [["Does it understand dialects?", "The models are tuned on Maghrebi and Levantine speech alongside Modern Standard Arabic."]],
+      faq: [["Does it understand dialects?", "The models are tuned on Maghrebi and Levantine speech alongside Modern Standard Arabic."]],      sections: [
+        { id: "multiple", h: "Several languages in one pass", p: "For recordings that switch languages, pick several languages before transcribing. Each one gets its own pass, and the most confident segment of every passage wins." },
+      ],
+
       cta: "Transcribe in your language",
     },
     "summary": {

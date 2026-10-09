@@ -169,8 +169,20 @@ function LinkGuide() {
 }
 
 /* ── Template: feature page (enriched) ──────────────────────────────────── */
-export function TFeaturePage({ slug, goFeature, goPage }) {
+export function TFeaturePage({ slug, goFeature, goPage, anchor }) {
   const [spkCount, setSpkCount] = useState(3);
+  useEffect(() => {
+    if (!anchor) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("sec-" + anchor);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        el.classList.add("sec-flash");
+        setTimeout(() => el.classList.remove("sec-flash"), 2400);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [anchor, slug]);
   const f = SPEC_DATA.features[slug];
   const g = RICH_DATA.groupPages[slug];
   if (!f && !g) return null;
@@ -201,6 +213,10 @@ export function TFeaturePage({ slug, goFeature, goPage }) {
     { id: "related", label: "Related features" },
     { id: "faq", label: "Questions" },
   ];
+  for (const sec of f?.sections || []) {
+    const i = toc.findIndex((t) => t.id === "related");
+    toc.splice(i === -1 ? toc.length : i, 0, { id: sec.id, label: sec.h });
+  }
 
   return (
     <Page section="Product" crumb={(f || g).crumb}>
@@ -227,6 +243,12 @@ export function TFeaturePage({ slug, goFeature, goPage }) {
         <div className="min-w-0">
           <SectionH id="how">How it works</SectionH>
           <StepsRow steps={f ? f.steps : g.items.map(([label]) => [label, ""])} />
+          {(f?.sections || []).map((sec) => (
+            <div key={sec.id} id={"sec-" + sec.id} className="mt-10 scroll-mt-28 rounded-2xl border border-transparent p-4 -m-4">
+              <SectionH id={sec.id}>{sec.h}</SectionH>
+              <p className="text-[14px] text-[#4b4763] leading-relaxed">{sec.p}</p>
+            </div>
+          ))}
           {g && (
             <div className="mt-5 space-y-3">
               {g.items.map(([label, target, para]) => (
@@ -274,7 +296,7 @@ export function TFeaturePage({ slug, goFeature, goPage }) {
           )}
 
           {slug === "share" && (
-            <div className="mt-12"><SectionH id="sharing">{RICH_DATA.shareLinks.h}</SectionH>
+            <div className="mt-12" id="sec-sharing"><SectionH id="sharing">{RICH_DATA.shareLinks.h}</SectionH>
               <div className="rounded-xl bg-white border border-[#18123b]/10 p-5">
                 <p className="text-[13.5px] text-[#4b4763] leading-relaxed">{RICH_DATA.shareLinks.p1}</p>
                 <p className="mt-2 text-[13.5px] text-[#4b4763] leading-relaxed">{RICH_DATA.shareLinks.p2}</p>
