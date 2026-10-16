@@ -970,14 +970,12 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     return times.length ? Math.min(...times) : Date.now();
   };
   const byDate = (a, b) => (new Date(a.created_at) - new Date(b.created_at)) * (filesSortDesc ? -1 : 1);
-  // The column arrow doubles as a date display toggle: ▼ shows the full
-  // day/month/year, ▲ collapses the cell to the time only.
+  // The date now sits right next to the file name, so it always shows the
+  // full day/month/year; the header chevron only flips the sort order.
   const dateCell = (ts) => {
     const d = new Date(ts);
     if (isNaN(d.getTime())) return "";
-    return filesSortDesc
-      ? d.toLocaleDateString()
-      : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return d.toLocaleDateString();
   };
   const visibleFolders = (selectedFolderFilter === "all" ? folders : [])
     .slice()
@@ -1760,16 +1758,19 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               ) : (
                 <div className="mt-8">
                   {/* header */}
-                  <div className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-3 border-b-2 ${hairline}`}>
+                  <div className={`grid grid-cols-[44px_1fr_132px] items-center px-4 py-3 border-b-2 ${hairline}`}>
                     <span />
-                    <span className="text-sm font-black">Name</span>
-                    <button
-                      onClick={() => setFilesSortDesc((d) => !d)}
-                      className="text-sm font-black flex items-center gap-1 hover:text-[#6415f5] transition text-start"
-                    >
-                      Date created
-                      <ChevronDown className={`w-4 h-4 transition-transform ${filesSortDesc ? "" : "rotate-180"}`} />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-black">Name</span>
+                      <button
+                        onClick={() => setFilesSortDesc((d) => !d)}
+                        className="inline-flex items-center gap-0.5 rounded-md px-1 py-0.5 text-[11px] font-bold opacity-70 hover:opacity-100 hover:text-[#6415f5] hover:bg-[#6415f5]/[0.06] transition"
+                        title="Trier par date de création"
+                      >
+                        <span className={textSub}>date</span>
+                        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${filesSortDesc ? "" : "rotate-180"}`} />
+                      </button>
+                    </div>
                     <span />
                   </div>
 
@@ -1778,14 +1779,15 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     <div
                       key={f.id}
                       onClick={() => setSelectedFolderFilter(f.id)}
-                      className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-4 border-b ${hairline} group cursor-pointer hover:bg-[#18123b]/[0.03] transition-colors`}
+                      className={`grid grid-cols-[44px_1fr_132px] items-center px-4 py-4 border-b ${hairline} group cursor-pointer hover:bg-[#18123b]/[0.03] transition-colors`}
                     >
                       <span />
                       <div className="flex items-center gap-3 min-w-0">
                         <FolderOpen className="w-6 h-6 text-[#18123b] shrink-0" />
                         <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{f.name}</span>
+                        <span className="shrink-0 text-[#18123b]/25">·</span>
+                        <span className={`shrink-0 text-[11px] font-medium tabular-nums ${textSub}`} dir="ltr">{dateCell(folderCreatedAt(f))}</span>
                       </div>
-                      <span className={`text-sm ${textSub}`}>{dateCell(folderCreatedAt(f))}</span>
                       <div
                         className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity"
                         onClick={(e) => e.stopPropagation()}
@@ -1818,7 +1820,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     return (
                       <div
                         key={s.id}
-                        className={`grid grid-cols-[44px_1fr_150px_132px] items-center px-4 py-4 border-b ${hairline} group hover:bg-[#18123b]/[0.03] transition-colors`}
+                        className={`grid grid-cols-[44px_1fr_132px] items-center px-4 py-4 border-b ${hairline} group hover:bg-[#18123b]/[0.03] transition-colors`}
                       >
                         <span />
                         <button
@@ -1832,8 +1834,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                             <FileAudio className="w-6 h-6 text-[#18123b] shrink-0" />
                           )}
                           <span className="font-semibold text-sm truncate group-hover:text-[#6415f5] transition-colors">{displayName}</span>
+                          <span className="shrink-0 text-[#18123b]/25">·</span>
+                          <span className={`shrink-0 text-[11px] font-medium tabular-nums ${textSub}`} dir="ltr">{dateCell(s.created_at)}</span>
                         </button>
-                        <span className={`text-sm ${textSub}`}>{dateCell(s.created_at)}</span>
                         <div
                           className="flex items-center gap-1 justify-end opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity"
                           onClick={(e) => e.stopPropagation()}
