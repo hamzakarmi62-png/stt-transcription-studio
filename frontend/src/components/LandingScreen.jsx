@@ -738,7 +738,7 @@ export default function LandingScreen({ onStart }) {
       <>
       {/* ── 1. Hero ─────────────────────────────────────────────────────── */}
       <section id="produit" className="relative scroll-mt-4">
-        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 lg:pt-14 pb-14 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 items-center">
+        <div className="max-w-[1400px] mx-auto px-5 sm:px-8 pt-8 lg:pt-14 pb-14 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-12 items-start">
           {/* Left */}
           <div>
             <TypedHeadline />
