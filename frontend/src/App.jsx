@@ -100,8 +100,8 @@ export default function App() {
   const [splashFading, setSplashFading] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setSplashFading(true), 2100);
-    const t2 = setTimeout(() => setSplashGone(true), 2850);
+    const t1 = setTimeout(() => setSplashFading(true), 0);
+    const t2 = setTimeout(() => setSplashGone(true), 0);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);

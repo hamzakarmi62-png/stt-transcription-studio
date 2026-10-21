@@ -4,6 +4,7 @@ import os
 import secrets
 import sqlite3
 import threading
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 import requests
@@ -413,7 +414,7 @@ def get_user_by_username_or_email(identifier: str) -> dict | None:
     return None
 
 
-def _format_session(data: dict) -> dict:
+def _format_session(data: dict, lean: bool = False) -> dict:
     segments = data.get("segments", "[]")
     if isinstance(segments, str):
         try:
@@ -436,6 +437,13 @@ def _format_session(data: dict) -> dict:
             sess_settings = {}
 
     audio_path = data.get("audio_path", "")
+
+    if lean:
+        # Keep segment length intact for badges and counts without sending megabytes of text
+        segments_len = len(segments) if isinstance(segments, list) else 0
+        segments = [None] * segments_len
+        speakers = []
+
     return {
         "id": data["id"],
         "user_id": data.get("user_id"),
@@ -489,6 +497,7 @@ def _save_session_cloud_meta(session_dict: dict):
             catalog_dict.values(), key=lambda s: s.get("created_at", ""), reverse=True
         )
         _write_json("sessions_catalog.json", sorted_list)
+        _invalidate_session_cloud_meta_cache()
     except Exception as e:
         print("Cloud meta save error:", e)
 
@@ -500,11 +509,28 @@ def _get_session_cloud_meta(session_id: str) -> dict | None:
     return data if isinstance(data, dict) else None
 
 
+_sessions_catalog_cache = None
+_sessions_catalog_cache_time = 0.0
+
+
+def _invalidate_session_cloud_meta_cache():
+    global _sessions_catalog_cache, _sessions_catalog_cache_time
+    _sessions_catalog_cache = None
+    _sessions_catalog_cache_time = 0.0
+
+
 def _list_session_cloud_meta() -> list[dict]:
+    global _sessions_catalog_cache, _sessions_catalog_cache_time
     if not _catalog_enabled():
         return []
+    now = time.time()
+    if _sessions_catalog_cache is not None and (now - _sessions_catalog_cache_time) < 20.0:
+        return _sessions_catalog_cache
     data = _read_json("sessions_catalog.json")
-    return data if isinstance(data, list) else []
+    res = data if isinstance(data, list) else []
+    _sessions_catalog_cache = res
+    _sessions_catalog_cache_time = now
+    return res
 
 
 def _delete_session_cloud_meta(session_id: str):
@@ -516,6 +542,7 @@ def _delete_session_cloud_meta(session_id: str):
             s for s in _list_session_cloud_meta() if s.get("id") != session_id
         ]
         _write_json("sessions_catalog.json", filtered)
+        _invalidate_session_cloud_meta_cache()
     except Exception as e:
         print("Cloud meta delete error:", e)
 
@@ -610,7 +637,7 @@ def list_sessions(user_id: str | None = None) -> list[dict]:
     def add(items) -> None:
         for item in items:
             try:
-                session = _format_session(item)
+                session = _format_session(item, lean=True)
             except Exception as e:
                 print("list_sessions format error:", e)
                 continue
@@ -636,10 +663,11 @@ def list_sessions(user_id: str | None = None) -> list[dict]:
 
     add(_list_session_cloud_meta())
 
-    if _supabase_enabled():
+    # Only do external network query to Supabase if nothing was found locally or in cloud catalog
+    if _supabase_enabled() and len(merged) == 0:
         try:
             url = f"{settings.supabase_url}/rest/v1/sessions?user_id=eq.{user_id}&select=*&order=created_at.desc"
-            r = requests.get(url, headers=_headers(), timeout=5)
+            r = requests.get(url, headers=_headers(), timeout=3)
             if r.status_code == 200 and isinstance(r.json(), list):
                 add(r.json())
         except Exception as e:

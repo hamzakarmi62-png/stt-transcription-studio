@@ -345,10 +345,77 @@ const LANGUAGES = [
   { value: "af", label: "Afrikaans" },
 ];
 
-// Last fetched sessions list, kept at module scope: returning from a
-// transcript re-mounts this screen, and the cache renders the archive
-// instantly while the fresh list loads in the background.
-let _sessionsCache = null;
+// Instant session cache helper:
+// Persists lean session metadata in localStorage so archive counts, folder badges,
+// and stored files appear IMMEDIATELY (0ms delay) on page load.
+const SESSION_CACHE_KEY = "_aud_sessions_cache";
+
+function getCachedSessions(userId) {
+  try {
+    const keys = [
+      userId ? `${SESSION_CACHE_KEY}_${userId}` : null,
+      SESSION_CACHE_KEY,
+    ].filter(Boolean);
+
+    for (const key of keys) {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      const list = Array.isArray(parsed) ? parsed : (parsed?.list || []);
+      if (Array.isArray(list) && list.length > 0) {
+        if (userId && parsed?.uid && String(parsed.uid) !== String(userId)) {
+          continue;
+        }
+        return list.map((s) => ({
+          ...s,
+          segments: Array.isArray(s.segments)
+            ? s.segments
+            : new Array(Number(s.segmentsCount || s.segments_count || 0)).fill(null),
+        }));
+      }
+    }
+    return [];
+  } catch (err) {
+    console.warn("Failed to load cached sessions:", err);
+    return [];
+  }
+}
+
+function saveCachedSessions(userId, list) {
+  if (!Array.isArray(list)) return;
+  try {
+    // Keep only essential fields to guarantee cache size is tiny (<15KB)
+    // and never exceeds browser quota.
+    const leanList = list.map((s) => {
+      const segCount = Array.isArray(s.segments)
+        ? s.segments.length
+        : Number(s.segmentsCount || s.segments_count || 0);
+      return {
+        id: s.id,
+        user_id: s.user_id,
+        filename: s.filename || "audio",
+        audio_path: s.audio_path || "",
+        kind: s.kind || "audio",
+        audio_url: s.audio_url || `/api/sessions/${s.id}/audio`,
+        duration: Number(s.duration || 0),
+        language: s.language || null,
+        status: s.status || "uploaded",
+        error: s.error || null,
+        created_at: s.created_at || "",
+        segmentsCount: segCount,
+        segments: new Array(segCount).fill(null),
+      };
+    });
+
+    const payload = JSON.stringify({ uid: userId || null, list: leanList });
+    if (userId) {
+      localStorage.setItem(`${SESSION_CACHE_KEY}_${userId}`, payload);
+    }
+    localStorage.setItem(SESSION_CACHE_KEY, payload);
+  } catch (err) {
+    console.warn("Failed to save cached sessions:", err);
+  }
+}
 
 // In-app dialog replacing window.prompt/confirm — browsers can silently
 // block native dialogs after repeated use, which made rename/delete appear
@@ -443,8 +510,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [sessions, setSessions] = useState(() => (_sessionsCache && _sessionsCache.uid === (user?.id || null)) ? _sessionsCache.list : []);
-  const [sessionsLoading, setSessionsLoading] = useState(_sessionsCache === null);
+  const [sessions, setSessions] = useState(() => getCachedSessions(user?.id));
+  const [sessionsLoading, setSessionsLoading] = useState(() => getCachedSessions(user?.id).length === 0);
   
   const userKey = useCallback((key) => (user?.id ? `${key}_${user.id}` : key), [user?.id]);
 
@@ -489,6 +556,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   // Sync state when user changes
   useEffect(() => {
     if (!user?.id) return;
+    const cached = getCachedSessions(user.id);
+    if (cached.length > 0) {
+      setSessions(cached);
+      setSessionsLoading(false);
+    }
     try {
       setCustomWorkIds(JSON.parse(localStorage.getItem(`custom_works_${user.id}`) || "[]"));
       setCustomFileNames(JSON.parse(localStorage.getItem(`custom_file_names_${user.id}`) || "{}"));
@@ -518,10 +590,13 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const t = TRANSLATIONS[uiLang] || TRANSLATIONS.fr;
 
   const loadSessions = useCallback(async () => {
-    setSessionsLoading(_sessionsCache === null);
+    setSessions((curr) => {
+      if (curr.length === 0) setSessionsLoading(true);
+      return curr;
+    });
     try {
       const list = await api.listSessions();
-      _sessionsCache = { uid: user?.id || null, list };
+      saveCachedSessions(user?.id, list);
       setSessions(list);
     } catch {
       /* keep showing the cached list */
@@ -865,13 +940,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       okText: "Delete",
       onOk: async () => {
         // instant removal: drop it locally FIRST, then sync with the server
-        setSessions((prev) => prev.filter((s) => s.id !== id));
-        if (_sessionsCache && _sessionsCache.uid === (user?.id || null)) {
-          _sessionsCache = {
-            uid: user?.id || null,
-            list: _sessionsCache.list.filter((s) => s.id !== id),
-          };
-        }
+        setSessions((prev) => {
+          const next = prev.filter((s) => s.id !== id);
+          saveCachedSessions(user?.id, next);
+          return next;
+        });
         try {
           await api.deleteSession(id);
           setCustomWorkIds((prev) => prev.filter((i) => i !== id));
@@ -914,13 +987,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
         setBulkDeleting(true);
         // optimistic local wipe — the UI clears in the same instant; the
         // server sweeps the files and transcripts in the background.
-        setSessions((prev) => prev.filter((s) => !targets.includes(s.id)));
-        if (_sessionsCache && _sessionsCache.uid === (user?.id || null)) {
-          _sessionsCache = {
-            uid: user?.id || null,
-            list: _sessionsCache.list.filter((s) => !targets.includes(s.id)),
-          };
-        }
+        setSessions((prev) => {
+          const next = prev.filter((s) => !targets.includes(s.id));
+          saveCachedSessions(user?.id, next);
+          return next;
+        });
         try {
           await api.bulkDeleteSessions(targets);
           setCustomWorkIds((prev) => prev.filter((i) => !targets.includes(i)));
