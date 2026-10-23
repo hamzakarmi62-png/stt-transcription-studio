@@ -133,4 +133,49 @@ body {
   .aud-brand-rise, .aud-brand-logo, .aud-brand-halo,
   .aud-brand-sheen, .aud-brand-soft { animation: none !important; }
   .aud-brand-item:hover { transform: none; }
+  .aud-card-in, .aud-card-el { animation: none !important; }
 }
+
+/* ── Login form card: one-shot creative entrance, then fully static ── */
+@keyframes aud-card-in {
+  from { opacity: 0; transform: translateY(34px) scale(0.96); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.aud-card-in {
+  animation: aud-card-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Inner elements stagger under the card entrance */
+.aud-card-el {
+  animation: aud-brand-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.aud-card-el-1 { animation-delay: 0.16s; }
+.aud-card-el-2 { animation-delay: 0.26s; }
+.aud-card-el-3 { animation-delay: 0.36s; }
+.aud-card-el-4 { animation-delay: 0.46s; }
+.aud-card-el-5 { animation-delay: 0.58s; }
+.aud-card-el-6 { animation-delay: 0.70s; }
+
+/* CTA: light sweep across the button on hover */
+@keyframes aud-cta-sheen {
+  from { transform: translateX(-130%) skewX(-18deg); }
+  to   { transform: translateX(230%) skewX(-18deg); }
+}
+.aud-cta { position: relative; overflow: hidden; }
+.aud-cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-130%) skewX(-18deg);
+  pointer-events: none;
+}
+.aud-cta:hover::after {
+  animation: aud-cta-sheen 0.8s ease;
+}
+
+/* Toggle: the active pill glides — animate transform of the thumb via box shadow pulse */
+.aud-toggle-thumb { transition: background-color 0.2s ease, box-shadow 0.2s ease; }

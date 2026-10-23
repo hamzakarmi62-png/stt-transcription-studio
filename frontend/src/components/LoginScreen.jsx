@@ -282,8 +282,8 @@ export default function LoginScreen({ onLogin, onBack }) {
             </button>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-2xl shadow-black/40 p-8">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="aud-card-in bg-white rounded-3xl shadow-2xl shadow-black/40 p-8">
+            <div className="aud-card-el aud-card-el-1 flex items-center gap-3 mb-6">
               <div className={`flex rounded-xl bg-slate-100 p-1 text-sm font-semibold`}>
                 <button
                   type="button"
@@ -328,18 +328,21 @@ export default function LoginScreen({ onLogin, onBack }) {
                 </Field>
               )}
 
-              <Field label="Email" required>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="name@example.com"
-                  className={inputCls}
-                  autoComplete="email"
-                  required
-                />
-              </Field>
+              <div className="aud-card-el aud-card-el-2">
+                <Field label="Email" required>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="name@example.com"
+                    className={inputCls}
+                    autoComplete="email"
+                    required
+                  />
+                </Field>
+              </div>
 
+              <div className="aud-card-el aud-card-el-3">
               <Field label="Password" required>
                 <div className="relative">
                   <input
@@ -373,12 +376,13 @@ export default function LoginScreen({ onLogin, onBack }) {
                   </div>
                 )}
               </Field>
+              </div>
 
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition duration-200 disabled:opacity-60 text-sm flex items-center justify-center gap-2"
+                className="aud-cta aud-card-el aud-card-el-4 w-full py-3.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition duration-200 disabled:opacity-60 text-sm flex items-center justify-center gap-2"
               >
                 {loading && (
                   <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin"></span>
@@ -393,7 +397,7 @@ export default function LoginScreen({ onLogin, onBack }) {
 
             {(providers.google || providers.apple || !cfgLoaded) && (
               <div
-                className={`transition-opacity duration-300 ${cfgLoaded ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+                className={`aud-card-el aud-card-el-5 transition-opacity duration-300 ${cfgLoaded ? "opacity-100" : "opacity-0 pointer-events-none"}`}
               >
                 <div className="my-5 flex items-center gap-4" aria-hidden="true">
                   <span className="flex-1 h-px bg-slate-200"></span>
@@ -419,7 +423,7 @@ export default function LoginScreen({ onLogin, onBack }) {
               </div>
             )}
 
-            <p className="mt-6 text-center text-sm text-slate-500">
+            <p className="aud-card-el aud-card-el-6 mt-6 text-center text-sm text-slate-500">
               {isRegister ? "Already have an account?" : "No account yet?"}{" "}
               <button
                 type="button"
