@@ -194,8 +194,10 @@ export default function LoginScreen({ onLogin, onBack }) {
 
   return (
     <div className="min-h-screen bg-slate-950 flex" dir="ltr" lang="en">
-      {/* Brand panel */}
-      <div className="hidden lg:flex lg:w-[45%] relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-950 to-violet-950">
+      {/* Brand panel — pinned to viewport height so it never stretches when
+          the taller sign-up form makes the page scroll (kept identical in
+          both modes, exactly like sign in). */}
+      <div className="hidden lg:flex lg:w-[45%] lg:sticky lg:top-0 lg:h-screen self-start relative overflow-hidden bg-gradient-to-br from-indigo-950 via-slate-950 to-violet-950">
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-fuchsia-600/10 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
