@@ -206,21 +206,25 @@ export default function LoginScreen({ onLogin, onBack }) {
               type="button"
               onClick={onBack}
               title={onBack ? "Back to home" : undefined}
-              className={`rounded-xl transition ${onBack ? "hover:opacity-80 hover:scale-[1.03] cursor-pointer" : "cursor-default"} focus:outline-none focus:ring-2 focus:ring-indigo-400/60`}
+              className={`relative rounded-xl transition ${onBack ? "hover:opacity-80 hover:scale-[1.03] cursor-pointer" : "cursor-default"} focus:outline-none focus:ring-2 focus:ring-indigo-400/60 aud-brand-rise aud-brand-rise-1`}
             >
+              <span
+                className="aud-brand-halo absolute -inset-5 rounded-2xl bg-indigo-500/25 blur-2xl pointer-events-none"
+                aria-hidden="true"
+              ></span>
               <img
                 src={audLogo}
                 alt="Aud"
-                className="h-16 w-auto drop-shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
+                className="aud-brand-logo relative h-16 w-auto drop-shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
                 draggable={false}
               />
             </button>
           </div>
 
           <div className="space-y-8 max-w-md">
-            <h2 className="text-4xl font-black text-white leading-tight">
+            <h2 className="text-4xl font-black text-white leading-tight aud-brand-rise aud-brand-rise-2">
               Turn your{" "}
-              <span className="bg-gradient-to-r from-indigo-400 to-fuchsia-400 bg-clip-text text-transparent">
+              <span className="aud-brand-sheen bg-gradient-to-r from-indigo-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">
                 audio & video
               </span>{" "}
               into text, in minutes.
@@ -231,9 +235,12 @@ export default function LoginScreen({ onLogin, onBack }) {
                 [<Users className="w-4 h-4 text-violet-300" key="u" />, "Speaker detection — know who said what, when"],
                 [<PenLine className="w-4 h-4 text-fuchsia-300" key="p" />, "Real-time editor: fix while you listen, word by word"],
                 [<FileText className="w-4 h-4 text-sky-300" key="f" />, "Clean export to TXT, SRT, DOCX and PDF"],
-              ].map(([icon, text]) => (
-                <li key={text} className="flex items-center gap-3 text-slate-300 text-sm">
-                  <span className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+              ].map(([icon, text], i) => (
+                <li
+                  key={text}
+                  className={`aud-brand-item flex items-center gap-3 text-slate-300 text-sm aud-brand-rise aud-brand-rise-${i + 3}`}
+                >
+                  <span className="aud-brand-icon w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
                     {icon}
                   </span>
                   {text}
@@ -242,7 +249,7 @@ export default function LoginScreen({ onLogin, onBack }) {
             </ul>
           </div>
 
-          <p className="text-slate-500 text-xs flex items-center gap-1.5">
+          <p className="aud-brand-soft text-slate-500 text-xs flex items-center gap-1.5 aud-brand-rise aud-brand-rise-6">
             <Lock className="w-3.5 h-3.5 shrink-0" /><span>Your recordings stay private — encrypted storage and authenticated access.</span>
           </p>
         </div>

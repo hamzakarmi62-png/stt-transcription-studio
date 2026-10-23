@@ -70,3 +70,67 @@ body {
   0%, 100% { opacity: 0.55; transform: scale(1); }
   50% { opacity: 1; transform: scale(1.08); }
 }
+
+/* ── Login brand panel: creative entrance + ambient motion ── */
+@keyframes aud-brand-rise {
+  from { opacity: 0; transform: translateY(26px) scale(0.98); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+.aud-brand-rise {
+  animation: aud-brand-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.aud-brand-rise-1 { animation-delay: 0.05s; }
+.aud-brand-rise-2 { animation-delay: 0.18s; }
+.aud-brand-rise-3 { animation-delay: 0.34s; }
+.aud-brand-rise-4 { animation-delay: 0.46s; }
+.aud-brand-rise-5 { animation-delay: 0.58s; }
+.aud-brand-rise-6 { animation-delay: 0.70s; }
+
+/* Logo: gentle float + breathing halo ring behind it */
+@keyframes aud-brand-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-8px) rotate(-1.2deg); }
+}
+.aud-brand-logo { animation: aud-brand-float 4.5s ease-in-out infinite; }
+@keyframes aud-brand-halo {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.25); }
+}
+.aud-brand-halo {
+  animation: aud-brand-halo 4.5s ease-in-out infinite;
+}
+
+/* Heading: slow color sweep across the gradient words */
+@keyframes aud-brand-sheen {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+.aud-brand-sheen {
+  background-size: 200% auto;
+  animation: aud-brand-sheen 5s linear infinite;
+}
+
+/* Feature rows: soft hover lift; icon tile glows on hover */
+.aud-brand-item { transition: transform 0.25s ease; }
+.aud-brand-item:hover { transform: translateX(8px); }
+.aud-brand-item:hover .aud-brand-icon {
+  background: rgba(129, 140, 248, 0.25);
+  border-color: rgba(129, 140, 248, 0.55);
+  box-shadow: 0 0 18px rgba(129, 140, 248, 0.35);
+  transform: scale(1.08);
+}
+.aud-brand-icon { transition: all 0.25s ease; }
+
+/* Privacy note: very subtle slow blink so it feels alive but stays quiet */
+@keyframes aud-brand-soft {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; }
+}
+.aud-brand-soft { animation: aud-brand-soft 6s ease-in-out infinite; }
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .aud-brand-rise, .aud-brand-logo, .aud-brand-halo,
+  .aud-brand-sheen, .aud-brand-soft { animation: none !important; }
+  .aud-brand-item:hover { transform: none; }
+}
