@@ -25,7 +25,16 @@ export default function LoginScreen({ onLogin, onBack }) {
   // Social providers configured server-side (empty = hidden). Google uses the
   // official button; Apple a native-style one — both hand an ID token to the
   // backend, which verifies it and returns the same session as email login.
-  const [providers, setProviders] = useState({ google: "", apple: "" });
+  // Seeded from the localStorage cache so the buttons appear instantly on
+  // revisit; the network fetch below only refreshes the cache.
+  const [providers, setProviders] = useState(() => {
+    try {
+      const c = JSON.parse(localStorage.getItem("aud_auth_config") || "{}");
+      return { google: c.google_client_id || "", apple: c.apple_client_id || "" };
+    } catch {
+      return { google: "", apple: "" };
+    }
+  });
   const googleBtnRef = useRef(null);
 
   useEffect(() => {
@@ -33,46 +42,10 @@ export default function LoginScreen({ onLogin, onBack }) {
     api.authConfig().then((cfg) => {
       if (!alive) return;
       const next = { google: cfg.google_client_id || "", apple: cfg.apple_client_id || "" };
+      try {
+        localStorage.setItem("aud_auth_config", JSON.stringify(next));
+      } catch { /* ignore */ }
       setProviders(next);
-
-      if (next.google && !document.getElementById("gsi-script")) {
-        const s = document.createElement("script");
-        s.id = "gsi-script";
-        s.src = "https://accounts.google.com/gsi/client";
-        s.async = true;
-        s.defer = true;
-        s.onload = () => {
-          try {
-            window.google.accounts.id.initialize({
-              client_id: next.google,
-              callback: async (response) => {
-                try {
-                  setError("");
-                  setLoading(true);
-                  const out = await api.googleAuth(response.credential);
-                  if (out.success && out.user) onLogin(out.user, out.token);
-                } catch (err) {
-                  setError(err.message || "Google sign-in failed.");
-                } finally {
-                  setLoading(false);
-                }
-              },
-            });
-            if (googleBtnRef.current) {
-              window.google.accounts.id.renderButton(googleBtnRef.current, {
-                theme: "outline",
-                size: "large",
-                shape: "pill",
-                text: "signin_with",
-                width: 360,
-              });
-            }
-          } catch {
-            /* button stays hidden on failure */
-          }
-        };
-        document.head.appendChild(s);
-      }
 
       if (next.apple && !document.getElementById("appleid-script")) {
         const s = document.createElement("script");
@@ -85,6 +58,63 @@ export default function LoginScreen({ onLogin, onBack }) {
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Draw the Google button whenever the login screen is shown — including
+  // revisits where the GSI script is already loaded (previously the button
+  // area stayed empty because renderButton only ran in the script's onload).
+  useEffect(() => {
+    if (!providers.google) return;
+
+    const draw = () => {
+      try {
+        if (!googleBtnRef.current || !window.google?.accounts?.id) return;
+        window.google.accounts.id.initialize({
+          client_id: providers.google,
+          callback: async (response) => {
+            try {
+              setError("");
+              setLoading(true);
+              const out = await api.googleAuth(response.credential);
+              if (out.success && out.user) onLogin(out.user, out.token);
+            } catch (err) {
+              setError(err.message || "Google sign-in failed.");
+            } finally {
+              setLoading(false);
+            }
+          },
+        });
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline",
+          size: "large",
+          shape: "pill",
+          text: "signin_with",
+          width: 360,
+        });
+      } catch {
+        /* button stays hidden on failure */
+      }
+    };
+
+    const s = document.getElementById("gsi-script");
+    if (window.google?.accounts?.id) {
+      draw();
+    } else if (s) {
+      // Script in flight (or loaded but not yet parsed): draw when ready.
+      s.dataset.loaded === "1" ? draw() : s.addEventListener("load", draw, { once: true });
+    } else {
+      const el = document.createElement("script");
+      el.id = "gsi-script";
+      el.src = "https://accounts.google.com/gsi/client";
+      el.async = true;
+      el.defer = true;
+      el.addEventListener("load", () => {
+        el.dataset.loaded = "1";
+        draw();
+      }, { once: true });
+      document.head.appendChild(el);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providers.google]);
 
   const handleApple = async () => {
     try {
