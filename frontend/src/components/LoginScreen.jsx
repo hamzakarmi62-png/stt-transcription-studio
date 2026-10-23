@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { api } from "../api.js";
 import audLogo from "../assets/aud-logo.png";
-import { Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff, ArrowLeft } from "./Icons.jsx";
+import { Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff } from "./Icons.jsx";
 
 function Logo({ size = "h-12" }) {
   return (
@@ -163,23 +163,13 @@ export default function LoginScreen({ onLogin, onBack }) {
               </div>
             </div>
 
-            <h2 className="text-xl font-bold text-slate-900 mt-5">
-              {isRegister ? "Create your account" : "Welcome back"}
-            </h2>
-            <p className="text-sm text-slate-500 mt-1 mb-6">
-              {isRegister
-                ? "A few details and your studio is ready."
-                : "Sign in to access your transcriptions."}
-            </p>
-
-            {onBack && (
-              <button
-                type="button"
-                onClick={onBack}
-                className="mb-4 inline-flex items-center gap-1 text-xs font-semibold text-slate-400 hover:text-indigo-600 transition"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back to home
-              </button>
+            {!isRegister && (
+              <h2 className="text-xl font-bold text-slate-900 mt-5">Welcome back</h2>
+            )}
+            {!isRegister && (
+              <p className="text-sm text-slate-500 mt-1 mb-6">
+                Sign in to access your transcriptions.
+              </p>
             )}
 
             {error && (
