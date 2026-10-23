@@ -35,6 +35,12 @@ export default function LoginScreen({ onLogin, onBack }) {
       return { google: "", apple: "" };
     }
   });
+  // False only before the very first config fetch resolves (no cache yet):
+  // the OR/social block then reserves its space invisibly instead of popping
+  // in and pushing everything below it down.
+  const [cfgLoaded, setCfgLoaded] = useState(() => {
+    try { return !!localStorage.getItem("aud_auth_config"); } catch { return false; }
+  });
   const googleBtnRef = useRef(null);
 
   useEffect(() => {
@@ -46,6 +52,7 @@ export default function LoginScreen({ onLogin, onBack }) {
         localStorage.setItem("aud_auth_config", JSON.stringify(next));
       } catch { /* ignore */ }
       setProviders(next);
+      setCfgLoaded(true);
 
       if (next.apple && !document.getElementById("appleid-script")) {
         const s = document.createElement("script");
@@ -54,7 +61,7 @@ export default function LoginScreen({ onLogin, onBack }) {
         s.async = true;
         document.head.appendChild(s);
       }
-    }).catch(() => {});
+    }).catch(() => { if (alive) setCfgLoaded(true); });
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -384,8 +391,10 @@ export default function LoginScreen({ onLogin, onBack }) {
               </button>
             </form>
 
-            {(providers.google || providers.apple) && (
-              <>
+            {(providers.google || providers.apple || !cfgLoaded) && (
+              <div
+                className={`transition-opacity duration-300 ${cfgLoaded ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+              >
                 <div className="my-5 flex items-center gap-4" aria-hidden="true">
                   <span className="flex-1 h-px bg-slate-200"></span>
                   <span className="text-sm font-bold text-slate-400">OR</span>
@@ -407,7 +416,7 @@ export default function LoginScreen({ onLogin, onBack }) {
                     </button>
                   )}
                 </div>
-              </>
+              </div>
             )}
 
             <p className="mt-6 text-center text-sm text-slate-500">
