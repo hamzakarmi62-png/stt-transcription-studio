@@ -1,6 +1,4 @@
 import { useEffect, useRef, useState } from "react";
-import { Phone, Globe } from "./Icons.jsx";
-
 export default function UserMenu({ user, onLogout, dark = false }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -48,24 +46,7 @@ export default function UserMenu({ user, onLogout, dark = false }) {
       </button>
 
       {open && (
-        <div className="absolute end-0 mt-3 w-64 rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/60 overflow-hidden z-50">
-          <div className="p-4 border-b border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <span className="w-11 h-11 rounded-2xl border-[1.5px] border-[#18123b]/30 bg-white flex items-center justify-center text-[#18123b] text-sm font-black shrink-0">
-                {initials}
-              </span>
-              <div className="min-w-0">
-                <p className="text-white font-bold text-sm truncate">{displayName}</p>
-                <p className="text-slate-400 text-[11px] truncate">{user.email}</p>
-              </div>
-            </div>
-            {(user.phone || user.country) && (
-              <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-400">
-                {user.phone && <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" /> {user.phone}</span>}
-                {user.country && <span className="inline-flex items-center gap-1"><Globe className="w-3 h-3" /> {user.country}</span>}
-              </div>
-            )}
-          </div>
+        <div className="absolute end-0 mt-3 w-56 rounded-3xl bg-slate-900/95 backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/60 overflow-hidden z-50">
           <div className="p-2">
             <button
               onClick={() => {
