@@ -30,7 +30,8 @@ class TranscribeRequest(BaseModel):
 
 
 class DiarizeRequest(BaseModel):
-    num_speakers: int = Field(default=2, ge=1, le=12)
+    # None = auto: the pipeline decides how many speakers are talking.
+    num_speakers: Optional[int] = Field(default=None, ge=1, le=12)
 
 
 class SessionUpdate(BaseModel):

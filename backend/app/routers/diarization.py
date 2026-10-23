@@ -11,7 +11,7 @@ from .uploads import ensure_local_audio
 router = APIRouter(prefix="/api")
 
 
-def _run_diarization(session_id: str, num_speakers: int) -> None:
+def _run_diarization(session_id: str, num_speakers: int | None) -> None:
     try:
         session = db.get_session(session_id)
         if not session:

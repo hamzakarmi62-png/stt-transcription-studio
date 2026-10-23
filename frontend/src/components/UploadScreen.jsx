@@ -508,7 +508,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [language, setLanguage] = useState("");
   const [languages, setLanguages] = useState([]); // multi-select: up to 3
   const [detectSpeakers, setDetectSpeakers] = useState(true);
-  const [numSpeakers, setNumSpeakers] = useState(2);
+  // "auto" = the pipeline decides how many speakers are talking.
+  const [numSpeakers, setNumSpeakers] = useState("auto");
   const [phase, setPhase] = useState("idle");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
@@ -821,7 +822,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
       setPhase("diarizing");
       setMessage(t.diarizingMsg);
-      await api.startDiarize(sid, detectSpeakers ? numSpeakers : 1);
+      await api.startDiarize(sid, detectSpeakers ? (numSpeakers === "auto" ? null : numSpeakers) : 1);
       await pollStatus(sid, "done");
 
       const full = await api.getSession(sid);
@@ -937,7 +938,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
         if (blob instanceof File) markQueue(blob.name, { state: "diarizing" });
         setPhase("diarizing");
         setMessage(t.diarizingMsg);
-        await api.startDiarize(session.id, detectSpeakers ? numSpeakers : 1);
+        await api.startDiarize(session.id, detectSpeakers ? (numSpeakers === "auto" ? null : numSpeakers) : 1);
         await pollStatus(session.id, "done");
 
         const full = await api.getSession(session.id);
@@ -1620,14 +1621,18 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                 <div>
                   <label className={`block text-[11px] font-bold ${textSub} mb-2 uppercase tracking-wide`}>{t.expectedSpeakers}</label>
                   <select
-                    value={numSpeakers <= 6 ? numSpeakers : "more"}
+                    value={numSpeakers === "auto" ? "auto" : numSpeakers <= 6 ? numSpeakers : "more"}
                     onChange={(e) => {
+                      if (e.target.value === "auto") { setNumSpeakers("auto"); return; }
                       if (e.target.value === "more") { setNumSpeakers(7); return; }
                       setNumSpeakers(Number(e.target.value));
                     }}
                     disabled={!detectSpeakers}
                     className={`w-full rounded-2xl border px-3.5 py-3 text-sm disabled:opacity-40 focus:outline-none focus:ring-2 ${inputBg}`}
                   >
+                    <option value="auto">
+                      {uiLang === "ar" ? "تلقائي — يحدد بنفسه" : uiLang === "fr" ? "Auto — détection" : "Auto — detect for me"}
+                    </option>
                     {[1, 2, 3, 4, 5, 6].map((n) => (
                       <option key={n} value={n}>
                         {n} Speaker{n > 1 ? "s" : ""}
@@ -1635,7 +1640,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                     ))}
                     <option value="more">More…</option>
                   </select>
-                  {numSpeakers > 6 && (
+                  {numSpeakers !== "auto" && numSpeakers > 6 && (
                     <input
                       type="number"
                       min={7}

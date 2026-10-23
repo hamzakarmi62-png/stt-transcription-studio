@@ -11,7 +11,7 @@ MIN_SILENCE_SECONDS = 0.5
 MAX_MERGE_GAP_SECONDS = 1.0
 
 
-def diarize(audio_path: str, segments: list[dict], num_speakers: int = 2) -> tuple[list[dict], list[dict]]:
+def diarize(audio_path: str, segments: list[dict], num_speakers: int | None = None) -> tuple[list[dict], list[dict]]:
     method = settings.diarization_method
     if method == "auto":
         method = "pyannote" if _pyannote_ready() else "simple"
@@ -45,13 +45,18 @@ def _pyannote_ready() -> bool:
         return False
 
 
-def _diarize_pyannote(audio_path: str, num_speakers: int) -> list[tuple[float, float, str]]:
+def _diarize_pyannote(audio_path: str, num_speakers: int | None) -> list[tuple[float, float, str]]:
     from pyannote.audio import Pipeline
 
     pipeline = Pipeline.from_pretrained(
         "pyannote/speaker-diarization-3.1", use_auth_token=settings.hf_token
     )
-    diarization = pipeline(audio_path, num_speakers=num_speakers)
+    # num_speakers=None lets pyannote's agglomerative clustering decide the
+    # speaker count itself (2, 3, 4… however many it hears).
+    if num_speakers is None:
+        diarization = pipeline(audio_path)
+    else:
+        diarization = pipeline(audio_path, num_speakers=num_speakers)
     out = []
     for turn, _, speaker in diarization.itertracks(yield_label=True):
         out.append((round(turn.start, 3), round(turn.end, 3), speaker))
@@ -95,18 +100,39 @@ def _assign_energy_turns(audio_path: str, segments: list[dict], num_speakers: in
     labels = _label_turns_by_voice(audio_path, [turns[i] for i in used_turns], num_speakers)
     if labels is None:
         # Voice fingerprinting unavailable (no usable pitch) — alternate turns.
-        labels = {pos: f"Speaker {(pos % max(num_speakers, 1)) + 1}" for pos in range(len(used_turns))}
+        labels = {pos: f"Speaker {(pos % max(num_speakers or 2, 1)) + 1}" for pos in range(len(used_turns))}
     label_by_turn = {turn_idx: labels[pos] for pos, turn_idx in enumerate(used_turns)}
     for seg, ti in zip(segments, turn_of):
         seg["speaker"] = label_by_turn.get(ti, "Speaker 1")
     return True
 
 
-def _label_turns_by_voice(audio_path: str, turns, num_speakers: int):
+def _auto_pitch_centers(values: list[float]) -> list[float]:
+    """Decide the speaker count from the pitch distribution itself: split the
+    sorted log-pitch range at its largest gaps (a register change ≈ another
+    voice). Returns one center per detected voice register."""
+
+    def rec(chunk: list[float]) -> list[list[float]]:
+        if len(chunk) < 4 or chunk[-1] - chunk[0] < 0.45:
+            return [chunk]
+        best_gap, best_i = 0.0, None
+        for i in range(2, len(chunk) - 1):
+            gap = chunk[i] - chunk[i - 1]
+            if gap > best_gap:
+                best_gap, best_i = gap, i
+        if best_i is None or best_gap < 0.22:
+            return [chunk]
+        return rec(chunk[:best_i]) + rec(chunk[best_i:])
+
+    groups = rec(sorted(values))
+    return [sum(g) / len(g) for g in groups]
+
+
+def _label_turns_by_voice(audio_path: str, turns, num_speakers: int | None):
     """Cluster speech turns into speakers by median pitch (F0), so the same
     voice keeps one label even across long silences. None when pitch is
     unusable and the caller should fall back to alternation."""
-    if num_speakers < 2 or len(turns) < 2:
+    if (num_speakers is not None and num_speakers < 2) or len(turns) < 2:
         return {i: "Speaker 1" for i in range(len(turns))} if turns else None
     try:
         pitches = _turn_pitch(audio_path, turns)
@@ -117,13 +143,20 @@ def _label_turns_by_voice(audio_path: str, turns, num_speakers: int):
     if len(voiced) < 2:
         return None
 
-    # 1-D k-means over log pitch, seeded at quantiles so two clear voice
-    # registers split even when turns are imbalanced.
+    # 1-D k-means over log pitch. With a fixed count, seed at quantiles so two
+    # clear voice registers split even when turns are imbalanced; with None,
+    # the count is decided by splitting the pitch range at its biggest gaps.
     import math
 
     values = sorted(math.log2(pitches[i]) for i in voiced)
-    k = min(num_speakers, len(values))
-    centers = [values[int((idx + 0.5) * len(values) / k)] for idx in range(k)]
+    if num_speakers is None:
+        centers = _auto_pitch_centers(values)
+        k = len(centers)
+        if k < 2:
+            return None
+    else:
+        k = min(num_speakers, len(values))
+        centers = [values[int((idx + 0.5) * len(values) / k)] for idx in range(k)]
     for _ in range(12):
         clusters = [[] for _ in range(k)]
         for v in values:
@@ -230,7 +263,7 @@ def _median_f0(samples, sr: int, frame: int = 640, hop: int = 320) -> float:
     return float(np.median(f0s))
 
 
-def _assign_turn_based(segments: list[dict], num_speakers: int) -> None:
+def _assign_turn_based(segments: list[dict], num_speakers: int | None) -> None:
     turns: list[list[dict]] = []
     current: list[dict] = []
     for seg in segments:
@@ -241,7 +274,7 @@ def _assign_turn_based(segments: list[dict], num_speakers: int) -> None:
     if current:
         turns.append(current)
     for i, turn in enumerate(turns):
-        label = f"Speaker {(i % max(num_speakers, 1)) + 1}"
+        label = f"Speaker {(i % max(num_speakers or 2, 1)) + 1}"
         for seg in turn:
             seg["speaker"] = label
 
