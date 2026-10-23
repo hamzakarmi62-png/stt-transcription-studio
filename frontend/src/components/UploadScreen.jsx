@@ -500,7 +500,10 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const [uiLang, setUiLang] = useState("en"); // ar | en | fr (Default to English)
   const [theme, setTheme] = useState("light"); // dark | light (light = Rev cream by default)
 
-  const [file, setFile] = useState(null);
+  // Multi-file queue: the user can drop/select one video — or two, three,
+  // as many as they want — and they are processed one after another.
+  const [files, setFiles] = useState([]);
+  const [queueState, setQueueState] = useState([]); // [{name, state, progress}] mirrors the run
   const [linkUrl, setLinkUrl] = useState("");
   const [language, setLanguage] = useState("");
   const [languages, setLanguages] = useState([]); // multi-select: up to 3
@@ -835,7 +838,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
 
   useEffect(() => () => resetRecording(), []);
 
-  const selectedBlob = file || recBlob;
+  const selectedBlob = recBlob;
 
   const pollStatus = async (id, target) => {
     // Never abandon a working transcription: poll for up to 2 hours. At 30
@@ -882,43 +885,76 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     }
   };
 
+  const markQueue = (name, patch) =>
+    setQueueState((prev) => prev.map((q) => (q.name === name ? { ...q, ...patch } : q)));
+
+  // Sync the per-file status list with the current selection while idle.
+  useEffect(() => {
+    if (busy) return;
+    setQueueState(files.map((f) => ({ name: f.name, state: "waiting", progress: 0 })));
+  }, [files]);
+
   const handleProcess = async () => {
-    if (!selectedBlob) return;
+    const queue = files.length > 0 ? [...files] : recBlob ? [recBlob] : [];
+    if (queue.length === 0) return;
     setError("");
     setMessage("");
+    let firstFull = null;
+    let currentFile = null;
     try {
-      setPhase("uploading");
-      setProgress(0);
-      const fileSizeMB = (selectedBlob.size / (1024 * 1024)).toFixed(1);
-      const isLarge = selectedBlob.size > 10 * 1024 * 1024;
-      if (isLarge) {
-        setMessage(
-          uiLang === "ar"
-            ? `جاري رفع الملف (${fileSizeMB} MB) بالرفع المجزّأ... يرجى الانتظار`
-            : uiLang === "fr"
-            ? `Envoi du fichier (${fileSizeMB} MB) en morceaux...`
-            : `Uploading file (${fileSizeMB} MB) in chunks...`
-        );
+      for (let i = 0; i < queue.length; i++) {
+        const blob = queue[i];
+        currentFile = blob;
+        const isVideoBlob = blob instanceof File && /\.(mp4|webm|mov|m4v|mkv|avi)$/i.test(blob.name || "");
+        const label = blob.name || (isVideoBlob ? "video" : "recording");
+        const pos = queue.length > 1 ? uiLang === "ar" ? `الملف ${i + 1} من ${queue.length}` : uiLang === "fr" ? `Fichier ${i + 1} sur ${queue.length}` : `File ${i + 1} of ${queue.length}` : "";
+
+        if (blob instanceof File) markQueue(blob.name, { state: "uploading", progress: 0 });
+        setPhase("uploading");
+        setProgress(0);
+        const fileSizeMB = (blob.size / (1024 * 1024)).toFixed(1);
+        const isLarge = blob.size > 10 * 1024 * 1024;
+        if (isLarge) {
+          setMessage(
+            uiLang === "ar"
+              ? `${pos} جاري رفع (${label} — ${fileSizeMB} MB) بالرفع المجزّأ... يرجى الانتظار`
+              : uiLang === "fr"
+              ? `${pos} Envoi de (${label} — ${fileSizeMB} MB) en morceaux...`
+              : `${pos} Uploading (${label} — ${fileSizeMB} MB) in chunks...`
+          );
+        }
+        const session = await api.upload(blob, (p) => {
+          setProgress(p);
+          if (blob instanceof File) markQueue(blob.name, { progress: p });
+        });
+
+        if (blob instanceof File) markQueue(blob.name, { state: "transcribing", progress: 100 });
+        setPhase("transcribing");
+        setMessage(t.transcribingMsg);
+        await api.startTranscribe(session.id, languages.length > 1 ? null : language, languages);
+        await pollStatus(session.id, "transcribed");
+
+        if (blob instanceof File) markQueue(blob.name, { state: "diarizing" });
+        setPhase("diarizing");
+        setMessage(t.diarizingMsg);
+        await api.startDiarize(session.id, detectSpeakers ? numSpeakers : 1);
+        await pollStatus(session.id, "done");
+
+        const full = await api.getSession(session.id);
+        if (!firstFull) firstFull = full;
+        if (blob instanceof File) markQueue(blob.name, { state: "done" });
+        // Done files leave the selection so a retry after an error
+        // re-processes only what is still pending.
+        setFiles((prev) => prev.filter((f) => f !== blob));
+        await loadSessions();
       }
-      const session = await api.upload(selectedBlob, setProgress);
-
-      setPhase("transcribing");
-      setMessage(t.transcribingMsg);
-      await api.startTranscribe(session.id, languages.length > 1 ? null : language, languages);
-      await pollStatus(session.id, "transcribed");
-
-      setPhase("diarizing");
-      setMessage(t.diarizingMsg);
-      await api.startDiarize(session.id, detectSpeakers ? numSpeakers : 1);
-      await pollStatus(session.id, "done");
-
-      const full = await api.getSession(session.id);
       setPhase("done");
-      await loadSessions();
-      onComplete(full);
+      setFiles([]);
+      onComplete(firstFull);
     } catch (e) {
       console.error("Pipeline error:", e);
       setPhase("error");
+      if (currentFile instanceof File) markQueue(currentFile.name, { state: "error" });
       const errText = e?.message || (typeof e === "string" ? e : "");
       setError(errText && errText !== "{}" ? errText : "حدث خطأ غير متوقع أثناء المعالجة، يرجى المحاولة مجدداً.");
     }
@@ -1013,7 +1049,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   };
 
   const busy = phase === "uploading" || phase === "downloading" || phase === "transcribing" || phase === "diarizing";
-  const hasAudio = !!selectedBlob;
+  const hasAudio = files.length > 0 || !!selectedBlob;
 
   const totalSessionsCount = sessions.length;
   const completedSessionsCount = sessions.filter((s) => s.status === "done").length;
@@ -1299,9 +1335,10 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   onDrop={(e) => {
                     e.preventDefault();
                     setDragOver(false);
-                    const f = e.dataTransfer.files?.[0];
-                    if (f) {
-                      setFile(f);
+                    const dropped = Array.from(e.dataTransfer.files || []);
+                    if (dropped.length > 0) {
+                      // Append: dropping again adds more files to the queue.
+                      setFiles((prev) => [...prev, ...dropped]);
                       resetRecording();
                       setError("");
                     }
@@ -1318,15 +1355,17 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   <input
                     ref={fileInputRef}
                     type="file"
+                    multiple
                     accept={ACCEPTED}
                     className="hidden"
                     onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) {
-                        setFile(f);
+                      const picked = Array.from(e.target.files || []);
+                      if (picked.length > 0) {
+                        setFiles((prev) => [...prev, ...picked]);
                         resetRecording();
                         setError("");
                       }
+                      e.target.value = ""; // allow re-picking the same file later
                     }}
                   />
                   <div className="w-16 h-16 mx-auto rounded-xl border-[1.5px] border-[#18123b]/25 flex items-center justify-center text-[#18123b] mb-4">
@@ -1334,18 +1373,72 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   </div>
                   <p className="font-bold text-sm">{t.uploadTitle}</p>
                   <p className={`text-xs ${textSub} mt-1.5`}>{t.uploadDesc}</p>
-                  {file && (
-                    <div className="mt-5 inline-flex items-center gap-3 bg-white text-[#18123b] border border-[#18123b]/15 px-4 py-2.5 rounded-2xl text-sm font-bold">
-                      <span className="flex items-center gap-1.5 min-w-0"><FileText className="w-3.5 h-3.5 shrink-0" /><span className="truncate max-w-[260px]">{file.name}</span></span>
-                      <button
-                        className="text-slate-400 hover:text-red-400 font-black"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setFile(null);
-                        }}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
+                  <p className={`text-[11px] mt-1 font-semibold ${isDark ? "text-indigo-300/80" : "text-[#6415f5]/80"}`}>
+                    {uiLang === "ar"
+                      ? "يمكنك اختيار ملف واحد أو عدة ملفات — ستُعالج كلها معاً بالترتيب"
+                      : uiLang === "fr"
+                      ? "Sélectionnez un ou plusieurs fichiers — ils seront traités l'un après l'autre"
+                      : "Select one file or many — they will be processed together, one after another"}
+                  </p>
+                  {files.length > 0 && (
+                    <div className="mt-5 w-full max-w-md mx-auto space-y-2 text-start" onClick={(e) => e.stopPropagation()}>
+                      <p className={`text-[11px] font-black ${textSub} text-center`}>
+                        {uiLang === "ar"
+                          ? `${files.length} ملف${files.length > 2 ? "ات" : ""} في الانتظار`
+                          : uiLang === "fr"
+                          ? `${files.length} fichier${files.length > 1 ? "s" : ""} en attente`
+                          : `${files.length} file${files.length > 1 ? "s" : ""} selected`}
+                      </p>
+                      {files.map((f, idx) => {
+                        const q = queueState.find((s) => s.name === f.name);
+                        const st = q?.state || "waiting";
+                        return (
+                          <div
+                            key={`${f.name}-${idx}`}
+                            className={`flex items-center gap-2.5 bg-white text-[#18123b] border px-3.5 py-2.5 rounded-2xl text-sm font-bold ${
+                              st === "error" ? "border-red-400" : st === "done" ? "border-emerald-400" : "border-[#18123b]/15"
+                            }`}
+                          >
+                            <FileText className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate flex-1 min-w-0">{f.name}</span>
+                            {busy || st !== "waiting" ? (
+                              <span
+                                className={`text-[10px] font-black px-2 py-0.5 rounded-full shrink-0 ${
+                                  st === "done"
+                                    ? "bg-emerald-500/15 text-emerald-600"
+                                    : st === "error"
+                                    ? "bg-red-500/15 text-red-500"
+                                    : st === "waiting"
+                                    ? "bg-slate-100 text-slate-500"
+                                    : "bg-indigo-500/15 text-indigo-500"
+                                }`}
+                              >
+                                {st === "waiting"
+                                  ? uiLang === "ar" ? "بالانتظار" : uiLang === "fr" ? "En attente" : "Waiting"
+                                  : st === "uploading"
+                                  ? `${q?.progress ?? 0}%`
+                                  : st === "transcribing"
+                                  ? uiLang === "ar" ? "تفريغ" : uiLang === "fr" ? "Transcription" : "Transcribing"
+                                  : st === "diarizing"
+                                  ? uiLang === "ar" ? "المتحدثون" : uiLang === "fr" ? "Locuteurs" : "Speakers"
+                                  : st === "done"
+                                  ? uiLang === "ar" ? "تم" : uiLang === "fr" ? "Terminé" : "Done"
+                                  : uiLang === "ar" ? "خطأ" : uiLang === "fr" ? "Erreur" : "Error"}
+                              </span>
+                            ) : null}
+                            <button
+                              className="text-slate-400 hover:text-red-400 font-black shrink-0 disabled:opacity-30"
+                              disabled={busy}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setFiles((prev) => prev.filter((x, j) => !(j === idx)));
+                              }}
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -1614,7 +1707,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                       : "bg-[#18123b] text-white hover:bg-[#2a2455] shadow-lg shadow-[#18123b]/20"
                   }`}
                 >
-                  <span className="inline-flex items-center justify-center gap-2">{busy ? <Loader className="w-4 h-4 animate-spin" /> : null}{busy ? t.processing : t.startTranscribe}</span>
+                  <span className="inline-flex items-center justify-center gap-2">{busy ? <Loader className="w-4 h-4 animate-spin" /> : null}{busy ? t.processing : files.length > 1 ? `${t.startTranscribe} (${files.length})` : t.startTranscribe}</span>
                 </button>
               </div>
             </div>
