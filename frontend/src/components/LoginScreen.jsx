@@ -90,13 +90,31 @@ export default function LoginScreen({ onLogin, onBack }) {
             }
           },
         });
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
+        const host = googleBtnRef.current;
+        // Hide the host until Google's iframe is actually inside, then fade
+        // in — otherwise the button pops into an empty slot and then
+        // reshapes (generic → personalized) in full view.
+        host.style.opacity = "0";
+        host.style.transition = "opacity 0.45s ease";
+        window.google.accounts.id.renderButton(host, {
           theme: "outline",
           size: "large",
           shape: "pill",
           text: "signin_with",
           width: 360,
         });
+        const reveal = () => { host.style.opacity = "1"; };
+        const obs = new MutationObserver(() => {
+          if (host.querySelector("iframe")) {
+            reveal();
+            // Reveal again after the personalized swap settles, in case the
+            // first paint was the generic button flashing mid-fade.
+            setTimeout(reveal, 600);
+            obs.disconnect();
+          }
+        });
+        obs.observe(host, { childList: true, subtree: true });
+        setTimeout(reveal, 2500); // safety net if the iframe event never fires
       } catch {
         /* button stays hidden on failure */
       }
