@@ -163,15 +163,6 @@ export default function LoginScreen({ onLogin, onBack }) {
               </div>
             </div>
 
-            {!isRegister && (
-              <h2 className="text-xl font-bold text-slate-900 mt-5">Welcome back</h2>
-            )}
-            {!isRegister && (
-              <p className="text-sm text-slate-500 mt-1 mb-6">
-                Sign in to access your transcriptions.
-              </p>
-            )}
-
             {error && (
               <div className="mb-5 p-3.5 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl font-medium flex items-start gap-2">
                 <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
