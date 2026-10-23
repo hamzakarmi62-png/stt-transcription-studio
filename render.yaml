@@ -35,3 +35,5 @@ services:
         value: 0058fc90bf9d6d40000000001
       - key: S3_SECRET_KEY
         value: K005VVwPBZE+VUc+0ly/kuuIrJDAQNI
+      - key: GOOGLE_CLIENT_ID
+        value: 320173559924-nemjdhs6157tg0152nh0u88f7rc92978.apps.googleusercontent.com
