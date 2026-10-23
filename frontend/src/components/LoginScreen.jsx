@@ -202,12 +202,19 @@ export default function LoginScreen({ onLogin, onBack }) {
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-fuchsia-600/10 rounded-full blur-3xl"></div>
         <div className="relative z-10 flex flex-col justify-between p-12 w-full">
           <div className="flex items-center">
-            <img
-              src={audLogo}
-              alt="Aud"
-              className="h-16 w-auto drop-shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
-              draggable={false}
-            />
+            <button
+              type="button"
+              onClick={onBack}
+              title={onBack ? "Back to home" : undefined}
+              className={`rounded-xl transition ${onBack ? "hover:opacity-80 hover:scale-[1.03] cursor-pointer" : "cursor-default"} focus:outline-none focus:ring-2 focus:ring-indigo-400/60`}
+            >
+              <img
+                src={audLogo}
+                alt="Aud"
+                className="h-16 w-auto drop-shadow-[0_10px_30px_rgba(37,99,235,0.35)]"
+                draggable={false}
+              />
+            </button>
           </div>
 
           <div className="space-y-8 max-w-md">
@@ -246,12 +253,19 @@ export default function LoginScreen({ onLogin, onBack }) {
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center mb-8">
-            <img
-              src={audLogo}
-              alt="Aud"
-              className="h-14 w-auto drop-shadow-[0_8px_24px_rgba(37,99,235,0.35)]"
-              draggable={false}
-            />
+            <button
+              type="button"
+              onClick={onBack}
+              title={onBack ? "Back to home" : undefined}
+              className={`rounded-xl transition ${onBack ? "hover:opacity-80 cursor-pointer" : "cursor-default"}`}
+            >
+              <img
+                src={audLogo}
+                alt="Aud"
+                className="h-14 w-auto drop-shadow-[0_8px_24px_rgba(37,99,235,0.35)]"
+                draggable={false}
+              />
+            </button>
           </div>
 
           <div className="bg-white rounded-3xl shadow-2xl shadow-black/40 p-8">
