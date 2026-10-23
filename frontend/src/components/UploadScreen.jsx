@@ -1051,6 +1051,14 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const busy = phase === "uploading" || phase === "downloading" || phase === "transcribing" || phase === "diarizing";
   const hasAudio = files.length > 0 || !!selectedBlob;
 
+  // While a pipeline is running, keep the archive statuses live so the
+  // "Processing" filter shows the session being worked on right now.
+  useEffect(() => {
+    if (!busy) return;
+    const id = setInterval(loadSessions, 4000);
+    return () => clearInterval(id);
+  }, [busy, loadSessions]);
+
   const totalSessionsCount = sessions.length;
   // "Completed" means the user got their result: the pipeline reached done,
   // or ended at transcribed (older sessions never ran the speakers step).
