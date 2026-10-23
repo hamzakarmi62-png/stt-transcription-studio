@@ -184,3 +184,93 @@ def login(req: LoginRequest):
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur du serveur: {str(e)}")
+
+
+# ── Social sign-in (Google / Apple) ──────────────────────────────────────────
+# The provider SDK runs in the browser and hands us an ID token; we verify it
+# against the provider, then reuse the exact same account store and token
+# format as email/password login. Providers stay hidden until their client id
+# is configured via GOOGLE_CLIENT_ID / APPLE_CLIENT_ID environment variables.
+
+
+@router.get("/config")
+def auth_config():
+    """Public provider availability for the login screen (ids are public)."""
+    return {
+        "google_client_id": settings.google_client_id or "",
+        "apple_client_id": settings.apple_client_id or "",
+    }
+
+
+class SocialAuthRequest(BaseModel):
+    credential: str = Field(..., min_length=20)
+
+
+def _login_or_create(email: str, full_name: str) -> dict:
+    """Find the account for a verified provider email, or provision one."""
+    row = get_user_by_username_or_email(email)
+    if row:
+        return {"success": True, "user": public_user(row), "token": make_token(row["id"])}
+
+    # First social login: create the account with an unusable random password
+    # (login stays possible through the provider, or a password reset flow).
+    user_id = uuid.uuid4().hex[:12]
+    base = re.sub(r"[^a-zA-Z0-9._-]", "", email.split("@", 1)[0].lower()) or "user"
+    username, n = base, 1
+    while get_user_by_username_or_email(username):
+        n += 1
+        username = f"{base}{n}"
+    user = create_user(user_id, username, email, uuid.uuid4().hex + uuid.uuid4().hex, {"full_name": full_name})
+    return {"success": True, "user": user, "token": make_token(user_id)}
+
+
+@router.post("/google")
+def google_auth(req: SocialAuthRequest):
+    if not settings.google_client_id:
+        raise HTTPException(status_code=501, detail="Google sign-in is not configured.")
+    try:
+        import requests as _requests
+
+        info = _requests.get(
+            "https://oauth2.googleapis.com/tokeninfo",
+            params={"id_token": req.credential},
+            timeout=10,
+        ).json()
+    except Exception:
+        raise HTTPException(status_code=401, detail="Impossible de vérifier le jeton Google.")
+
+    if (
+        info.get("aud") != settings.google_client_id
+        or info.get("iss") not in ("accounts.google.com", "https://accounts.google.com")
+        or int(info.get("exp", 0)) < time.time()
+        or info.get("email_verified", "").lower() != "true"
+    ):
+        raise HTTPException(status_code=401, detail="Jeton Google invalide.")
+    return _login_or_create(info["email"], info.get("name") or "")
+
+
+@router.post("/apple")
+def apple_auth(req: SocialAuthRequest):
+    if not settings.apple_client_id:
+        raise HTTPException(status_code=501, detail="Apple sign-in is not configured.")
+    try:
+        import jwt
+        from jwt import PyJWKClient
+
+        key = PyJWKClient("https://appleid.apple.com/auth/keys").get_signing_key_from_jwt(req.credential).key
+        claims = jwt.decode(
+            req.credential,
+            key,
+            algorithms=["RS256"],
+            audience=settings.apple_client_id,
+            options={"require": ["exp", "iss", "aud"]},
+        )
+    except Exception:
+        raise HTTPException(status_code=401, detail="Jeton Apple invalide.")
+
+    if claims.get("iss") != "https://appleid.apple.com" or int(claims.get("exp", 0)) < time.time():
+        raise HTTPException(status_code=401, detail="Jeton Apple invalide.")
+    email = claims.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Apple n'a pas partagé d'adresse e-mail.")
+    return _login_or_create(email, (claims.get("name") or {}).get("firstName", "") if isinstance(claims.get("name"), dict) else "")

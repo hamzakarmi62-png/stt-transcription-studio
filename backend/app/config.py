@@ -28,6 +28,12 @@ class Settings(BaseSettings):
     auth_secret: str = ""
     keepalive_seconds: int = 600
 
+    # Social sign-in. Empty = the provider stays hidden on the login screen.
+    # google_client_id: OAuth Web client ID from Google Cloud Console.
+    # apple_client_id: Services ID from the Apple Developer Program.
+    google_client_id: str = ""
+    apple_client_id: str = ""
+
     diarization_method: str = "auto"
     hf_token: str = ""
 

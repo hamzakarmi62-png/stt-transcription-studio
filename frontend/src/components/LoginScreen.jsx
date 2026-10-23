@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import audLogo from "../assets/aud-logo.png";
 import { Target, Users, PenLine, FileText, Lock, AlertTriangle, Eye, EyeOff } from "./Icons.jsx";
@@ -22,6 +22,89 @@ export default function LoginScreen({ onLogin, onBack }) {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Social providers configured server-side (empty = hidden). Google uses the
+  // official button; Apple a native-style one — both hand an ID token to the
+  // backend, which verifies it and returns the same session as email login.
+  const [providers, setProviders] = useState({ google: "", apple: "" });
+  const googleBtnRef = useRef(null);
+
+  useEffect(() => {
+    let alive = true;
+    api.authConfig().then((cfg) => {
+      if (!alive) return;
+      const next = { google: cfg.google_client_id || "", apple: cfg.apple_client_id || "" };
+      setProviders(next);
+
+      if (next.google && !document.getElementById("gsi-script")) {
+        const s = document.createElement("script");
+        s.id = "gsi-script";
+        s.src = "https://accounts.google.com/gsi/client";
+        s.async = true;
+        s.defer = true;
+        s.onload = () => {
+          try {
+            window.google.accounts.id.initialize({
+              client_id: next.google,
+              callback: async (response) => {
+                try {
+                  setError("");
+                  setLoading(true);
+                  const out = await api.googleAuth(response.credential);
+                  if (out.success && out.user) onLogin(out.user, out.token);
+                } catch (err) {
+                  setError(err.message || "Google sign-in failed.");
+                } finally {
+                  setLoading(false);
+                }
+              },
+            });
+            if (googleBtnRef.current) {
+              window.google.accounts.id.renderButton(googleBtnRef.current, {
+                theme: "outline",
+                size: "large",
+                shape: "pill",
+                text: "signin_with",
+                width: 360,
+              });
+            }
+          } catch {
+            /* button stays hidden on failure */
+          }
+        };
+        document.head.appendChild(s);
+      }
+
+      if (next.apple && !document.getElementById("appleid-script")) {
+        const s = document.createElement("script");
+        s.id = "appleid-script";
+        s.src = "https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js";
+        s.async = true;
+        document.head.appendChild(s);
+      }
+    }).catch(() => {});
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleApple = async () => {
+    try {
+      setError("");
+      setLoading(true);
+      window.AppleID.auth.init({
+        clientId: providers.apple,
+        scope: "name email",
+        redirectURI: window.location.origin,
+        usePopup: true,
+      });
+      const res = await window.AppleID.auth.signIn();
+      const out = await api.appleAuth(res.authorization.id_token);
+      if (out.success && out.user) onLogin(out.user, out.token);
+    } catch (err) {
+      setError(err.error || err.message || "Apple sign-in failed.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const passwordScore = (() => {
     let score = 0;
@@ -247,6 +330,32 @@ export default function LoginScreen({ onLogin, onBack }) {
                   : "Sign in"}
               </button>
             </form>
+
+            {(providers.google || providers.apple) && (
+              <>
+                <div className="my-5 flex items-center gap-4" aria-hidden="true">
+                  <span className="flex-1 h-px bg-slate-200"></span>
+                  <span className="text-sm font-bold text-slate-400">OR</span>
+                  <span className="flex-1 h-px bg-slate-200"></span>
+                </div>
+                <div className="space-y-3">
+                  {providers.google && <div ref={googleBtnRef} className="flex justify-center min-h-[44px]"></div>}
+                  {providers.apple && (
+                    <button
+                      type="button"
+                      onClick={handleApple}
+                      disabled={loading}
+                      className="w-full flex items-center justify-center gap-3 py-3 bg-white border border-slate-300 rounded-full font-semibold text-slate-900 hover:bg-slate-50 transition disabled:opacity-60 text-sm"
+                    >
+                      <svg viewBox="0 0 384 512" className="w-4 h-4 fill-slate-900" aria-hidden="true">
+                        <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z" />
+                      </svg>
+                      Sign in with Apple
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
 
             <p className="mt-6 text-center text-sm text-slate-500">
               {isRegister ? "Already have an account?" : "No account yet?"}{" "}

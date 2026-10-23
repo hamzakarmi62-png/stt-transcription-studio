@@ -288,6 +288,21 @@ export const api = {
       body: JSON.stringify({ identifier, password }),
     }),
 
+  // Social sign-in: which providers are configured, and token exchange.
+  authConfig: () => request(`${BASE}/auth/config`),
+  googleAuth: (credential) =>
+    request(`${BASE}/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential }),
+    }),
+  appleAuth: (credential) =>
+    request(`${BASE}/auth/apple`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ credential }),
+    }),
+
   // ── Post-transcription insights (never touches the transcript itself) ──
   startTranslate: (id, language) =>
     request(`${BASE}/sessions/${id}/translate`, {
