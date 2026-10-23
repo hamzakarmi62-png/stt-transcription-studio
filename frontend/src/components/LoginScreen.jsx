@@ -255,7 +255,7 @@ export default function LoginScreen({ onLogin, onBack }) {
           </div>
 
           <div className="bg-white rounded-3xl shadow-2xl shadow-black/40 p-8">
-            <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-center gap-3 mb-6">
               <div className={`flex rounded-xl bg-slate-100 p-1 text-sm font-semibold`}>
                 <button
                   type="button"
