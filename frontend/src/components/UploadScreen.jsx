@@ -1052,7 +1052,13 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
   const hasAudio = files.length > 0 || !!selectedBlob;
 
   const totalSessionsCount = sessions.length;
-  const completedSessionsCount = sessions.filter((s) => s.status === "done").length;
+  // "Completed" means the user got their result: the pipeline reached done,
+  // or ended at transcribed (older sessions never ran the speakers step).
+  const isCompletedSession = (s) => s.status === "done" || s.status === "transcribed";
+  // "Processing" covers every in-flight state, not just the transcription one.
+  const isProcessingSession = (s) =>
+    s.status === "processing" || s.status === "diarizing" || s.status === "downloading";
+  const completedSessionsCount = sessions.filter(isCompletedSession).length;
   const totalSegmentsCount = sessions.reduce((acc, s) => acc + (s.segments?.length || 0), 0);
 
   const filteredSessions = sessions.filter((s) => {
@@ -1060,7 +1066,9 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
     // what has not been moved. Removing them from My Files brings them back.
     if (customWorkIds.includes(s.id)) return false;
     const matchesSearch = (customFileNames[s.id] || s.filename || "").toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === "all" || s.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "done" ? isCompletedSession(s) : statusFilter === "processing" ? isProcessingSession(s) : s.status === statusFilter);
     return matchesSearch && matchesStatus;
   });
 
