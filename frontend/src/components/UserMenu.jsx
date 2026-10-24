@@ -28,12 +28,10 @@ export default function UserMenu({ user, onLogout, dark = false }) {
         className={`flex items-center gap-2.5 rounded-2xl px-2 py-1.5 transition ${dark ? "hover:bg-white/[0.07]" : "hover:bg-[#18123b]/[0.05]"}`}
         title="Mon compte"
       >
-        <span className="w-9 h-9 rounded-2xl border-[1.5px] border-[#18123b]/30 bg-white flex items-center justify-center text-[#18123b] text-[11px] font-black shrink-0">
+        <span
+          className={`w-9 h-9 rounded-2xl border-[1.5px] flex items-center justify-center text-[11px] font-black shrink-0 ${dark ? "border-white/30 bg-white/10 text-white" : "border-[#18123b]/30 bg-white text-[#18123b]"}`}
+        >
           {initials}
-        </span>
-        <span className="hidden sm:block text-start leading-tight">
-          <span className={`block text-xs font-normal ${dark ? "text-white" : "text-[#18123b]"}`}>{displayName}</span>
-          <span className={`block text-[10px] ${dark ? "text-slate-400" : "text-[#4b4763]"}`}>Free account</span>
         </span>
         <svg
           className={`w-3.5 h-3.5 text-slate-500 transition-transform ${open ? "rotate-180" : ""}`}
