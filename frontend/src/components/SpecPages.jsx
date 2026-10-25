@@ -517,7 +517,7 @@ export function TAudiencePage({ slug, goFeature }) {
           <p className="mt-3.5 text-[16px] leading-[1.65] text-[#4b4763]">{a.pains[0]}</p>
         </div>
         <div className="relative rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/25 h-[260px] sm:h-[320px]">
-          <video src={base.video} poster={base.poster} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <img src={base.poster || "/videos/hero-woman.jpg"} alt={base.title} className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/40 to-transparent" />
         </div>
       </div>

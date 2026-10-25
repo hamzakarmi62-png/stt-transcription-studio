@@ -162,19 +162,15 @@ function HeroDemo() {
 
   return (
     <div className="relative w-full h-[440px] sm:h-[520px] lg:h-[560px] rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/30 bg-[#12101f]">
-      {/* footage */}
-      <video
-        src="/videos/hero-woman.mp4"
-        poster="/videos/hero-woman.jpg"
-        preload="auto"
-        autoPlay muted loop playsInline
+      {/* footage poster images (lightweight, zero-bandwidth overhead) */}
+      <img
+        src="/videos/hero-woman.jpg"
+        alt="AudStudio"
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${showingWoman ? "opacity-100" : "opacity-0"}`}
       />
-      <video
-        src="/videos/hero-man.mp4"
-        poster="/videos/hero-man.jpg"
-        preload="auto"
-        autoPlay muted loop playsInline
+      <img
+        src="/videos/hero-man.jpg"
+        alt="AudStudio"
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${showingWoman ? "opacity-0" : "opacity-100"}`}
       />
       {/* ambient gradient + dim so the UI cards read on any frame */}
@@ -614,16 +610,12 @@ export default function LandingScreen({ onStart }) {
 
                     {/* Promo rail */}
                     <div className="relative p-0 min-h-[320px]">
-                      {openNavItem.promo.video ? (
-                        <video
-                          src={openNavItem.promo.video}
-                          poster={openNavItem.promo.poster}
-                          autoPlay muted loop playsInline
-                          className="absolute inset-0 w-full h-full object-cover"
-                        />
-                      ) : (
-                        <img src="/videos/hero-woman.jpg" alt="Aud Studio" className="absolute inset-0 w-full h-full object-cover" draggable={false} />
-                      )}
+                      <img
+                        src={openNavItem.promo.poster || "/videos/hero-woman.jpg"}
+                        alt="Aud Studio"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        draggable={false}
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/95 via-[#12101f]/55 to-transparent" />
                       <div className="relative h-full flex flex-col justify-end p-6 text-white">
                         {openNavItem.promo.kicker && (

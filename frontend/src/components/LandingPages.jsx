@@ -594,7 +594,7 @@ export const FEATURES = {
     kicker: "Speaking Statistics",
     title: "Time, Pace, Participation",
     video: "/videos/feat-stats.mp4",
-    poster: "/videos/feat-stats.mp4.jpg".replace(".mp4.jpg", ".mp4"),
+    poster: "/videos/feat-stats.jpg",
     lead: "Talking time, pace and participation per speaker — the anatomy of any meeting or interview, generated automatically after every transcription.",
     steps: [
       ["Transcribe as usual", "The statistics build themselves from the words and speakers."],
@@ -698,7 +698,7 @@ export function FeaturePage({ slug, onStart, goFeature }) {
           </button>
         </div>
         <div className="relative rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/25 bg-[#12101f] h-[320px] sm:h-[420px]">
-          <video src={f.video} poster={f.poster} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <img src={f.poster || "/videos/hero-woman.jpg"} alt={f.title || "AudStudio"} className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/40 to-transparent" />
         </div>
       </div>
@@ -869,7 +869,7 @@ export const INFO_PAGES = {
     title: "Watch. Learn. Master.",
     lead: "A visual library of short, focused videos explaining the advanced platform features and how to leverage every control-panel tool efficiently.",
     video: "/videos/feat-stats.mp4",
-    poster: "/videos/feat-stats.mp4.jpg".replace(".mp4.jpg", ".mp4"),
+    poster: "/videos/feat-stats.jpg",
     sections: [
       { h: "Feature walkthroughs", p: "Two-minute videos on single features: speaker renaming, paragraph splitting, folder organization, share links — each one focused and complete." },
       { h: "Advanced workflows", p: "Combining tools: multi-language passes for mixed interviews, translation for bilingual publishing, statistics for meeting facilitation." },
@@ -973,7 +973,7 @@ export function InfoPage({ slug, onStart }) {
           </button>
         </div>
         <div className="relative rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/25 bg-[#12101f] h-[320px] sm:h-[420px]">
-          <video src={f.video} poster={f.poster} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <img src={f.poster || "/videos/hero-woman.jpg"} alt={f.title || "AudStudio"} className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/40 to-transparent" />
         </div>
       </div>
@@ -1368,7 +1368,7 @@ export function AudiencePage({ slug }) {
           <p className="mt-5 text-[17px] leading-[1.65] text-[#4b4763] max-w-[580px]">{f.problem}</p>
         </div>
         <div className="relative rounded-[26px] overflow-hidden shadow-2xl shadow-[#18123b]/25 h-[320px] sm:h-[420px]">
-          <video src={f.video} poster={f.poster} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
+          <img src={f.poster || "/videos/hero-woman.jpg"} alt={f.title || "AudStudio"} className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#12101f]/40 to-transparent" />
         </div>
       </div>
