@@ -792,3 +792,28 @@ def delete_session(session_id: str) -> bool:
         conn.close()
         return affected > 0
 
+
+def clean_old_public_submissions(cutoff_date: str = "2024-01-01") -> int:
+    """
+    Delete old records from public_submissions table.
+    cutoff_date format: 'YYYY-MM-DD'
+    Returns number of deleted records.
+    """
+    with _lock:
+        conn = _local_conn()
+        try:
+            # Delete records older than cutoff_date
+            cur = conn.execute(
+                "DELETE FROM public_submissions WHERE created_at < ?",
+                (cutoff_date,)
+            )
+            conn.commit()
+            deleted_count = cur.rowcount
+            conn.close()
+            print(f"Cleaned {deleted_count} old public_submissions records (before {cutoff_date})")
+            return deleted_count
+        except Exception as e:
+            print(f"Error cleaning old public_submissions: {e}")
+            conn.close()
+            return 0
+
