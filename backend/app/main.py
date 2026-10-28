@@ -116,13 +116,18 @@ def _start_janitor() -> None:
 def _start_keepalive() -> None:
     """Self keep-alive: the service pings its own public URL every few minutes.
 
-    The request enters through Render's proxy, so it counts as inbound traffic
-    and resets the free-tier idle timer — the app stays warm 24/7 regardless of
-    whether the user's computer is on. Best-effort: failures are swallowed.
+    DISABLED by default (keepalive_enabled=false): each ping exits the service
+    and re-enters through Render's proxy, so Render bills it as outbound
+    bandwidth — at the default interval that is ~3.8 GB/month, which alone
+    exhausts the Hobby free tier's 5 GB and suspends the workspace. Only turn
+    this on when a paid plan covers the traffic.
     """
     import threading
     import time
 
+    if not settings.keepalive_enabled:
+        print("[keepalive] disabled (keepalive_enabled=false) — free tier safe")
+        return
     def _loop():
         url = f"{settings.public_url.rstrip('/')}/api/health"
         time.sleep(45)
@@ -138,7 +143,6 @@ def _start_keepalive() -> None:
 
     threading.Thread(target=_loop, daemon=True, name="render-keepalive").start()
     print(f"[keepalive] self-ping enabled every {max(60, settings.keepalive_seconds)}s")
-
 
 def _load_bucket_secrets() -> None:
     """Secrets that cannot ride in the repo (GitHub push protection blocks

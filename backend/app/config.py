@@ -27,6 +27,11 @@ class Settings(BaseSettings):
     # HMAC secret for bearer tokens; stable so tokens survive restarts.
     auth_secret: str = ""
     keepalive_seconds: int = 600
+    # Self keep-alive pings EXIT the service and re-enter through the public
+    # proxy, so Render bills every one of them as outbound bandwidth (~3.8 GB
+    # per month at the default interval). Disabled by default; free-tier
+    # spin-down after 15 idle minutes is the correct, free behaviour.
+    keepalive_enabled: bool = False
 
     # Social sign-in. Empty = the provider stays hidden on the login screen.
     # google_client_id: OAuth Web client ID from Google Cloud Console.
