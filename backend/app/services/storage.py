@@ -507,6 +507,47 @@ def delete(key: str) -> None:
         print("Supabase delete failed:", exc)
 
 
+def put_chunk(upload_id: str, index: int, data: bytes) -> bool:
+    """Persist one upload chunk in the bucket so a free-tier restart (which
+    wipes the ephemeral disk) cannot lose it. False on failure, never raises."""
+    return put_bytes(f"chunks/{upload_id}/{index:06d}", data, "application/octet-stream")
+
+
+def get_chunk(upload_id: str, index: int) -> bytes | None:
+    """Read one persisted chunk back. None when absent or unreachable."""
+    return get_bytes(f"chunks/{upload_id}/{index:06d}")
+
+
+def delete_chunks(upload_id: str, total: int) -> None:
+    """Best-effort cleanup of a finished/aborted upload's cloud chunks.
+
+    B2 batches up to 1000 deletions per call, so a whole upload is usually
+    one API request; the Supabase path falls back to per-key deletes.
+    """
+    prefix = f"chunks/{upload_id}/"
+    if driver() == "s3":
+        try:
+            data = _b2_call("/b2api/v3/b2_list_file_names", {
+                "bucketId": _b2_bucket_id(), "prefix": prefix, "maxFileCount": 1000,
+            })
+            files = [
+                {"fileName": f["fileName"], "fileId": f["fileId"]}
+                for f in data.get("files", []) if f["fileName"].startswith(prefix)
+            ]
+            if not files:
+                return
+            for start in range(0, len(files), 1000):
+                _b2_call("/b2api/v3/b2_delete_file_versions", {"files": files[start:start + 1000]})
+            return
+        except Exception as exc:
+            print(f"Cloud chunk cleanup failed for {upload_id}:", exc)
+    for i in range(total):
+        try:
+            delete(f"{prefix}{i:06d}")
+        except Exception:
+            pass
+
+
 def put_bytes(key: str, data: bytes, mime_type: str = "application/json") -> bool:
     """Store a small object (the JSON catalogs). False on failure, never raises."""
     if driver() == "s3":

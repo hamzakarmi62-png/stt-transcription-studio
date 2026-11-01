@@ -37,6 +37,11 @@ MIME_BY_EXT = {
 
 MAX_BYTES = settings.max_upload_mb * 1024 * 1024
 
+# Media above this size is reduced to its mono mp3 track right after assembly:
+# transcription needs the audio only, and the free-tier disk cannot hold a
+# multi-GB video. 2 h of 16 kHz mono mp3 is ≈30 MB.
+LARGE_MEDIA_AUDIO_THRESHOLD = 200 * 1024 * 1024
+
 class _AudioHealth:
     """Is the active bucket serving downloads right now? Cached briefly so a
     blocked window (B2 daily cap) doesn't add a probe to every request."""
@@ -88,11 +93,20 @@ async def upload_chunk(
     chunk_index: int = Form(...),
     file: UploadFile = File(...),
 ):
-    """Receive one chunk and save it to a temp directory."""
+    """Receive one chunk and save it to a temp directory.
+
+    It is also mirrored straight into the bucket: the free-tier disk is
+    ephemeral, so a restart mid-upload would otherwise drop every chunk
+    already received and the client would see "no parts were received".
+    """
     chunk_dir = _chunks_dir(upload_id)
     chunk_path = chunk_dir / f"{chunk_index:06d}"
     data = await file.read()
     chunk_path.write_bytes(data)
+    try:
+        storage.put_chunk(upload_id, chunk_index, data)
+    except Exception as exc:
+        print(f"Cloud chunk mirror failed for {upload_id}/{chunk_index}:", exc)
     return {"ok": True, "chunk_index": chunk_index, "bytes": len(data)}
 
 
@@ -104,6 +118,21 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
         raise HTTPException(401, "Authentification requise.")
     chunk_dir = _chunks_dir(req.upload_id)
     chunk_files = sorted(chunk_dir.glob("??????"))
+
+    # The free-tier disk is ephemeral: a restart mid-upload wipes the local
+    # chunk files. Anything missing locally is fetched back from the bucket,
+    # where /upload/chunk mirrored it, so the upload survives restarts.
+    if storage.enabled() and len(chunk_files) < req.total_chunks:
+        have = {int(p.name) for p in chunk_files}
+        for i in range(req.total_chunks):
+            if i in have:
+                continue
+            blob = storage.get_chunk(req.upload_id, i)
+            if blob is None:
+                break
+            (chunk_dir / f"{i:06d}").write_bytes(blob)
+        chunk_files = sorted(chunk_dir.glob("??????"))
+
     if not chunk_files:
         raise HTTPException(400, "لم يتم استلام أي أجزاء، يرجى إعادة المحاولة")
 
@@ -126,21 +155,46 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
             f"أجزاء مفقودة: استُقبل {len(chunk_files)} من أصل {req.total_chunks}"
         )
 
-    # Merge
+    # Merge. Each chunk file is deleted right after it is appended so the
+    # peak disk use stays close to the final file size, not file + chunks.
     total_size = 0
     with dest.open("wb") as out:
         for cf in chunk_files:
             data = cf.read_bytes()
             out.write(data)
             total_size += len(data)
+            cf.unlink(missing_ok=True)
             if total_size > MAX_BYTES:
                 out.close()
                 dest.unlink(missing_ok=True)
                 shutil.rmtree(chunk_dir, ignore_errors=True)
                 raise HTTPException(413, f"الملف أكبر من الحد المسموح ({settings.max_upload_mb} MB)")
 
-    # Clean up temp chunks
+    # A two-hour video can be several GB; the free-tier disk cannot hold it
+    # for long and transcription only needs the audio. Large media is reduced
+    # to its mono 16 kHz mp3 track immediately (≈30 MB per 2 hours), so the
+    # upload, playback and transcription all work within the small disk.
+    if total_size > LARGE_MEDIA_AUDIO_THRESHOLD:
+        try:
+            audio_path = dest.with_suffix(".mp3")
+            extract_audio_track(dest, audio_path)
+            if audio_path.exists() and audio_path.stat().st_size > 0:
+                dest.unlink(missing_ok=True)
+                dest = audio_path
+                stored_name = audio_path.name
+                ext = "mp3"
+                total_size = audio_path.stat().st_size
+        except Exception as exc:
+            # No audio stream or an unreadable container: keep the original
+            # file, transcription will report a clear error if it is unusable.
+            print(f"Large-media audio reduction failed for {dest.name}: {exc}")
+
+    # Clean up temp chunks (and their cloud mirrors)
     shutil.rmtree(chunk_dir, ignore_errors=True)
+    if storage.enabled():
+        threading.Thread(
+            target=storage.delete_chunks, args=(req.upload_id,), daemon=True
+        ).start()
 
     mime_type = MIME_BY_EXT.get(ext, "application/octet-stream")
     session = db.create_session(session_id, filename, str(dest), user_id=user_id)
@@ -156,6 +210,10 @@ def abort_chunked_upload(upload_id: str):
     chunk_dir = _chunks_dir(upload_id)
     if chunk_dir.exists():
         shutil.rmtree(chunk_dir, ignore_errors=True)
+    if storage.enabled():
+        threading.Thread(
+            target=storage.delete_chunks, args=(upload_id,), daemon=True
+        ).start()
     return {"ok": True}
 
 

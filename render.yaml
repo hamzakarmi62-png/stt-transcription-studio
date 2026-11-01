@@ -10,7 +10,7 @@ services:
       - key: PYTHON_VERSION
         value: 3.10.0
       - key: MAX_UPLOAD_MB
-        value: 100
+        value: 2000
       - key: STORAGE_BACKEND
         value: local
       - key: HF_HOME
