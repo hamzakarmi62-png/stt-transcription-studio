@@ -101,10 +101,9 @@ async function _chunkedUpload(file, fileName, onProgress) {
   const { upload_id } = await initRes.json();
 
   const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-  let uploaded = 0;
 
-  try {
-    // 2. Upload each chunk with retry
+  const uploadAllChunks = async () => {
+    let uploaded = 0;
     for (let i = 0; i < totalChunks; i++) {
       const start = i * CHUNK_SIZE;
       const end = Math.min(start + CHUNK_SIZE, file.size);
@@ -143,33 +142,53 @@ async function _chunkedUpload(file, fileName, onProgress) {
       }
 
       uploaded += blob.size;
-      onProgress(Math.round((uploaded / file.size) * 95)); // reserve 5% for assembly
+      onProgress(Math.round((uploaded / file.size) * 95));
     }
+  };
 
-    // 3. Complete: ask server to assemble
-    onProgress(97);
-    let completeRes = null;
+  const noPartsReceived = (message) =>
+    /(no parts were received|missing parts|لم يتم استلام أي أجزاء|لم يتم استلام أجزاء|أجزاء مفقودة)/i.test(String(message || ""));
+
+  const completeUpload = async () => {
     let completeErr = null;
-
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
-        completeRes = await fetch(`${BASE}/upload/complete`, {
+        const res = await fetch(`${BASE}/upload/complete`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders },
           body: JSON.stringify({ upload_id, filename: fileName, total_chunks: totalChunks }),
         });
-        if (completeRes.ok) break;
+        if (res.ok) return res;
         let detail = "فشل تجميع الملف";
-        try { detail = (await completeRes.json()).detail || detail; } catch { /* ignore */ }
+        try { detail = (await res.json()).detail || detail; } catch { /* ignore */ }
         completeErr = new Error(detail);
+        // Re-sending the chunks is more useful than repeating a completion
+        // request when the server lost the temporary chunk files.
+        if (noPartsReceived(detail)) break;
       } catch (err) {
         completeErr = err;
       }
       await new Promise((r) => setTimeout(r, 2000));
     }
+    throw completeErr || new Error("فشل تجميع الملف في الخادم");
+  };
 
-    if (!completeRes || !completeRes.ok) {
-      throw completeErr || new Error("فشل تجميع الملف في الخادم");
+  try {
+    await uploadAllChunks();
+
+    // 3. Complete: ask server to assemble
+    onProgress(97);
+    let completeRes;
+    try {
+      completeRes = await completeUpload();
+    } catch (err) {
+      if (!noPartsReceived(err?.message)) throw err;
+      // A restart or routing change can discard the local temporary chunks.
+      // Re-send them once under the same upload ID, then ask for assembly again.
+      onProgress(0);
+      await uploadAllChunks();
+      onProgress(97);
+      completeRes = await completeUpload();
     }
 
     onProgress(100);
