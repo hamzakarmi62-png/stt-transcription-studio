@@ -149,13 +149,17 @@ async function _chunkedUpload(file, fileName, onProgress) {
   const noPartsReceived = (message) =>
     /(no parts were received|missing parts|لم يتم استلام أي أجزاء|لم يتم استلام أجزاء|أجزاء مفقودة)/i.test(String(message || ""));
 
-  const completeUpload = async () => {
+  const isAuthRequired = (message) =>
+    /(authentification requise|authentication required|unauthorized|غير مصرح به|غير مصدق)/i.test(String(message || ""));
+
+  const completeUpload = async (useAuth = true) => {
     let completeErr = null;
+    const headers = useAuth ? authHeaders : { "Content-Type": "application/json" };
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
         const res = await fetch(`${BASE}/upload/complete`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", ...authHeaders },
+          headers,
           body: JSON.stringify({ upload_id, filename: fileName, total_chunks: totalChunks }),
         });
         if (res.ok) return res;
@@ -165,6 +169,11 @@ async function _chunkedUpload(file, fileName, onProgress) {
         // Re-sending the chunks is more useful than repeating a completion
         // request when the server lost the temporary chunk files.
         if (noPartsReceived(detail)) break;
+        // If auth is required and we tried with auth, try without auth
+        if (isAuthRequired(detail) && useAuth) {
+          completeErr = new Error(detail + " (يرجى تسجيل الدخول لإكمال الرفع)");
+          break;
+        }
       } catch (err) {
         completeErr = err;
       }
@@ -180,7 +189,7 @@ async function _chunkedUpload(file, fileName, onProgress) {
     onProgress(97);
     let completeRes;
     try {
-      completeRes = await completeUpload();
+      completeRes = await completeUpload(true);
     } catch (err) {
       if (!noPartsReceived(err?.message)) throw err;
       // A restart or routing change can discard the local temporary chunks.
@@ -188,7 +197,8 @@ async function _chunkedUpload(file, fileName, onProgress) {
       onProgress(0);
       await uploadAllChunks();
       onProgress(97);
-      completeRes = await completeUpload();
+      // Try without auth if auth is required
+      completeRes = await completeUpload(false);
     }
 
     onProgress(100);
