@@ -36,7 +36,7 @@ EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 # No server-side session store needed: the token carries the user id and an
 # expiry, signed with a per-deployment secret. It survives Render restarts.
 
-TOKEN_TTL = 60 * 60 * 24 * 30  # 30 days
+TOKEN_TTL = 60 * 60 * 24 * 2  # 2 days
 
 
 def _secret() -> bytes:
