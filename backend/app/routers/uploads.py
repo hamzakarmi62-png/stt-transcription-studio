@@ -115,8 +115,7 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
     """Assemble all chunks into a single file and create a session."""
     user_id = user_id_from_request(request)
     if not user_id:
-        # Allow anonymous uploads for chunked uploads (they'll be linked to the upload_id)
-        user_id = f"anonymous_{uuid.uuid4().hex[:8]}"
+        raise HTTPException(401, "Authentification requise.")
     chunk_dir = _chunks_dir(req.upload_id)
     chunk_files = sorted(chunk_dir.glob("??????"))
 
