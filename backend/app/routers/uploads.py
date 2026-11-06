@@ -103,11 +103,15 @@ async def upload_chunk(
     chunk_path = chunk_dir / f"{chunk_index:06d}"
     data = await file.read()
     chunk_path.write_bytes(data)
+    mirrored = True
     try:
         storage.put_chunk(upload_id, chunk_index, data)
     except Exception as exc:
+        mirrored = False
         print(f"Cloud chunk mirror failed for {upload_id}/{chunk_index}:", exc)
-    return {"ok": True, "chunk_index": chunk_index, "bytes": len(data)}
+    # mirrored=false in the response lets the client (and devtools) notice a
+    # broken bucket early instead of discovering it only at /upload/complete.
+    return {"ok": True, "chunk_index": chunk_index, "bytes": len(data), "mirrored": mirrored}
 
 
 @router.post("/upload/complete")
@@ -134,7 +138,13 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
         chunk_files = sorted(chunk_dir.glob("??????"))
 
     if not chunk_files:
-        raise HTTPException(400, "لم يتم استلام أي أجزاء، يرجى إعادة المحاولة")
+        # Keep the leading phrase intact: the client matches it to know a
+        # re-send of the chunks under the same upload_id can still recover.
+        raise HTTPException(
+            400,
+            f"لم يتم استلام أي أجزاء، يرجى إعادة المحاولة"
+            f" (استُقبل 0 من {req.total_chunks} — غالباً أُعيد تشغيل الخادم أثناء الرفع وفشل النسخ السحابي)"
+        )
 
     filename = req.filename or "recording.webm"
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webm"
@@ -193,7 +203,7 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
     shutil.rmtree(chunk_dir, ignore_errors=True)
     if storage.enabled():
         threading.Thread(
-            target=storage.delete_chunks, args=(req.upload_id,), daemon=True
+            target=storage.delete_chunks, args=(req.upload_id, req.total_chunks), daemon=True
         ).start()
 
     mime_type = MIME_BY_EXT.get(ext, "application/octet-stream")
@@ -205,14 +215,15 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
 
 
 @router.delete("/upload/abort/{upload_id}")
-def abort_chunked_upload(upload_id: str):
-    """Clean up a partial upload."""
+def abort_chunked_upload(upload_id: str, total_chunks: int = 0):
+    """Clean up a partial upload. total_chunks lets the Supabase fallback
+    delete the mirrored chunk objects; the B2 path lists the prefix itself."""
     chunk_dir = _chunks_dir(upload_id)
     if chunk_dir.exists():
         shutil.rmtree(chunk_dir, ignore_errors=True)
     if storage.enabled():
         threading.Thread(
-            target=storage.delete_chunks, args=(upload_id,), daemon=True
+            target=storage.delete_chunks, args=(upload_id, total_chunks), daemon=True
         ).start()
     return {"ok": True}
 

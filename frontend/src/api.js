@@ -125,6 +125,12 @@ async function _chunkedUpload(file, fileName, onProgress) {
             body: form,
           });
           if (res.ok) {
+            try {
+              const body = await res.json();
+              if (body && body.mirrored === false) {
+                console.warn(`الجزء ${i + 1} لم يُنسخ للسحابة — الاسترجاع بعد انقطاع الخادم قد يفشل`);
+              }
+            } catch { /* ignore */ }
             success = true;
             break;
           }
@@ -198,7 +204,7 @@ async function _chunkedUpload(file, fileName, onProgress) {
     return await completeRes.json();
   } catch (err) {
     // Best-effort cleanup
-    fetch(`${BASE}/upload/abort/${upload_id}`, {
+    fetch(`${BASE}/upload/abort/${upload_id}?total_chunks=${totalChunks}`, {
       method: "DELETE",
       headers: { ...authHeaders },
     }).catch(() => {});

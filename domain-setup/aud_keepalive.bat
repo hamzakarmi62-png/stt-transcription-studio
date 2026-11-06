@@ -1,2 +1,2 @@
 @echo off
-curl -s -o "%TEMP%ud_ping.txt" https://stt-transcription-studio.onrender.com/api/health
+curl -s -o %TEMP%\aud_ping.txt https://audstudio.onrender.com/api/health
