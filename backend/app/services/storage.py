@@ -51,7 +51,13 @@ def driver() -> str:
     """Which backend is live: "s3", "supabase", or "" when media stays local."""
     mode = settings.storage_backend.strip().lower()
     if mode == "s3":
-        return "s3" if _s3_configured() else ""
+        if _s3_configured():
+            return "s3"
+        # s3 requested but its keys are missing (e.g. dashboard drift): fall
+        # back to Supabase instead of silently disabling storage — an empty
+        # driver turns off archival AND complete-time chunk recovery, which
+        # is exactly how user uploads were being lost.
+        return "supabase" if _supabase_configured() else ""
     if mode == "supabase":
         return "supabase" if _supabase_configured() else ""
     if mode == "local":

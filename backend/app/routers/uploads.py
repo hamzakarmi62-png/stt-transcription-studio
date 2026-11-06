@@ -126,7 +126,10 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
     # The free-tier disk is ephemeral: a restart mid-upload wipes the local
     # chunk files. Anything missing locally is fetched back from the bucket,
     # where /upload/chunk mirrored it, so the upload survives restarts.
-    if storage.enabled() and len(chunk_files) < req.total_chunks:
+    # Attempted unconditionally: get_chunk returns None gracefully when the
+    # bucket has nothing, and a half-configured storage backend must not
+    # silently skip the only recovery path a resumed upload has.
+    if len(chunk_files) < req.total_chunks:
         have = {int(p.name) for p in chunk_files}
         for i in range(req.total_chunks):
             if i in have:
