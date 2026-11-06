@@ -43,6 +43,16 @@ def _secret() -> bytes:
     return (settings.auth_secret or settings.supabase_key or "aud-dev-secret").encode("utf-8")
 
 
+def _candidate_secrets() -> list[bytes]:
+    cands = []
+    if settings.auth_secret:
+        cands.append(settings.auth_secret.encode("utf-8"))
+    if settings.supabase_key:
+        cands.append(settings.supabase_key.encode("utf-8"))
+    cands.append(b"aud-dev-secret")
+    return cands
+
+
 def _sign(payload: str) -> str:
     return hmac.new(_secret(), payload.encode("utf-8"), hashlib.sha256).hexdigest()
 
@@ -59,9 +69,12 @@ def verify_token(token: str) -> str | None:
         user_id, exp, sig = token.split(".")
         if int(exp) < time.time():
             return None
-        if not hmac.compare_digest(sig, _sign(f"{user_id}.{exp}")):
-            return None
-        return user_id
+        payload = f"{user_id}.{exp}".encode("utf-8")
+        for secret in _candidate_secrets():
+            expected = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+            if hmac.compare_digest(sig, expected):
+                return user_id
+        return None
     except Exception:
         return None
 
@@ -83,7 +96,12 @@ def verify_share_token(token: str, session_id: str) -> bool:
         scope, sid, sig = token.strip().split(".")
         if scope != "share" or sid != session_id:
             return False
-        return hmac.compare_digest(sig, _sign(f"share.{sid}"))
+        payload = f"share.{sid}".encode("utf-8")
+        for secret in _candidate_secrets():
+            expected = hmac.new(secret, payload, hashlib.sha256).hexdigest()
+            if hmac.compare_digest(sig, expected):
+                return True
+        return False
     except Exception:
         return False
 

@@ -853,7 +853,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       console.error("URL pipeline error:", e);
       setPhase("error");
       const errText = e?.message || "";
-      setError(errText && errText !== "{}" ? errText : t.linkBadUrl);
+      if (/authentification|authentication|unauthorized/i.test(errText)) {
+        setError(uiLang === "ar" ? "انتهت صلاحية الجلسة، يُرجى تسجيل الخروج وتسجيل الدخول مرة أخرى." : "Session expired, please log out and log in again.");
+      } else {
+        setError(errText && errText !== "{}" ? errText : t.linkBadUrl);
+      }
     }
   };
 
@@ -1002,7 +1006,11 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       setPhase("error");
       if (currentFile instanceof File) markQueue(currentFile.name, { state: "error" });
       const errText = e?.message || (typeof e === "string" ? e : "");
-      setError(errText && errText !== "{}" ? errText : "حدث خطأ غير متوقع أثناء المعالجة، يرجى المحاولة مجدداً.");
+      if (/authentification|authentication|unauthorized/i.test(errText)) {
+        setError(uiLang === "ar" ? "انتهت صلاحية الجلسة، يُرجى تسجيل الخروج وتسجيل الدخول مرة أخرى." : "Session expired, please log out and log in again.");
+      } else {
+        setError(errText && errText !== "{}" ? errText : "حدث خطأ غير متوقع أثناء المعالجة، يرجى المحاولة مجدداً.");
+      }
     }
   };
 
