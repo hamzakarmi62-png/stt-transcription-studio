@@ -48,16 +48,7 @@ def _frame_energies(path: str, sample_rate: int = 16000) -> np.ndarray:
     """
     frame_len = max(1, int(FRAME_SECONDS * sample_rate))
     energies: list[float] = []
-    buf = np.zeros(0, dtype=np.float32)
-
-    def drain(resampled) -> None:
-        nonlocal buf
-        for res in resampled:
-            buf = np.concatenate([buf, res.to_ndarray()[0].astype(np.float32) / 32768.0])
-            while len(buf) >= frame_len:
-                window = buf[:frame_len]
-                energies.append(float(np.sqrt(np.mean(window ** 2))))
-                buf = buf[frame_len:]
+    leftover = np.zeros(0, dtype=np.float32)
 
     container = av.open(path, metadata_errors="ignore")
     try:
@@ -65,8 +56,29 @@ def _frame_energies(path: str, sample_rate: int = 16000) -> np.ndarray:
         resampler = av.AudioResampler(format="s16", layout="mono", rate=sample_rate)
         for frame in container.decode(stream):
             frame.pts = None
-            drain(resampler.resample(frame))
-        drain(resampler.resample(None))
+            for res in resampler.resample(frame):
+                arr = res.to_ndarray()[0].astype(np.float32) / 32768.0
+                if len(leftover) > 0:
+                    arr = np.concatenate([leftover, arr])
+                    leftover = np.zeros(0, dtype=np.float32)
+                n_frames = len(arr) // frame_len
+                if n_frames > 0:
+                    usable = arr[:n_frames * frame_len].reshape(n_frames, frame_len)
+                    rms = np.sqrt(np.mean(usable ** 2, axis=1))
+                    energies.extend(rms.tolist())
+                    leftover = arr[n_frames * frame_len:]
+                else:
+                    leftover = arr
+        for res in resampler.resample(None):
+            arr = res.to_ndarray()[0].astype(np.float32) / 32768.0
+            if len(leftover) > 0:
+                arr = np.concatenate([leftover, arr])
+                leftover = np.zeros(0, dtype=np.float32)
+            n_frames = len(arr) // frame_len
+            if n_frames > 0:
+                usable = arr[:n_frames * frame_len].reshape(n_frames, frame_len)
+                rms = np.sqrt(np.mean(usable ** 2, axis=1))
+                energies.extend(rms.tolist())
     finally:
         container.close()
 

@@ -506,7 +506,13 @@ def _get_session_cloud_meta(session_id: str) -> dict | None:
     if not _catalog_enabled():
         return None
     data = _read_json(f"meta_{session_id}.json")
-    return data if isinstance(data, dict) else None
+    if isinstance(data, dict):
+        return data
+    # Fallback to catalog
+    for s in _list_session_cloud_meta():
+        if isinstance(s, dict) and s.get("id") == session_id:
+            return s
+    return None
 
 
 _sessions_catalog_cache = None
@@ -547,6 +553,41 @@ def _delete_session_cloud_meta(session_id: str):
         print("Cloud meta delete error:", e)
 
 
+def _save_local_session(s: dict) -> None:
+    """Warm or restore the local SQLite row from cloud metadata."""
+    if not isinstance(s, dict) or not s.get("id"):
+        return
+    with _lock:
+        conn = _local_conn()
+        try:
+            conn.execute(
+                """
+                INSERT OR REPLACE INTO sessions 
+                (id, user_id, filename, audio_path, duration, language, status, error, segments, speakers, settings, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    s.get("id"),
+                    s.get("user_id"),
+                    s.get("filename", ""),
+                    s.get("audio_path", ""),
+                    float(s.get("duration") or 0),
+                    s.get("language"),
+                    s.get("status", "uploaded"),
+                    s.get("error"),
+                    json.dumps(s.get("segments", []), ensure_ascii=False) if isinstance(s.get("segments"), list) else s.get("segments", "[]"),
+                    json.dumps(s.get("speakers", []), ensure_ascii=False) if isinstance(s.get("speakers"), list) else s.get("speakers", "[]"),
+                    json.dumps(s.get("settings", {}), ensure_ascii=False) if isinstance(s.get("settings"), dict) else s.get("settings", "{}"),
+                    s.get("created_at") or datetime.now(timezone.utc).isoformat(),
+                ),
+            )
+            conn.commit()
+        except Exception as e:
+            print("Local session restore error:", e)
+        finally:
+            conn.close()
+
+
 def create_session(session_id: str, filename: str, audio_path: str, user_id: str | None = None,
                    status: str = "uploaded", sync_cloud: bool = True) -> dict:
     now = datetime.now(timezone.utc).isoformat()
@@ -568,23 +609,20 @@ def create_session(session_id: str, filename: str, audio_path: str, user_id: str
     if _supabase_enabled():
         try:
             url = f"{settings.supabase_url}/rest/v1/sessions"
-            r = requests.post(url, headers=_headers(), json=sess_data, timeout=5)
-            if r.status_code in (200, 201):
-                formatted = _format_session(sess_data)
-                if sync_cloud:
-                    _save_session_cloud_meta(formatted)
+            requests.post(url, headers=_headers(), json=sess_data, timeout=5)
         except Exception as e:
             print("Supabase create_session error:", e)
 
-    # The local row is the live source of truth for this worker: get_session
-    # reads it first, so skipping this insert would leave every later status
-    # update to fall through to a cloud copy that may lag behind.
     formatted = _format_session(sess_data)
     with _lock:
         conn = _local_conn()
         conn.execute(
-            "INSERT OR REPLACE INTO sessions (id, user_id, filename, audio_path, created_at) VALUES (?, ?, ?, ?, ?)",
-            (session_id, user_id, filename, audio_path, now),
+            """
+            INSERT OR REPLACE INTO sessions 
+            (id, user_id, filename, audio_path, duration, language, status, error, segments, speakers, settings, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (session_id, user_id, filename, audio_path, 0, None, status, None, "[]", "[]", "{}", now),
         )
         conn.commit()
         conn.close()
@@ -607,7 +645,9 @@ def get_session(session_id: str) -> dict | None:
     # 2. Cloud metadata cache (for restarts or files created on other workers)
     cloud_data = _get_session_cloud_meta(session_id)
     if cloud_data:
-        return _format_session(cloud_data)
+        formatted = _format_session(cloud_data)
+        _save_local_session(formatted)
+        return formatted
 
     # 3. Supabase REST fallback
     if _supabase_enabled():
@@ -617,7 +657,9 @@ def get_session(session_id: str) -> dict | None:
             if r.status_code == 200:
                 data = r.json()
                 if data and len(data) > 0:
-                    return _format_session(data[0])
+                    formatted = _format_session(data[0])
+                    _save_local_session(formatted)
+                    return formatted
         except Exception:
             pass
 

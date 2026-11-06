@@ -27,8 +27,8 @@ def get_model() -> WhisperModel:
                     settings.whisper_model,
                     device=settings.whisper_device,
                     compute_type=settings.whisper_compute_type,
-                    cpu_threads=cpu_count,
-                    num_workers=min(4, cpu_count),
+                    cpu_threads=min(4, cpu_count),
+                    num_workers=1,
                 )
     return _model
 
@@ -56,6 +56,13 @@ def _collect(segments_iter) -> list[dict]:
 
 
 def _vad_coverage(audio_path: str, segments: list[dict]) -> float:
+    # For longer files, avoid heavy re-analysis in memory — Silero VAD in whisper is sufficient
+    try:
+        from .audio import get_duration
+        if get_duration(audio_path) > 300:
+            return 1.0
+    except Exception:
+        pass
     turns = detect_speech_turns(audio_path)
     if not turns:
         return 1.0

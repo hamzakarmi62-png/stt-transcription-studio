@@ -50,7 +50,7 @@ def on_startup():
 
 def _start_janitor() -> None:
     """Self-healing: a session stuck in processing/diarizing/downloading for
-    over 90 minutes gets ONE automatic retry; if it stalls again the user
+    over 180 minutes gets ONE automatic retry; if it stalls again the user
     sees a clear error instead of an eternal spinner."""
     import time as _time
 
@@ -74,7 +74,7 @@ def _start_janitor() -> None:
                         seen.pop(sid, None)
                 for sid, sess in stuck.items():
                     first = seen.setdefault(sid, now)
-                    if now - first < 90 * 60:
+                    if now - first < 180 * 60:
                         continue
                     if sess.get("status") == "downloading":
                         # a hung import cannot be fixed by re-running the

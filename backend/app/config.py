@@ -86,7 +86,6 @@ class Settings(BaseSettings):
 
     model_config = {
         "env_file": str(BACKEND_DIR / ".env"),
-        "env_prefix": "S3_",
         "extra": "ignore"
     }
 

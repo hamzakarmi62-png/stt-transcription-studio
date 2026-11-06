@@ -807,13 +807,33 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
       const sid = created.id;
       let sess = null;
       const startedAt = Date.now();
+      let consecutiveUrlErrors = 0;
       for (;;) {
         await sleep(3000);
         if (Date.now() - startedAt > 40 * 60 * 1000) throw new Error("Download timed out");
-        sess = await api.getSession(sid);
-        if (sess.status !== "downloading") break;
+        try {
+          sess = await api.getSession(sid);
+          consecutiveUrlErrors = 0;
+          if (sess && sess.status !== "downloading") break;
+        } catch (pollErr) {
+          consecutiveUrlErrors++;
+          if (pollErr.message && pollErr.message.toLowerCase().includes("session not found")) {
+            try {
+              const list = await api.listSessions();
+              const found = list.find((item) => item.id === sid);
+              if (found) {
+                sess = found;
+                consecutiveUrlErrors = 0;
+                if (found.status !== "downloading") break;
+              }
+            } catch { /* ignore */ }
+          }
+          if (consecutiveUrlErrors > 40) {
+            throw pollErr;
+          }
+        }
       }
-      if (sess.status === "error") throw new Error(sess.error || "Download failed");
+      if (!sess || sess.status === "error") throw new Error(sess?.error || "Download failed");
 
       setPhase("transcribing");
       setMessage(t.transcribingMsg);
@@ -879,7 +899,32 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
           throw err;
         }
         consecutiveErrors++;
-        if (consecutiveErrors > 30) {
+        // If session was temporarily not found (e.g. server restart / spinning up), check archive
+        if (err.message && err.message.toLowerCase().includes("session not found")) {
+          try {
+            const list = await api.listSessions();
+            const found = list.find((item) => item.id === id);
+            if (found) {
+              consecutiveErrors = 0;
+              if (found.status === "error") throw new Error(found.error || "فشلت معالجة الملف الصوتي بالذكاء الاصطناعي");
+              if (found.status === target) return found;
+            }
+          } catch (listErr) {
+            if (listErr.message && (listErr.message.includes("فشلت") || listErr.message.includes("failed") || listErr.message.includes("خطأ"))) {
+              throw listErr;
+            }
+          }
+        }
+        if (consecutiveErrors > 60) {
+          if (err.message && err.message.toLowerCase().includes("session not found")) {
+            throw new Error(
+              uiLang === "ar"
+                ? "تعذّر الوصول إلى الجلسة مؤقتاً بسبب إعادة تشغيل الخادم. يُرجى التحقق من الأرشيف أو إعادة المحاولة."
+                : uiLang === "fr"
+                ? "Session temporairement introuvable (redémarrage du serveur). Vérifiez vos archives ou réessayez."
+                : "Session temporarily unavailable due to server restart. Please check your archive or retry."
+            );
+          }
           throw err;
         }
       }

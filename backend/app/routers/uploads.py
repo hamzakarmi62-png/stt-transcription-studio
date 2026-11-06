@@ -843,10 +843,6 @@ def create_from_url(req: FromUrlRequest, request: Request):
     # cloud copy catches up in the background.
     db.create_session(session_id, filename=url.rsplit("/", 1)[-1][:120] or url,
                       audio_path=str(settings.upload_path / session_id), user_id=user_id,
-                      status="downloading", sync_cloud=False)
-    threading.Thread(
-        target=db.update_session, args=(session_id,), kwargs={"status": "downloading"},
-        daemon=True,
-    ).start()
+                      status="downloading", sync_cloud=True)
     threading.Thread(target=_download_thread, args=(session_id, url), daemon=True).start()
     return {"ok": True, "id": session_id, "status": "downloading"}
