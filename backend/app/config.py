@@ -55,6 +55,15 @@ class Settings(BaseSettings):
     # transcription. Below it the original — picture included — is kept and
     # archived to B2, so <video> playback works. Env-overridable.
     large_media_audio_threshold_mb: int = 800
+
+    # Disk self-protection: the bucket is the source of truth, the local disk
+    # is only a cache. The janitor keeps this much free space by evicting
+    # local copies of cloud-backed media (re-fetched on demand), so a full
+    # disk can never take the service down.
+    disk_reserve_mb: int = 400
+    janitor_seconds: int = 600
+    # Orphaned chunk directories older than this are cleaned up.
+    chunk_stale_hours: int = 24
     cors_origins: str = "http://localhost:5173"
 
     # Where uploaded media is kept. "auto" prefers a dedicated S3 bucket and

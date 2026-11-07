@@ -46,6 +46,12 @@ def on_startup():
     _load_bucket_secrets()
     _start_keepalive()
     _start_janitor()
+    try:
+        from .services import disk_janitor
+
+        disk_janitor.start_janitor()
+    except Exception as exc:
+        print("Disk janitor failed to start:", exc)
 
 
 def _start_janitor() -> None:

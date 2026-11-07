@@ -17,6 +17,7 @@ import requests
 from .. import db
 from ..config import settings
 from ..services import storage
+from ..services import disk_janitor
 from ..services.audio import extract_audio_track
 from .auth import ensure_session_owner, share_token_from_request, user_id_from_request, verify_share_token
 
@@ -104,6 +105,13 @@ async def upload_chunk(
     chunk_dir = _chunks_dir(upload_id)
     chunk_path = chunk_dir / f"{chunk_index:06d}"
     data = await file.read()
+    # Each chunk is small (5 MB) but a full-disk service dies everywhere —
+    # make room (evicting cloud-backed copies) before writing.
+    if not disk_janitor.ensure_room_for(len(data)):
+        raise HTTPException(
+            507,
+            "مساحة الخادم المؤقتة ممتلئة — أعد المحاولة بعد قليل (التنظيف التلقائي جارٍ).",
+        )
     chunk_path.write_bytes(data)
     mirrored = True
     try:
@@ -168,6 +176,14 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
         raise HTTPException(
             400,
             f"أجزاء مفقودة: استُقبل {len(chunk_files)} من أصل {req.total_chunks}"
+        )
+
+    # Assembly writes the final file while chunks are freed one by one, so
+    # the peak need is roughly the assembled size. Keep the reserve intact.
+    if not disk_janitor.ensure_room_for(0):
+        raise HTTPException(
+            507,
+            "مساحة الخادم المؤقتة ممتلئة — أعد المحاولة بعد قليل (التنظيف التلقائي جارٍ).",
         )
 
     # Merge. Each chunk file is deleted right after it is appended so the
@@ -240,6 +256,13 @@ def _validate_and_save(file: UploadFile) -> tuple[str, str, Path, str, int]:
     ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else "webm"
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(400, f"Unsupported file type '.{ext}'. Allowed: {', '.join(sorted(ALLOWED_EXTENSIONS))}")
+    # Safety net for streaming writes without a content-length: keep the
+    # free-space reserve intact (evicting cloud-backed copies when needed).
+    if not disk_janitor.ensure_room_for(0):
+        raise HTTPException(
+            507,
+            "مساحة الخادم المؤقتة ممتلئة — الوسائط محفوظة في السحابة، أعد المحاولة بعد قليل.",
+        )
     settings.upload_path.mkdir(parents=True, exist_ok=True)
     session_id = uuid.uuid4().hex[:12]
     stored_name = f"{session_id}.{ext}"
@@ -325,15 +348,15 @@ def _publish_to_cloud(session_id: str, dest: Path, mime_type: str, size: int) ->
     merged["cloud_key"] = key
     db.update_session(session_id, settings=merged)
 
-    # The bucket is now the source of truth. Free the ephemeral-disk copy once
-    # transcription has finished, so a heavy upload day can't fill the small
-    # free-instance disk — ensure_local_audio re-fetches on demand.
-    if not temporary and (session or {}).get("status") == "done":
-        try:
-            dest.unlink(missing_ok=True)
-            print(f"Freed local disk copy of {session_id} after cloud archival")
-        except OSError:
-            pass
+    # The bucket is now the source of truth. If the small ephemeral disk is
+    # getting tight, the janitor frees this copy (cloud-backed files are
+    # evicted oldest-first; ensure_local_audio re-fetches on demand, so
+    # transcription, diarization and playback keep working). A comfortable
+    # disk keeps the copy locally for faster transcription.
+    try:
+        disk_janitor.evict_cloud_backed()
+    except Exception as exc:
+        print("[disk-janitor] post-archival pass failed:", exc)
 
 
 def _cloud_backend(session: dict) -> str:
@@ -361,6 +384,13 @@ def upload_audio(file: UploadFile = File(...), request: Request = None):
     content_length = request.headers.get("content-length") if request else None
     if content_length and content_length.isdigit() and int(content_length) > MAX_BYTES + 1024 * 1024:
         raise HTTPException(413, f"الملف أكبر من الحد المسموح ({settings.max_upload_mb} MB)")
+    # Make room for exactly this upload before streaming it to disk.
+    if content_length and content_length.isdigit():
+        if not disk_janitor.ensure_room_for(int(content_length)):
+            raise HTTPException(
+                507,
+                "مساحة الخادم المؤقتة ممتلئة — الوسائط محفوظة في السحابة، أعد المحاولة بعد قليل.",
+            )
     session_id, filename, dest, mime_type, size = _validate_and_save(file)
     session = db.create_session(session_id, filename, str(dest), user_id=user_id)
     threading.Thread(
