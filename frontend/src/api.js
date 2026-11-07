@@ -347,4 +347,8 @@ export const api = {
   summaryStatus: (id) => request(`${BASE}/sessions/${id}/summary/status`),
 
   stats: (id) => request(`${BASE}/sessions/${id}/stats`),
+
+  // Storage dashboard: disk + bucket usage, so the operator knows when old
+  // sessions should be deleted.
+  storageStatus: () => request(`${BASE}/storage/status`),
 };

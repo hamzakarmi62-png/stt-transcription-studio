@@ -603,6 +603,40 @@ def bulk_delete_sessions(payload: BulkDeleteRequest, request: Request = None):
     return {"ok": True, "queued": len(ids)}
 
 
+@router.get("/storage/status")
+def storage_status(request: Request):
+    """Storage dashboard for the operator: how full the ephemeral disk and the
+    cloud bucket are, so old media can be deleted before anything feels it.
+    Any signed-in user may read the aggregates (no file names leak)."""
+    user_id = user_id_from_request(request)
+    if not user_id:
+        raise HTTPException(401, "Authentification requise.")
+
+    root = Path(settings.upload_path)
+    local_files = [p for p in root.iterdir() if p.is_file()] if root.exists() else []
+    local_bytes = sum(p.stat().st_size for p in local_files if p.stat().st_size > 0)
+
+    usage = storage.bucket_usage()
+    return {
+        "disk": {
+            "free_mb": round(disk_janitor.free_mb()),
+            "reserve_mb": settings.disk_reserve_mb,
+            "uploads_mb": round(local_bytes / (1024 * 1024), 1),
+            "local_files": len(local_files),
+        },
+        "bucket": usage or {"driver": storage.driver(), "label": storage.bucket_label(), "objects": None, "bytes": None},
+        # Reference quotas so the UI can color the bar: B2 free = 10 GB,
+        # Supabase free = 1 GB.
+        "plan_limit_gb": 10 if storage.driver() == "s3" else (1 if storage.driver() == "supabase" else None),
+        "janitor": {
+            "last_cycle": disk_janitor.stats["last_cycle"],
+            "last_evicted": disk_janitor.stats["last_evicted"],
+            "evicted_total": disk_janitor.stats["evicted_total"],
+            "last_free_mb": disk_janitor.stats["last_free_mb"],
+        },
+    }
+
+
 @router.post("/jobs/refresh")
 def _noop():
     return {"ok": True, "threads": threading.active_count()}

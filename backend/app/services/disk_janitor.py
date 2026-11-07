@@ -27,6 +27,9 @@ from ..config import settings
 # A fresh upload (archival still running) is never touched.
 _MIN_AGE_SECONDS = 10 * 60
 
+# What the storage dashboard shows about the janitor's recent work.
+stats: dict = {"last_cycle": 0.0, "last_evicted": 0, "evicted_total": 0, "last_free_mb": None}
+
 
 def free_mb(path: Path | None = None) -> float:
     """Free space (MB) on the disk holding the uploads dir."""
@@ -131,10 +134,24 @@ def _loop() -> None:
         try:
             evicted = evict_cloud_backed()
             stale = clean_stale_chunks()
-            if evicted or stale:
+            cloud_stale = 0
+            try:
+                from . import storage
+
+                cloud_stale = storage.clean_stale_cloud_chunks(
+                    keep_hours=settings.chunk_stale_hours
+                )
+            except Exception as exc:
+                print("[disk-janitor] cloud chunk cleanup failed:", exc)
+            stats["last_cycle"] = time.time()
+            stats["last_evicted"] = evicted
+            stats["evicted_total"] += evicted
+            stats["last_free_mb"] = free_mb()
+            if evicted or stale or cloud_stale:
                 print(
                     f"[disk-janitor] cycle: {evicted} media evicted, "
                     f"{stale} stale chunk dirs removed, "
+                    f"{cloud_stale} stale cloud chunks deleted, "
                     f"{free_mb():.0f} MB free"
                 )
         except Exception as exc:

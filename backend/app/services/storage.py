@@ -82,6 +82,58 @@ def bucket_label() -> str:
     return "التخزين المحلي (لا سحابة)"
 
 
+_bucket_usage_cache: dict = {"at": 0.0, "data": None}
+
+
+def bucket_usage() -> dict | None:
+    """Aggregate bucket size for the storage dashboard: object count and total
+    bytes, split between media, upload-chunks and catalogs. Cached for 10
+    minutes (one paginated listing per refresh). None when not measurable."""
+    now = time.time()
+    if _bucket_usage_cache["data"] and now - _bucket_usage_cache["at"] < 600:
+        return _bucket_usage_cache["data"]
+    usage: dict | None = None
+    if driver() == "s3":
+        try:
+            prefixes = {"media": "", "chunks": "chunks/", "catalogs": None}
+            totals = {"media": [0, 0], "chunks": [0, 0], "catalogs": [0, 0]}
+            cursor = None
+            while True:
+                payload = {"bucketId": _b2_bucket_id(), "maxFileCount": 1000}
+                if cursor:
+                    payload["startFileName"] = cursor
+                data = _b2_call("/b2api/v3/b2_list_file_names", payload)
+                for f in data.get("files", []):
+                    name = f["fileName"]
+                    if name.startswith("chunks/"):
+                        key = "chunks"
+                    elif name.startswith("secrets/") or name.startswith("_app/") or name.startswith("meta_") or name.endswith(".json"):
+                        key = "catalogs"
+                    else:
+                        key = "media"
+                    totals[key][0] += 1
+                    totals[key][1] += int(f.get("contentLength") or 0)
+                cursor = data.get("nextFileName")
+                if not cursor:
+                    break
+            usage = {
+                "driver": "s3",
+                "objects": sum(v[0] for v in totals.values()),
+                "bytes": sum(v[1] for v in totals.values()),
+                "media_objects": totals["media"][0],
+                "media_bytes": totals["media"][1],
+                "chunks_objects": totals["chunks"][0],
+                "chunks_bytes": totals["chunks"][1],
+            }
+        except Exception as exc:
+            print("[storage] bucket_usage failed:", exc)
+            usage = None
+    if usage is not None:
+        _bucket_usage_cache["at"] = now
+        _bucket_usage_cache["data"] = usage
+    return usage
+
+
 def audio_only() -> bool:
     """Whether the bucket is too small to hold original videos.
 
@@ -552,6 +604,57 @@ def delete_chunks(upload_id: str, total: int) -> None:
             delete(f"{prefix}{i:06d}")
         except Exception:
             pass
+
+
+def clean_stale_cloud_chunks(keep_hours: int = 24) -> int:
+    """Delete mirrored chunk objects from uploads that never completed or
+    were abandoned. Chunk groups are keyed chunks/{upload_id}/; a group whose
+    newest file is older than keep_hours is guaranteed abandoned (the client
+    never resumes across a page reload), so it can be freed in batches.
+    Returns the number of deleted objects. s3 driver only — the Supabase
+    path cleans per-upload via delete_chunks."""
+    if driver() != "s3":
+        return 0
+    cutoff = time.time() - keep_hours * 3600
+    groups: dict[str, list[dict]] = {}
+    newest: dict[str, float] = {}
+    cursor = None
+    try:
+        while True:
+            payload = {"bucketId": _b2_bucket_id(), "prefix": "chunks/", "maxFileCount": 1000}
+            if cursor:
+                payload["startFileName"] = cursor
+            data = _b2_call("/b2api/v3/b2_list_file_names", payload)
+            for f in data.get("files", []):
+                name = f["fileName"]
+                uid = name.split("/")[1] if name.count("/") >= 1 else ""
+                if not uid:
+                    continue
+                groups.setdefault(uid, []).append(
+                    {"fileName": f["fileName"], "fileId": f["fileId"]}
+                )
+                newest[uid] = max(newest.get(uid, 0), f.get("uploadTimestamp", 0) / 1000)
+            cursor = data.get("nextFileName")
+            if not cursor:
+                break
+    except Exception as exc:
+        print("[storage] stale chunk scan failed:", exc)
+        return 0
+
+    deleted = 0
+    for uid, files in groups.items():
+        if newest.get(uid, 0) > cutoff:
+            continue
+        try:
+            # b2_delete_file_versions (batch) 404s on this API host — the
+            # per-file endpoint is proven, so delete one by one.
+            for f in files:
+                _b2_call("/b2api/v3/b2_delete_file_version", {"fileName": f["fileName"], "fileId": f["fileId"]})
+            deleted += len(files)
+            print(f"[storage] cleaned {len(files)} stale cloud chunks for upload {uid}")
+        except Exception as exc:
+            print(f"[storage] stale chunk cleanup failed for {uid}:", exc)
+    return deleted
 
 
 def put_bytes(key: str, data: bytes, mime_type: str = "application/json") -> bool:

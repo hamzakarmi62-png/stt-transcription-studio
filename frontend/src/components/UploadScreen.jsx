@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../api.js";
 import { sleep, uid } from "../utils.js";
 import UserMenu from "./UserMenu.jsx";
+import StorageStatus from "./StorageStatus.jsx";
 import { Mic, Zap, Folder, FolderOpen, Star, FileVideo, FileAudio, FileText, Headphones, X, Check, AlertTriangle, Loader, Inbox, Pencil, Trash, Sun, Moon, Settings, ArrowUpRight, Lightbulb, Home, Box, AlignLeft, ChevronDown } from "./Icons.jsx";
 import audLogo from "../assets/aud-logo.png";
 
@@ -2160,6 +2161,8 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
                   </select>
                 </div>
               </div>
+
+              <StorageStatus isDark={isDark} glass={glass} hairline={hairline} textSub={textSub} inputBg={inputBg} />
 
               <div className={`${glass} rounded-[30px] p-6 border ${textSub} text-xs leading-relaxed`}>
                 <p className="font-black text-slate-400 mb-1">Aud Studio · Aurora Edition</p>
