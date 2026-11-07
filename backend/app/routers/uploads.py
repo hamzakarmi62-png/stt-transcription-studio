@@ -39,8 +39,10 @@ MAX_BYTES = settings.max_upload_mb * 1024 * 1024
 
 # Media above this size is reduced to its mono mp3 track right after assembly:
 # transcription needs the audio only, and the free-tier disk cannot hold a
-# multi-GB video. 2 h of 16 kHz mono mp3 is ≈30 MB.
-LARGE_MEDIA_AUDIO_THRESHOLD = 200 * 1024 * 1024
+# multi-GB video. 2 h of 16 kHz mono mp3 is ≈30 MB. Below the threshold the
+# original — picture included — is kept and archived to B2, so <video> playback
+# works; env-overridable via LARGE_MEDIA_AUDIO_THRESHOLD_MB.
+LARGE_MEDIA_AUDIO_THRESHOLD = settings.large_media_audio_threshold_mb * 1024 * 1024
 
 class _AudioHealth:
     """Is the active bucket serving downloads right now? Cached briefly so a

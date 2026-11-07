@@ -50,6 +50,11 @@ class Settings(BaseSettings):
     # (1 GB) Supabase bucket, so playback keeps the picture; bigger ones fall
     # back to their mono mp3 track. Raise the env var if the bucket grows.
     cloud_video_max_mb: int = 120
+    # Videos above this size are reduced to their mono 16 kHz mp3 right after
+    # upload: the free instance disk cannot hold multi-GB originals during
+    # transcription. Below it the original — picture included — is kept and
+    # archived to B2, so <video> playback works. Env-overridable.
+    large_media_audio_threshold_mb: int = 800
     cors_origins: str = "http://localhost:5173"
 
     # Where uploaded media is kept. "auto" prefers a dedicated S3 bucket and
