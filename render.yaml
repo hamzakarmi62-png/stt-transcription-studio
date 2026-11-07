@@ -1,43 +1,6 @@
-services:
-  - type: web
-    name: audstudio
-    env: python
-    region: frankfurt
-    plan: free
-    buildCommand: pip install -r backend/requirements.txt && cd backend/pot_server && npm ci --omit=dev --no-audit --no-fund
-    startCommand: python -m uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 300
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10.0
-      - key: MAX_UPLOAD_MB
-        value: 2000
-      - key: STORAGE_BACKEND
-        value: s3
-      - key: HF_HOME
-        value: /opt/render/project/src/.hf_cache
-      - key: TRANSCRIPTION_ENGINE
-        value: auto
-      - key: BGUTIL_BASE_URL
-        value: http://127.0.0.1:4416
-      - key: GROQ_API_KEY
-        sync: false
-      - key: AUTH_SECRET
-        sync: false
-      - key: CORS_ORIGINS
-        value: "*"
-      - key: SUPABASE_URL
-        value: https://tpmvuvsalhluqfdyaeha.supabase.co
-      - key: SUPABASE_KEY
-        sync: false
-      - key: S3_ENDPOINT
-        value: https://s3.us-east-005.backblazeb2.com
-      - key: S3_REGION
-        value: us-east-005
-      - key: S3_BUCKET
-        value: aud-studio-hamza-01
-      - key: S3_ACCESS_KEY
-        sync: false
-      - key: S3_SECRET_KEY
-        sync: false
-      - key: GOOGLE_CLIENT_ID
-        value: 320173559924-nemjdhs6157tg0152nh0u88f7rc92978.apps.googleusercontent.com
+# Blueprint retired (2026-11-07): the duplicate "audstudio" service this file
+# used to define was deleted — production is served by the two manually
+# managed Web Services (audstudio-main → audstudio.onrender.com and
+# stt-transcription-studio → stt-transcription-studio.onrender.com).
+# An explicit empty list keeps the blueprint sync a no-op.
+services: []
