@@ -64,6 +64,15 @@ class Settings(BaseSettings):
     janitor_seconds: int = 600
     # Orphaned chunk directories older than this are cleaned up.
     chunk_stale_hours: int = 24
+
+    # Storage alerts: pushed via ntfy (phone app or any browser — subscribe to
+    # https://ntfy.sh/<ntfy_topic>) and emailed when SMTP_* + NOTIFY_EMAIL are
+    # configured. The topic acts as the secret subscription address — keep it
+    # unguessable. Alerts fire at 75%/90% bucket usage, on a full disk, and on
+    # cloud-write failures.
+    ntfy_topic: str = ""
+    ntfy_server: str = "https://ntfy.sh"
+    alert_cooldown_hours: int = 24
     cors_origins: str = "http://localhost:5173"
 
     # Where uploaded media is kept. "auto" prefers a dedicated S3 bucket and

@@ -154,6 +154,12 @@ def _loop() -> None:
                     f"{cloud_stale} stale cloud chunks deleted, "
                     f"{free_mb():.0f} MB free"
                 )
+            try:
+                from . import alerts
+
+                alerts.check_storage()
+            except Exception as exc:
+                print("[disk-janitor] storage alerts failed:", exc)
         except Exception as exc:
             print("[disk-janitor] cycle error:", exc)
         time.sleep(max(60, settings.janitor_seconds))

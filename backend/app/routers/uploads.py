@@ -18,6 +18,7 @@ from .. import db
 from ..config import settings
 from ..services import storage
 from ..services import disk_janitor
+from ..services import alerts
 from ..services.audio import extract_audio_track
 from .auth import ensure_session_owner, share_token_from_request, user_id_from_request, verify_share_token
 
@@ -108,6 +109,7 @@ async def upload_chunk(
     # Each chunk is small (5 MB) but a full-disk service dies everywhere —
     # make room (evicting cloud-backed copies) before writing.
     if not disk_janitor.ensure_room_for(len(data)):
+        alerts.alert_disk_pressure()
         raise HTTPException(
             507,
             "مساحة الخادم المؤقتة ممتلئة — أعد المحاولة بعد قليل (التنظيف التلقائي جارٍ).",
@@ -181,6 +183,7 @@ def complete_chunked_upload(req: CompleteRequest, request: Request):
     # Assembly writes the final file while chunks are freed one by one, so
     # the peak need is roughly the assembled size. Keep the reserve intact.
     if not disk_janitor.ensure_room_for(0):
+        alerts.alert_disk_pressure()
         raise HTTPException(
             507,
             "مساحة الخادم المؤقتة ممتلئة — أعد المحاولة بعد قليل (التنظيف التلقائي جارٍ).",
@@ -259,6 +262,7 @@ def _validate_and_save(file: UploadFile) -> tuple[str, str, Path, str, int]:
     # Safety net for streaming writes without a content-length: keep the
     # free-space reserve intact (evicting cloud-backed copies when needed).
     if not disk_janitor.ensure_room_for(0):
+        alerts.alert_disk_pressure()
         raise HTTPException(
             507,
             "مساحة الخادم المؤقتة ممتلئة — الوسائط محفوظة في السحابة، أعد المحاولة بعد قليل.",
@@ -334,6 +338,7 @@ def _publish_to_cloud(session_id: str, dest: Path, mime_type: str, size: int) ->
         storage.put_file(src, key, mime)
     except Exception as exc:
         print("Cloud upload failed:", exc)
+        alerts.alert_cloud_write_failure(key, str(exc))
         return
     finally:
         if temporary:
