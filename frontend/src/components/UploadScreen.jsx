@@ -1245,7 +1245,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               <img src={audLogo} alt="Aud" className="h-9 w-auto" draggable={false} />
             </div>
 
-            <nav className="hidden md:flex items-center gap-0.5 mx-auto min-w-0">
+            <nav className="hidden md:flex items-center gap-0.5 min-w-0">
               {NAV.map((item) => {
                 const active = activeTab === item.id;
                 return (
@@ -1265,7 +1265,7 @@ export default function UploadScreen({ onComplete, user, onLogout }) {
               })}
             </nav>
 
-            <div className="flex items-center gap-1.5 sm:gap-2 ms-auto md:ms-0 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               <select
                 value={uiLang}
                 onChange={(e) => setUiLang(e.target.value)}
