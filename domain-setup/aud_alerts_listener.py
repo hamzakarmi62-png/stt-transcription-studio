@@ -38,6 +38,35 @@ def _xml_escape(text: str) -> str:
     )
 
 
+def _b64_ps(ps: str) -> str:
+    """Encode a PowerShell command as Base64 UTF-16LE for -EncodedCommand
+    (reliable Unicode, no quoting pitfalls)."""
+    return ps.encode("utf-16-le").hex()
+
+
+def show_messagebox(title: str, body: str, high: bool) -> None:
+    """Guaranteed-visible Windows message box, detached (never blocks the
+    listener). Appears even when toasts are blocked by Focus Assist."""
+    icon = "Warning" if high else "Information"
+    ps = (
+        "Add-Type -AssemblyName System.Windows.Forms; "
+        f"[System.Windows.Forms.MessageBox]::Show("
+        f"'{_ps_escape(body)}', '{_ps_escape(title)}', "
+        f"'OK', '{icon}')"
+    )
+    enc = ps.encode("utf-16-le").hex()
+    subprocess.Popen(
+        ["powershell", "-NoProfile", "-EncodedCommand", enc],
+        creationflags=0x00000008,  # DETACHED_PROCESS
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def _ps_escape(text: str) -> str:
+    return str(text).replace("'", "''")
+
+
 def show_toast(title: str, body: str, high: bool) -> None:
     ps = PS_TEMPLATE.replace("__TITLE__", _xml_escape(title)).replace(
         "__BODY__", _xml_escape(body)
@@ -74,13 +103,15 @@ def handle_message(msg: dict) -> None:
     body = msg.get("message") or ""
     high = str(msg.get("priority", 3)) in ("4", "5")
     print(f"[alert] {title} | {body}")
+    # primary: guaranteed message box (detached). secondary: modern toast.
+    try:
+        show_messagebox(title, body, high)
+    except Exception as exc:
+        print("messagebox failed:", exc)
     try:
         show_toast(title, body, high)
     except Exception:
-        try:
-            show_fallback(title, body)
-        except Exception as exc:
-            print("fallback toast failed:", exc)
+        pass
 
 
 def main() -> None:
