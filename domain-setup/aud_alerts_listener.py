@@ -1,19 +1,26 @@
 # -*- coding: utf-8 -*-
-"""AudStudio storage-alert listener (Windows desktop toasts).
+"""AudStudio storage-alert listener (Windows desktop toasts) + keepalive.
 
 Connects to the ntfy alert topic and pops a native Windows notification for
 every alert — no browser, no email, no phone. Runs hidden in the background
 (scheduled task "AudAlerts" at logon) and reconnects automatically if the
 network drops.
+
+ALSO: pings the production service every 5 minutes so Render's free tier
+never spins it down (no 50-second cold starts for visitors). One process,
+two jobs.
 """
 
 import json
 import subprocess
+import threading
 import time
 import urllib.request
 
 TOPIC = "audstudio-storage-NdZDPqsrQtgZ00"
 STREAM = f"https://ntfy.sh/{TOPIC}/json"
+KEEPALIVE_URL = "https://stt-transcription-studio-1-ymqi.onrender.com/api/health"
+KEEPALIVE_SECONDS = 290  # < 300: Render spins down after 15 min idle
 
 PS_TEMPLATE = r"""
 $AppId = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
@@ -117,6 +124,20 @@ def handle_message(msg: dict) -> None:
 def main() -> None:
     # Only new messages: start from "now" so old cached alerts don't replay.
     since = int(time.time())
+
+    # Keepalive thread: ping the production service every ~5 minutes so
+    # Render's free tier never spins it down (no 50-second cold starts).
+    def keepalive_loop() -> None:
+        while True:
+            try:
+                urllib.request.urlopen(KEEPALIVE_URL, timeout=30)
+                print("keepalive ping OK")
+            except Exception as exc:
+                print("keepalive ping failed:", exc)
+            time.sleep(KEEPALIVE_SECONDS)
+
+    threading.Thread(target=keepalive_loop, daemon=True, name="keepalive").start()
+
     while True:
         try:
             url = f"{STREAM}?since={since}"
